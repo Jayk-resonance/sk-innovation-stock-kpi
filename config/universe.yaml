@@ -1,0 +1,25 @@
+# 평가 대상 종목 및 Peer Group 구성
+#
+# group_weights 합은 1.0 이어야 한다 (core/schema.py 에서 검증).
+
+subject:
+  name: SK이노베이션
+  code: "096770"
+  market: KOSPI
+
+groups:
+  에화:
+    weight: 0.6
+    members:
+      - { name: LG화학,           code: "051910", market: KOSPI }
+      - { name: S-Oil,            code: "010950", market: KOSPI }
+      - { name: 롯데케미칼,       code: "011170", market: KOSPI }
+      - { name: 포스코인터내셔널, code: "047050", market: KOSPI }
+  배소:
+    weight: 0.4
+    members:
+      - { name: LG에너지솔루션, code: "373220", market: KOSPI }
+      - { name: 삼성SDI,        code: "006400", market: KOSPI }
+      # 에코프로비엠만 KOSDAQ GLOBAL. 휴장일 캘린더는 KOSPI와 동일하다.
+      - { name: 에코프로비엠,   code: "247540", market: KOSDAQ }
+      - { name: 포스코퓨처엠,   code: "003670", market: KOSPI }

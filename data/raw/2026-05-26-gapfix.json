@@ -1,0 +1,134 @@
+{
+ "collected_at": "2026-07-27T21:35:00+09:00",
+ "source": "KIS via PlayMCP koreaStock",
+ "note": "QC 탐지 결측 보정: 2026-05-26~05-27 (9종목). 상반기 평가 2M 윈도우 내부.",
+ "prices": [
+  {
+   "code": "096770",
+   "date": "2026-05-27",
+   "close": 115400,
+   "volume": 725626,
+   "trading_value": 84692698250
+  },
+  {
+   "code": "096770",
+   "date": "2026-05-26",
+   "close": 121700,
+   "volume": 448304,
+   "trading_value": 55019992000
+  },
+  {
+   "code": "051910",
+   "date": "2026-05-27",
+   "close": 331000,
+   "volume": 447062,
+   "trading_value": 151120785500
+  },
+  {
+   "code": "051910",
+   "date": "2026-05-26",
+   "close": 351000,
+   "volume": 288865,
+   "trading_value": 102056979250
+  },
+  {
+   "code": "010950",
+   "date": "2026-05-27",
+   "close": 108100,
+   "volume": 365297,
+   "trading_value": 39597529600
+  },
+  {
+   "code": "010950",
+   "date": "2026-05-26",
+   "close": 110100,
+   "volume": 290354,
+   "trading_value": 31923238650
+  },
+  {
+   "code": "011170",
+   "date": "2026-05-27",
+   "close": 81200,
+   "volume": 157098,
+   "trading_value": 12843912350
+  },
+  {
+   "code": "011170",
+   "date": "2026-05-26",
+   "close": 83500,
+   "volume": 227842,
+   "trading_value": 19230688150
+  },
+  {
+   "code": "047050",
+   "date": "2026-05-27",
+   "close": 65600,
+   "volume": 625387,
+   "trading_value": 41509064550
+  },
+  {
+   "code": "047050",
+   "date": "2026-05-26",
+   "close": 68300,
+   "volume": 590640,
+   "trading_value": 40813894250
+  },
+  {
+   "code": "373220",
+   "date": "2026-05-27",
+   "close": 383500,
+   "volume": 463463,
+   "trading_value": 181122251750
+  },
+  {
+   "code": "373220",
+   "date": "2026-05-26",
+   "close": 399500,
+   "volume": 321431,
+   "trading_value": 129010292250
+  },
+  {
+   "code": "006400",
+   "date": "2026-05-27",
+   "close": 630000,
+   "volume": 799920,
+   "trading_value": 519453934500
+  },
+  {
+   "code": "006400",
+   "date": "2026-05-26",
+   "close": 642000,
+   "volume": 481983,
+   "trading_value": 310491116500
+  },
+  {
+   "code": "247540",
+   "date": "2026-05-27",
+   "close": 213500,
+   "volume": 659252,
+   "trading_value": 144728004000
+  },
+  {
+   "code": "247540",
+   "date": "2026-05-26",
+   "close": 220000,
+   "volume": 920419,
+   "trading_value": 208474179500
+  },
+  {
+   "code": "003670",
+   "date": "2026-05-27",
+   "close": 229000,
+   "volume": 274944,
+   "trading_value": 64606814750
+  },
+  {
+   "code": "003670",
+   "date": "2026-05-26",
+   "close": 240500,
+   "volume": 209833,
+   "trading_value": 51189459250
+  }
+ ],
+ "shares": []
+}

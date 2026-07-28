@@ -1,0 +1,39 @@
+# '주가' 과제 산출 규칙
+#
+# 확정 이력은 PLAN.md §7.1 참조.
+
+# 기준일 = 2025년 마지막 거래일
+base_date: "2025-12-30"
+
+# 평가일은 SK주식회사(모회사) 안내값을 그대로 입력한다.
+# 코드가 추정하지 않는다 — 평가일 하루 차이가 8점을 만든다 (PLAN.md §2).
+# 안내 미수신분은 비워 둔다. 비어 있으면 사이트에 "평가일 미확정"으로 표시된다.
+eval_dates:
+  - { label: "2026 1분기", date: "2026-04-16", mode: 잠정 }
+  - { label: "2026 상반기", date: "2026-07-15", mode: 잠정 }
+  # - { label: "2026 3분기", date: null, mode: 잠정 }   # 안내 수신 후 기입
+  # - { label: "2026 최종",  date: null, mode: 최종 }   # 안내 수신 후 기입
+
+# 윈도우 경계: (가) 평가일 포함, 달력 역산  → PLAN.md §7.2 확정
+#   2M: 평가일 -2개월 +1일 ~ 평가일
+#   1W: 평가일 -7일 +1일 ~ 평가일 (달력 7일. 거래일 수는 휴장에 따라 4~5일)
+window_boundary: inclusive_calendar
+
+windows:
+  잠정: ["2M"]                 # 2개월 VWAP
+  최종: ["2M", "1M", "1W"]     # 세 윈도우 VWAP의 산술평균
+
+# VWAP 산식. 둘 다 산출하며 primary 는 표기 우선순위일 뿐이다.
+#   A: Σ거래대금 / Σ거래량            (체결 기준)
+#   B: Σ(종가 × 거래량) / Σ거래량      (사내 기존 방식)
+vwap_methods: ["A", "B"]
+vwap_primary: "B"
+
+# 점수 스케일: 기준선 대비 ±15%
+score_scale:
+  base_points: 40
+  min_points: 0
+  max_points: 100
+  lower_bound_pct: -0.15
+  upper_bound_pct: 0.15
+  clip: true                   # 0~100 클리핑. 원값은 별도 보존
