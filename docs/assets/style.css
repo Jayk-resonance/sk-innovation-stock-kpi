@@ -69,9 +69,7 @@ aside{width:232px;flex-shrink:0;position:sticky;top:0;height:100vh;background:va
   border-right:1px solid var(--line);display:flex;flex-direction:column;gap:20px;
   padding:20px 14px;overflow-y:auto}
 .logo{display:flex;align-items:center;gap:11px;padding:2px 6px}
-.logo .mark{width:38px;height:38px;border-radius:var(--r-md);background:var(--primary);
-  display:flex;align-items:center;justify-content:center;color:#fff;font-weight:var(--w-black);
-  flex-shrink:0;font-size:16px}
+.logo .mark{width:50px;height:auto;object-fit:contain;flex-shrink:0}
 .logo b{font-size:15px;font-weight:var(--w-black);letter-spacing:-.01em}
 .logo small{font-size:10.5px;color:var(--muted)}
 .nav-h{padding:0 10px 8px;font-size:11px;font-weight:var(--w-semi);letter-spacing:.05em;color:var(--muted-2)}
