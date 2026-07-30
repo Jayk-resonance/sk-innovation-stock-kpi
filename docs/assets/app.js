@@ -15,7 +15,8 @@ const MAIN_TABS = [
   { key: "design", label: "27년 과제 설계", icon: "🛠️" },
 ];
 const S = { tab: "score", evalKey: "today", method: null, horizon: 2 };
-const D = { latest: null, history: null, scenarios: null, bars: null, changelog: null };
+const D = { latest: null, history: null, scenarios: null, bars: null };
+const HIDDEN_EVAL_KEYS = new Set(["2026-1분기"]); // 다시 표시하려면 이 키를 제거한다.
 const WINDOW_OPTS = ["1D", "1W", "1M", "2M", "3M", "6M"];
 let SIM = null;   // 탭4 파라미터 상태. D.latest 로딩 후 첫 방문 시 simDefaults() 로 채운다.
 
@@ -39,18 +40,20 @@ async function j(path) {
   return r.json();
 }
 
+function visibleViews() {
+  return D.latest.views.filter(v => !HIDDEN_EVAL_KEYS.has(v.key));
+}
+
 function currentView() {
-  return D.latest.views.find(v => v.key === S.evalKey) || D.latest.views[0];
+  return visibleViews().find(v => v.key === S.evalKey) || visibleViews()[0];
 }
 
 async function init() {
   try {
-    [D.latest, D.history, D.scenarios, D.bars, D.changelog] = await Promise.all([
-      j("data/latest.json"), j("data/history.json"), j("data/scenarios.json"),
-      j("data/bars.json"), j("data/changelog.json"),
+    [D.latest, D.history, D.scenarios, D.bars] = await Promise.all([
+      j("data/latest.json"), j("data/history.json"), j("data/scenarios.json"), j("data/bars.json"),
     ]);
     verifyDefaultsMatchToday();
-    renderChangelog();
     wireExportDelegation();
     S.method = D.latest.method_primary;
     // 서브탭 키에 한글이 섞여 있다(예: "2026-상반기"). 주소창을 거쳐 오면
@@ -60,7 +63,7 @@ async function init() {
     let hSub = hSubRaw;
     try { hSub = hSubRaw ? decodeURIComponent(hSubRaw) : hSubRaw; } catch (e) { /* 잘못된 인코딩은 무시 */ }
     if (MAIN_TABS.some(t => t.key === hTab)) S.tab = hTab;
-    if (hSub && D.latest.views.some(v => v.key === hSub)) S.evalKey = hSub;
+    if (hSub && visibleViews().some(v => v.key === hSub)) S.evalKey = hSub;
     document.getElementById("todayStr").textContent = "기준 " + D.latest.as_of;
     renderMainNav(); renderTickerList(); renderSubtabs(); render();
   } catch (e) {
@@ -83,7 +86,7 @@ function renderMainNav() {
   document.querySelectorAll("[data-main]").forEach(b =>
     b.addEventListener("click", () => {
       S.tab = b.dataset.main;
-      if (S.tab === "score" && !D.latest.views.some(v => v.key === S.evalKey)) S.evalKey = "today";
+      if (S.tab === "score" && !visibleViews().some(v => v.key === S.evalKey)) S.evalKey = "today";
       pushHash(); renderMainNav(); renderSubtabs(); render();
     }));
 }
@@ -91,7 +94,7 @@ function renderMainNav() {
 function renderSubtabs() {
   const el = document.getElementById("subtabs");
   if (S.tab !== "score") { el.innerHTML = ""; return; }
-  el.innerHTML = D.latest.views.map(v => `
+  el.innerHTML = visibleViews().map(v => `
     <button class="tab ${S.evalKey === v.key ? "active" : ""}" data-sub="${v.key}">
       ${esc(v.label)}${v.confirmed ? "" : `<span class="tag">D-DAY</span>`}
     </button>`).join("");
@@ -161,16 +164,6 @@ function csvButton(tableId, filename) {
 }
 function pngButton(svgId, filename) {
   return `<button class="btn-mini" data-export-png="${svgId}|${esc(filename)}">PNG 저장 ⤓</button>`;
-}
-
-function renderChangelog() {
-  const el = document.getElementById("changelogList");
-  if (!el) return;
-  if (!D.changelog.length) { el.innerHTML = `<div class="changelog-row">config/ 변경 이력이 없습니다</div>`; return; }
-  el.innerHTML = D.changelog.map(c => `<div class="changelog-row">
-    <div class="subject">${esc(c.subject)}</div>
-    <div class="meta">${esc(c.date.slice(0, 10))} · ${esc(c.author)} · ${esc(c.hash)}</div>
-  </div>`).join("");
 }
 
 /* ── 공용 조각 ─────────────────────────────────────────────── */
@@ -815,8 +808,6 @@ function renderDesign(V) {
 }
 
 function render() {
-  const changelogBox = document.getElementById("changelogBox");
-  if (changelogBox) changelogBox.open = false;   // 탭을 옮기면 열려 있던 변경이력 드롭다운을 닫는다
   const V = document.getElementById("view");
   if (S.tab === "score") return renderScore(V);
   if (S.tab === "case") return renderCase(V);
