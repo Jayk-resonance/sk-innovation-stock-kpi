@@ -259,6 +259,11 @@ main{flex:1;min-width:0;display:flex;flex-direction:column}
 .history-mode-panel .formula-term,.history-mode-panel .formula-output{padding:2px 6px}
 .history-mode-panel .formula-index{width:16px;height:16px;font-size:9px}
 .history-mode-panel .peer-popover{width:400px}
+.history-mode-panel table{font-size:11.5px}
+.history-mode-panel th,.history-mode-panel td{padding:8px 4px}
+.history-mode-panel th{font-size:10.5px;white-space:normal;line-height:1.3}
+.history-mode-panel th:first-child,.history-mode-panel td:first-child{white-space:normal}
+
 
 
 
