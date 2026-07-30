@@ -375,20 +375,24 @@ function renderScore(V) {
         <span class="raw">점수 산정가격 ${won(result.eval_price)}원</span>
       </div>
       ${scoreGauge(marks, score.value)}
-      <div class="hero-note">최근 2개월·1개월·1주의 거래를 함께 반영한 평균가격으로 산정한 점수입니다.</div>
+      <div class="hero-note"><b>점수 산정가격</b> = (2개월 평균가격 + 1개월 평균가격 + 1주 평균가격) ÷ 3<br><span>각 기간의 평균가격에는 거래량을 함께 반영합니다.</span></div>
     </div>
 
     <div class="card">
       <h3>점수 산출 <span class="sub">최근 거래 흐름을 함께 반영</span></h3>
       <div class="mode-block">
+        <div class="hero-note"><b>① SK이노베이션 가격</b> · 최근 2개월·1개월·1주의 거래량을 반영한 평균가격을 같은 비중으로 평균합니다.</div>
         ${subjectTable(result)}
+        <div class="hero-note"><b>② Peer 보정</b> · Peer 그룹별 주가 변화를 가중 평균해 SK이노베이션의 변화와 비교합니다.</div>
         ${peerSection(result)}
+        <div class="hero-note"><b>③ 점수 산정가격</b> · SK이노베이션과 Peer의 상대 변화를 반영해 점수 산정가격을 계산합니다.</div>
         ${calcSection(result)}
       </div>
     </div>
 
     <div class="card">
       <h3>점수 기준 <span class="sub">기준일의 거래량을 반영한 평균가격을 기준으로 산정</span></h3>
+      <div class="hero-note"><b>④ 점수 환산</b> · 기준 가격을 중심으로 점수 산정가격의 수준을 점수로 환산합니다.</div>
       <div class="statpair">
         <span class="k">기준 가격</span><span class="v r">${won(score.anchor)}원</span>
         <span class="k">점수 산정가격</span><span class="v r">${won(result.eval_price)}원</span>
