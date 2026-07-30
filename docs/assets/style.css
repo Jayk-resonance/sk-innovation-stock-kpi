@@ -106,20 +106,6 @@ main{flex:1;min-width:0;display:flex;flex-direction:column}
 .tab .tag{font-size:10px;font-weight:var(--w-bold);opacity:.8;margin-left:2px}
 .today{font-size:12px;color:var(--muted);padding-bottom:14px;white-space:nowrap;flex:0 0 auto}
 
-/* 변경이력 — details/summary 로 토글하는 드롭다운. 별도 JS 없이 열고 닫힌다 */
-.changelog{position:relative;flex:0 0 auto;padding-bottom:14px}
-.changelog summary{list-style:none;cursor:pointer;font-size:12px;color:var(--muted);
-  padding:6px 10px;border-radius:var(--r-pill);user-select:none}
-.changelog summary::-webkit-details-marker{display:none}
-.changelog summary:hover{background:var(--chip)}
-.changelog[open] summary{background:var(--chip);color:var(--ink)}
-.changelog-panel{position:absolute;top:calc(100% + 4px);right:0;z-index:10;width:340px;max-height:360px;
-  overflow-y:auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);
-  box-shadow:var(--shadow-md);padding:6px}
-.changelog-row{padding:9px 10px;border-bottom:1px solid var(--line-2);font-size:12px}
-.changelog-row:last-child{border-bottom:none}
-.changelog-row .subject{color:var(--ink);font-weight:var(--w-med)}
-.changelog-row .meta{color:var(--muted-2);font-size:11px;margin-top:2px}
 .wrap{padding:24px 32px 88px;display:flex;flex-direction:column;gap:18px;width:100%;max-width:1100px}
 
 /* ── 면 ───────────────────────────────────────────────────── */
