@@ -225,6 +225,42 @@ main{flex:1;min-width:0;display:flex;flex-direction:column}
 .actual-tag.tag-3{color:var(--series-3);background:var(--series-3-soft)}
 .actual-note{text-align:right;font-size:9.5px;color:var(--muted-2)}
 
+/* 확정 평가일 — 잠정/최종을 같은 산출 단계에서 비교 */
+.history-formula{margin-top:2px}
+.history-shared-chart{margin:16px 0 18px;padding:14px;border:1px solid var(--line);
+  border-radius:var(--r-md);background:var(--canvas);display:flex;flex-direction:column;gap:10px}
+.history-shared-chart>div:first-child{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.history-shared-chart>div:first-child b{font-size:12.5px}
+.history-shared-chart>div:first-child span{font-size:10.5px;color:var(--muted)}
+.history-compare-steps{display:flex;flex-direction:column;gap:16px}
+.history-compare-step{--step-color:var(--primary);border:1px solid var(--line);
+  border-left:4px solid var(--step-color);border-radius:var(--r-md);padding:16px;
+  display:flex;flex-direction:column;gap:12px;background:var(--surface)}
+.history-compare-step.step-1{--step-color:var(--series-1)}
+.history-compare-step.step-2{--step-color:var(--series-2)}
+.history-compare-step.step-3{--step-color:var(--series-3)}
+.history-compare-step.step-4{--step-color:var(--primary-ink)}
+.history-step-head{display:flex;align-items:center;gap:10px}
+.history-step-head>.step-badge{background:var(--step-color)}
+.history-step-head>div{display:flex;flex-direction:column;gap:1px}
+.history-step-head b{font-size:13.5px}
+.history-step-head span{font-size:10.5px;color:var(--muted)}
+.history-step-head .step-badge{font-size:12px;color:var(--surface)}
+.history-compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
+.history-mode-panel{min-width:0;border:1px solid var(--line);border-radius:var(--r-sm);
+  padding:13px;display:flex;flex-direction:column;gap:11px;background:var(--surface);overflow:visible}
+.history-mode-panel.provisional{border-top:3px solid var(--series-2)}
+.history-mode-panel.final{border-top:3px solid var(--primary)}
+.history-mode-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;
+  padding-bottom:8px;border-bottom:1px solid var(--line-2)}
+.history-mode-head b{font-size:12.5px}
+.history-mode-head span{font-size:10.5px;color:var(--muted);text-align:right}
+.history-mode-panel .score-formula{font-size:10.5px;gap:4px}
+.history-mode-panel .formula-term,.history-mode-panel .formula-output{padding:2px 6px}
+.history-mode-panel .formula-index{width:16px;height:16px;font-size:9px}
+.history-mode-panel .peer-popover{width:400px}
+
+
 
 .mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .mode{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:15px 17px;
@@ -363,6 +399,11 @@ tr.subject td:last-child{border-top-right-radius:var(--r-sm);border-bottom-right
 .empty{text-align:center;padding:52px 20px;color:var(--muted-2);font-size:14px;line-height:1.7}
 .empty .ico{font-size:32px;display:block;margin-bottom:12px;opacity:.6}
 
+@media(max-width:1100px){
+  .history-compare-grid{grid-template-columns:1fr}
+  .history-mode-panel .peer-popover{width:min(430px,calc(100vw - 80px))}
+}
+
 @media(max-width:760px){
   aside{display:none}
   .topbar{padding:10px 16px 0}
@@ -385,4 +426,7 @@ tr.subject td:last-child{border-top-right-radius:var(--r-sm);border-bottom-right
     transform:translateY(-50%)}
   .actual-calc-row{grid-template-columns:1fr}
   .actual-expression{justify-content:flex-start}
+  .history-shared-chart>div:first-child{align-items:flex-start;flex-direction:column}
+  .history-compare-step{padding:13px 11px}
+  .history-mode-panel{padding:11px}
 }
