@@ -111,9 +111,9 @@ def _mode_detail(prices, universe, rules, calibration, eval_date, mode, method) 
     actions = calibration.get("corporate_actions") or []
     result = evaluate(prices, universe, rules, calibration, eval_date, mode, method)
     subject = universe.subject.code
-    bars = apply_corporate_actions(prices[subject], subject, actions)
 
-    def windows(anchor_date):
+    def windows(code, anchor_date):
+        bars = apply_corporate_actions(prices[code], code, actions)
         return [{"spec": s, "vwap": round(adjusted_price(bars, anchor_date, [s], method), 2)}
                 for s in specs]
 
@@ -126,17 +126,23 @@ def _mode_detail(prices, universe, rules, calibration, eval_date, mode, method) 
         groups[name] = {
             "weight": weight,
             "average": round(result.group_changes[name], 6),
-            "members": [{"name": t.name,
-                         "change": round(now[t.code] / base[t.code] - 1, 6)}
-                        for t in members],
+            "members": [{
+                "name": t.name,
+                "code": t.code,
+                "change": round(now[t.code] / base[t.code] - 1, 6),
+                "price": round(now[t.code], 2),
+                "base_price": round(base[t.code], 2),
+                "windows_now": windows(t.code, eval_date),
+                "windows_base": windows(t.code, rules["base_date"]),
+            } for t in members],
         }
 
     return {
         **_result_json(result),
         "specs": specs,
         "subject_close": by_day[eval_date].close if eval_date in by_day else None,
-        "windows_now": windows(eval_date),
-        "windows_base": windows(rules["base_date"]),
+        "windows_now": windows(subject, eval_date),
+        "windows_base": windows(subject, rules["base_date"]),
         "subject_base_price": round(base[subject], 2),
         "groups": groups,
         "score_marks": {k: _score_marks(rules["score_scale"], s["anchor"])
