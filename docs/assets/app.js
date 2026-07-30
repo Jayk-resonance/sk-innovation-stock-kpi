@@ -381,7 +381,7 @@ function renderScore(V) {
     <div class="card">
       <h3>점수 산출 <span class="sub">최근 거래 흐름을 함께 반영</span></h3>
       <div class="mode-block">
-        ${skSection(result)}
+        ${subjectTable(result)}
         ${peerSection(result)}
         ${calcSection(result)}
       </div>
