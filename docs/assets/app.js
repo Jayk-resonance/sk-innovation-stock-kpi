@@ -96,7 +96,7 @@ function renderSubtabs() {
   if (S.tab !== "score") { el.innerHTML = ""; return; }
   el.innerHTML = visibleViews().map(v => `
     <button class="tab ${S.evalKey === v.key ? "active" : ""}" data-sub="${v.key}">
-      ${esc(v.label)}${v.confirmed ? "" : `<span class="tag">D-DAY</span>`}
+      ${esc(v.label)}
     </button>`).join("");
   document.querySelectorAll("[data-sub]").forEach(b =>
     b.addEventListener("click", () => { S.evalKey = b.dataset.sub; pushHash(); renderSubtabs(); render(); }));
@@ -362,130 +362,39 @@ function sensitivityCard(m) {
 }
 
 function renderScore(V) {
-  const L = D.latest, view = currentView(), m = S.method;
-  const prov = view.modes["잠정"], fin = view.modes["최종"];
-  const official = view.modes[view.official_mode].scores.V3;
-  const marks = view.modes[view.official_mode].score_marks.V3;
-  const diff = Math.abs(fin.scores.V3.value - prov.scores.V3.value);
-
-  const methodNote = (view.key === "today" && L.method_compare) ? `
-    <div class="hero-note">산식 ${esc(m === "A" ? "B" : "A")}로 계산하면
-      ${pts(L.method_compare[m === "A" ? "B" : "A"].scores.V3.value)}점
-      (차이 ${pts(Math.abs(L.method_compare["A"].scores.V3.raw - L.method_compare["B"].scores.V3.raw))}점).
-      두 산식은 매일 다르지만 2개월을 누적하면 차이가 1점 미만으로 수렴합니다.</div>` : "";
-
-  const summaryRows = view.key === "today"
-    ? D.latest.views.filter(v => v.confirmed).map(v => {
-        const s = v.modes[v.official_mode].scores.V3;
-        return `<tr><td>${esc(v.label)} <span class="badge grp">${esc(v.date)}</span></td>
-          <td class="num ${dirClass(v.modes[v.official_mode].relative_change)}">${signed(v.modes[v.official_mode].relative_change)}</td>
-          <td class="num">${won(v.modes[v.official_mode].eval_price)}원</td>
-          <td class="num ${dirClass(s.raw)}">${pts(s.raw)}</td>
-          <td class="num"><b>${pts(s.value)}점</b>${s.clipped ? ' <span class="badge warn">하한</span>' : ""}</td></tr>`;
-      }).join("")
-    : "";
+  const view = currentView();
+  const result = view.modes["최종"];
+  const score = result.scores.V2;
+  const marks = result.score_marks.V2;
 
   V.innerHTML = `
     <div class="hero">
-      <div class="eyebrow">${esc(view.label)} · ${esc(view.date)} 기준${view.confirmed ? " · 확정" : ""}
-        · 공식 방식(${view.official_mode})</div>
+      <div class="eyebrow">${esc(view.label)} · ${esc(view.date)} 기준</div>
       <div class="score-main">
-        <b>${pts(official.value)}</b><span class="unit">점</span>
-        <span class="raw">클리핑 전 원값 ${pts(official.raw)}점 · 평가주가 ${won(view.modes[view.official_mode].eval_price)}원</span>
+        <b>${pts(score.value)}</b><span class="unit">점</span>
+        <span class="raw">점수 산정가격 ${won(result.eval_price)}원</span>
       </div>
-      ${scoreGauge(marks, official.value)}
-      <div class="mode-grid">
-        <div class="mode"><span class="t">잠정 방식 · 2개월 VWAP</span>
-          <span class="v">${pts(prov.scores.V3.value)}점</span>
-          <span class="d">평가주가 ${won(prov.eval_price)}원 · x ${signed(prov.relative_change)}</span></div>
-        <div class="mode"><span class="t">최종 방식 · 2M·1M·1W 산술평균</span>
-          <span class="v">${pts(fin.scores.V3.value)}점</span>
-          <span class="d">평가주가 ${won(fin.eval_price)}원 · x ${signed(fin.relative_change)}</span></div>
-      </div>
-      <div class="hero-note">같은 날 같은 데이터인데 방식에 따라 <b>${pts(diff)}점</b> 벌어집니다.
-        윈도우 선택이 점수를 가장 크게 좌우합니다.</div>
+      ${scoreGauge(marks, score.value)}
+      <div class="hero-note">최근 2개월·1개월·1주의 거래를 함께 반영한 평균가격으로 산정한 점수입니다.</div>
     </div>
 
     <div class="card">
-      <h3>산출 과정 — 방식별 비교 <span class="sub">기준일 ${esc(L.base_date)} · VWAP 산식 ${esc(m)}</span></h3>
-      <div class="mode-compare">
-        ${modeBlock(prov, "잠정 방식", "2개월 VWAP")}
-        ${modeBlock(fin, "최종 방식", "2M·1M·1W 산술평균")}
+      <h3>점수 산출 <span class="sub">최근 거래 흐름을 함께 반영</span></h3>
+      <div class="mode-block">
+        ${skSection(result)}
+        ${peerSection(result)}
+        ${calcSection(result)}
       </div>
-      ${methodNote}
     </div>
 
     <div class="card">
-      <h3>기준선별 점수 <span class="sub">${esc(view.official_mode)} 방식 기준</span></h3>
-      ${baselineTable(view.modes[view.official_mode])}
-    </div>
-
-    ${targetCard(view.modes[view.official_mode])}
-    ${waterfallChart(view.modes[view.official_mode])}
-    ${sensitivityCard(view.modes[view.official_mode])}
-
-    ${summaryRows ? `<div class="card">
-      <h3>확정 평가 실적 <span class="sub">${L.next_eval
-        ? `다음 평가일 ${esc(L.next_eval.date)} · D−${L.next_eval.days}`
-        : "다음 평가일 미확정 — SK주식회사 안내 수신 후 입력"}</span>
-        ${csvButton("summaryTbl", "확정평가실적.csv")}</h3>
-      <div class="tbl-wrap"><table id="summaryTbl">
-        <thead><tr><th>평가</th><th>상대 증감율 x</th><th>평가주가</th><th>원값</th><th>점수</th></tr></thead>
-        <tbody>${summaryRows}</tbody></table></div>
-    </div>` : ""}
-
-    ${coverageNotice()}`;
-}
-
-/* ── 주가 현황 탭 ─────────────────────────────────────────── */
-
-function indexChart() {
-  const H = D.history, W = 900, HT = 300, PAD = { t: 16, r: 84, b: 28, l: 48 };
-  const series = [
-    ["SK이노베이션", H.indexed[H.subject], tok("--series-1"), 2.6],
-    ["에/화 그룹 평균", H.groups["에화"], tok("--series-2"), 1.9],
-    ["배/소 그룹 평균", H.groups["배소"], tok("--series-3"), 1.9],
-  ];
-  const n = H.dates.length;
-  const vals = series.flatMap(s => s[1].filter(v => v != null));
-  if (!n || !vals.length) return `<div class="empty">차트 데이터가 없습니다</div>`;
-  const lo = Math.min(...vals, 100), hi = Math.max(...vals, 100);
-  const pad = (hi - lo) * 0.1 || 5, yMin = lo - pad, yMax = hi + pad;
-  const X = i => PAD.l + (n === 1 ? 0 : i * (W - PAD.l - PAD.r) / (n - 1));
-  const Y = v => PAD.t + (yMax - v) * (HT - PAD.t - PAD.b) / (yMax - yMin);
-  const gaps = new Set(H.gap_after || []);
-
-  const grid = [yMin, (yMin + yMax) / 2, yMax, 100].map(v =>
-    `<line x1="${PAD.l}" y1="${Y(v).toFixed(1)}" x2="${W - PAD.r}" y2="${Y(v).toFixed(1)}"
-       stroke="${v === 100 ? tok("--axis") : tok("--grid")}" stroke-width="1"
-       ${v === 100 ? 'stroke-dasharray="4 3"' : ""}/>
-     <text x="${PAD.l - 8}" y="${(Y(v) + 4).toFixed(1)}" text-anchor="end" font-size="10.5"
-       fill="${tok("--muted")}">${v.toFixed(0)}</text>`).join("");
-
-  const paths = series.map(([name, ys, color, wdt]) => {
-    let d = "", pen = false;
-    ys.forEach((v, i) => {
-      if (v == null) { pen = false; return; }
-      d += `${pen ? "L" : "M"}${X(i).toFixed(1)} ${Y(v).toFixed(1)} `;
-      pen = !gaps.has(i);
-    });
-    const last = ys.reduce((a, v, i) => v == null ? a : i, -1);
-    const label = last >= 0
-      ? `<text x="${(X(last) + 7).toFixed(1)}" y="${(Y(ys[last]) + 3.5).toFixed(1)}"
-           font-size="10.5" fill="${color}" font-weight="700">${esc(ys[last].toFixed(0))}</text>` : "";
-    return `<path d="${d.trim()}" fill="none" stroke="${color}" stroke-width="${wdt}"
-      stroke-linejoin="round" stroke-linecap="round"/>${label}`;
-  }).join("");
-
-  const ticks = [0, Math.floor(n / 3), Math.floor(2 * n / 3), n - 1].map(i =>
-    `<text x="${X(i).toFixed(1)}" y="${HT - 7}" text-anchor="middle" font-size="10.5"
-       fill="${tok("--muted")}">${esc(H.dates[i].slice(2))}</text>`).join("");
-
-  return `<div class="chart"><svg id="indexChartSvg" viewBox="0 0 ${W} ${HT}" role="img"
-    aria-label="기준일 대비 주가 지수 추이 — SK이노베이션, 에/화 그룹 평균, 배/소 그룹 평균">
-    ${grid}${paths}${ticks}</svg></div>
-    <div class="legend">${series.map(([name, , c]) =>
-      `<span><i style="background:${c}"></i>${esc(name)}</span>`).join("")}</div>`;
+      <h3>점수 기준 <span class="sub">기준일의 거래량을 반영한 평균가격을 기준으로 산정</span></h3>
+      <div class="statpair">
+        <span class="k">기준 가격</span><span class="v r">${won(score.anchor)}원</span>
+        <span class="k">점수 산정가격</span><span class="v r">${won(result.eval_price)}원</span>
+        <span class="k">현재 점수</span><span class="v r">${pts(score.value)}점</span>
+      </div>
+    </div>`;
 }
 
 function groupBars() {
