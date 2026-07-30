@@ -168,7 +168,7 @@ main{flex:1;min-width:0;display:flex;flex-direction:column}
   border-radius:var(--r-sm);padding:10px 12px;font-size:12.5px;color:var(--muted)}
 .step-equation b{color:var(--ink)}
 .step-equation strong{font-size:14px}
-.step-result{display:flex;align-items:center;justify-content:flex-end;gap:7px;
+.step-result{display:flex;align-items:center;justify-content:flex-start;gap:7px;
   border-top:1px solid var(--line);padding-top:10px;font-size:12px;color:var(--muted)}
 .step-result b{font-size:16px;color:var(--primary-ink)}
 .chart-caption{font-size:11px;font-weight:var(--w-semi);color:var(--muted-2);margin-top:2px}
@@ -216,7 +216,7 @@ main{flex:1;min-width:0;display:flex;flex-direction:column}
   padding-bottom:8px;border-bottom:1px solid var(--primary-border)}
 .actual-calc-row.final{padding-bottom:0;border-bottom:none}
 .actual-label{font-size:11px;color:var(--primary-ink);font-weight:var(--w-semi)}
-.actual-expression{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:6px;
+.actual-expression{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-start;gap:6px;
   font-size:12.5px;color:var(--muted)}
 .actual-expression strong{font-size:16px;color:var(--primary-ink)}
 .actual-tag{display:inline-flex;align-items:center;border-radius:var(--r-pill);padding:3px 7px;font-weight:var(--w-semi)}
