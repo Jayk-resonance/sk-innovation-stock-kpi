@@ -68,7 +68,7 @@ async function init() {
     try { hSub = hSubRaw ? decodeURIComponent(hSubRaw) : hSubRaw; } catch (e) { /* 잘못된 인코딩은 무시 */ }
     if (MAIN_TABS.some(t => t.key === hTab)) S.tab = hTab;
     if (hSub && visibleViews().some(v => v.key === hSub)) S.evalKey = hSub;
-    document.getElementById("todayStr").textContent = "기준 " + D.latest.as_of;
+    document.getElementById("todayStr").textContent = koDate(D.latest.as_of) + " 기준";
     renderMainNav(); renderTickerList(); renderSubtabs(); render();
   } catch (e) {
     document.getElementById("view").innerHTML =
@@ -225,8 +225,10 @@ function coverageNotice() {
 }
 
 /** SK이노베이션 거래량 보정 주가 — 종가에서 시작해 윈도우별 VWAP, 증감율까지. */
-function subjectTable(m, weighted = true) {
+function subjectTable(m, weighted = true, friendlyDates = false) {
   const unit = weighted ? "거래량가중평균" : "종가평균";
+  const latestLabel = friendlyDates ? "최근 업데이트" : "평가일";
+  const baseLabel = friendlyDates ? `${String(D.latest.base_date).slice(0, 4)}년 말` : "기준일";
   const rows = m.windows_now.map((w, i) => {
     const base = m.windows_base[i];
     const chg = w.vwap / base.vwap - 1;
@@ -238,11 +240,11 @@ function subjectTable(m, weighted = true) {
   return `<div class="group-sec">
     <div class="group-sec-h">SK이노베이션 ${weighted ? "거래량 보정 주가" : "종가평균 (거래량 무시)"}</div>
     <div class="tbl-wrap"><table>
-      <thead><tr><th>구간</th><th>평가일 ${unit}</th><th>기준일 ${unit}</th><th>증감율</th></tr></thead>
+      <thead><tr><th>구간</th><th>${latestLabel} ${unit}</th><th>${baseLabel} ${unit}</th><th>증감율</th></tr></thead>
       <tbody>
         <tr><td>종가</td><td class="num">${won(m.subject_close)}원</td><td colspan="2"></td></tr>
         ${rows.join("")}
-        <tr class="subject"><td><b>${m.windows_now.length > 1 ? `평균 ${unit}` : unit}</b></td>
+        <tr class="subject"><td><b>${m.windows_now.length > 1 ? `${unit}의 산술평균` : unit}</b></td>
           <td class="num"><b>${won(m.subject_price)}원</b></td>
           <td class="num"><b>${won(m.subject_base_price)}원</b></td>
           <td class="num ${dirClass(m.subject_change)}"><b>${signed(m.subject_change)}</b></td></tr>
@@ -419,42 +421,103 @@ function renderHistoricalScore(V, view) {
     ${coverageNotice()}`;
 }
 
+function indexedScoreFormula(active = 0, showPeer = false) {
+  const term = (step, label) => {
+    const state = active ? (active === step ? " active" : " dimmed") : "";
+    return `<span class="formula-term formula-step-${step}${state}"><span class="formula-index">${step}</span>${label}</span>`;
+  };
+  const outputState = active ? (active === 4 ? " active" : " dimmed") : "";
+  return `<div class="score-formula">
+      <span class="formula-output${outputState}"><span class="formula-index">4</span>평가주가</span>
+      <span class="formula-op">=</span>
+      ${term(1, "SK이노베이션 거래량가중평균")}
+      <span class="formula-op">÷ [1 − (</span>
+      ${term(2, "SK이노베이션 증감률")}
+      <span class="formula-op">−</span>
+      ${term(3, "Peer 증감률")}
+      <span class="formula-op">)]</span>
+    </div>
+    ${showPeer ? `<div class="peer-formula${active && active !== 3 ? " dimmed" : active === 3 ? " active" : ""}">
+      <span class="formula-index">3</span><b>Peer 증감률</b>
+      <span>= 0.6 × 에화 그룹 평균 + 0.4 × 배소 그룹 평균</span>
+    </div>` : ""}`;
+}
+
 function renderScore(V) {
   const view = currentView();
   if (view.key !== "today") return renderHistoricalScore(V, view);
   const result = view.modes["최종"];
   const score = result.scores.V2;
   const marks = result.score_marks.V2;
+  const baseYear = String(D.latest.base_date).slice(0, 4);
 
   V.innerHTML = `
     <div class="hero">
-      <div class="eyebrow">${esc(view.label)} · ${koDate(view.date)} 기준 거래량가중평가 · 기준일 ${koDate(D.latest.base_date)} (2025년 마지막 개장일)</div>
+      <div class="eyebrow">${koDate(view.date)} 기준</div>
       <div class="score-main">
         <b>${pts(score.value)}</b><span class="unit">점</span>
         <span class="raw">점수 산정가격 ${won(result.eval_price)}원</span>
       </div>
       ${scoreGauge(marks, score.value)}
-      <div class="hero-note"><b>평가주가</b> = SK이노베이션 거래량가중평균 ÷ [1 − (SK이노베이션 증감률 − Peer 증감률)]<br>
-        <span><b>Peer 증감률</b> = 0.6 × 에화 그룹 평균 + 0.4 × 배소 그룹 평균</span></div>
+      <div class="indexed-formula">
+        <div class="formula-kicker">평가주가 산식</div>
+        ${indexedScoreFormula(0, true)}
+        <div class="formula-guide">산식의 번호와 아래 산출 단계의 번호가 서로 연결됩니다.</div>
+      </div>
     </div>
 
     <div class="card">
-      <h3>점수 산출 <span class="sub">평가주가를 만드는 다섯 단계</span></h3>
-      <div class="mode-block">
-        <div class="hero-note"><b>① SK이노베이션 거래량가중평균</b> · 2개월·1개월·1주의 거래량가중평균의 산술평균으로 산출합니다.</div>
-        ${subjectTable(result)}
-        <div class="hero-note"><b>② SK이노베이션 증감률</b> · 평가일 SK이노베이션 거래량가중평균을 기준일 SK이노베이션 거래량가중평균과 비교합니다.</div>
-        <div class="hero-note"><b>③ Peer 증감률</b> · 각 그룹 안의 종목 증감률을 단순 평균한 뒤, 에화 그룹 60%와 배소 그룹 40%를 가중 평균합니다.</div>
-        ${peerSection(result)}
-        <div class="hero-note"><b>④ 상대 증감률</b> · SK이노베이션 증감률에서 Peer 증감률을 뺍니다.</div>
-        <div class="hero-note"><b>⑤ 평가주가</b> · SK이노베이션 거래량가중평균을 1 − 상대 증감률로 나눕니다.</div>
-        ${calcSection(result)}
+      <h3>점수 산출 <span class="sub">평가주가를 만드는 네 단계</span></h3>
+      <div class="calc-steps">
+        <section class="calc-step step-1">
+          <div class="calc-step-head">
+            <span class="step-badge">1</span>
+            <div><b>SK이노베이션 거래량가중평균</b><span>산식의 분자</span></div>
+          </div>
+          ${indexedScoreFormula(1)}
+          <p class="step-copy">2개월·1개월·1주의 거래량가중평균의 산술평균으로 산출합니다.</p>
+          ${subjectTable(result, true, true)}
+        </section>
+
+        <section class="calc-step step-2">
+          <div class="calc-step-head">
+            <span class="step-badge">2</span>
+            <div><b>SK이노베이션 증감률</b><span>괄호 안 첫 번째 값</span></div>
+          </div>
+          ${indexedScoreFormula(2)}
+          <p class="step-copy">최근 업데이트 거래량가중평균을 ${baseYear}년 말 거래량가중평균과 비교합니다.</p>
+          <div class="step-equation">
+            <span>(</span><b>${won(result.subject_price)}원</b><span>÷</span>
+            <b>${won(result.subject_base_price)}원</b><span>) − 1 =</span>
+            <strong class="${dirClass(result.subject_change)}">${signed(result.subject_change)}</strong>
+          </div>
+        </section>
+
+        <section class="calc-step step-3">
+          <div class="calc-step-head">
+            <span class="step-badge">3</span>
+            <div><b>Peer 증감률</b><span>괄호 안 두 번째 값</span></div>
+          </div>
+          ${indexedScoreFormula(3, true)}
+          <p class="step-copy">각 그룹 안의 종목 증감률을 단순 평균한 뒤, 에화 그룹 60%와 배소 그룹 40%를 가중 평균합니다.</p>
+          ${peerSection(result)}
+        </section>
+
+        <section class="calc-step step-4">
+          <div class="calc-step-head">
+            <span class="step-badge">4</span>
+            <div><b>평가주가 산출</b><span>1~3단계 결과를 산식에 결합</span></div>
+          </div>
+          ${indexedScoreFormula(4)}
+          <p class="step-copy">①을 분자로 사용하고, ②에서 ③을 뺀 값을 분모에 반영해 평가주가를 계산합니다.</p>
+          ${calcSection(result)}
+        </section>
       </div>
     </div>
 
     <div class="card">
       <h3>점수 기준 <span class="sub">기준 가격을 40점으로 환산</span></h3>
-      <div class="hero-note"><b>⑥ 점수 환산</b> · 기준 가격의 85%는 0점, 기준 가격은 40점, 기준 가격의 115%는 100점입니다. 범위 밖 값은 0~100점으로 제한합니다.</div>
+      <div class="hero-note"><b>⑤ 점수 환산</b> · 기준 가격의 85%는 0점, 기준 가격은 40점, 기준 가격의 115%는 100점입니다. 범위 밖 값은 0~100점으로 제한합니다.</div>
       <div class="statpair">
         <span class="k">기준 가격</span><span class="v r">${won(score.anchor)}원</span>
         <span class="k">점수 산정가격</span><span class="v r">${won(result.eval_price)}원</span>
