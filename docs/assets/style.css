@@ -126,6 +126,48 @@ main{flex:1;min-width:0;display:flex;flex-direction:column}
 .score-main .raw{font-size:12.5px;color:var(--muted);padding-bottom:8px}
 .hero-note{font-size:12.5px;color:var(--muted);line-height:1.7}
 .hero-note b{color:var(--ink)}
+/* 평가 산식 ↔ 산출 단계 인덱싱 */
+.indexed-formula{background:var(--surface);border:1px solid var(--primary-border);
+  border-radius:var(--r-md);padding:14px 15px;display:flex;flex-direction:column;gap:9px}
+.formula-kicker{font-size:11px;font-weight:var(--w-bold);color:var(--primary-ink);letter-spacing:.03em}
+.score-formula{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:12px;line-height:1.7}
+.formula-term,.formula-output{display:inline-flex;align-items:center;gap:5px;border:1px solid transparent;
+  border-radius:var(--r-pill);padding:3px 8px;font-weight:var(--w-semi);transition:opacity .15s ease}
+.formula-index{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;
+  border:1px solid currentColor;border-radius:var(--r-pill);font-size:10px;font-weight:var(--w-black);
+  line-height:1;background:var(--surface)}
+.formula-step-1{color:var(--series-1);background:var(--series-1-soft)}
+.formula-step-2{color:var(--series-2);background:var(--series-2-soft)}
+.formula-step-3{color:var(--series-3);background:var(--series-3-soft)}
+.formula-output{color:var(--primary-ink);background:var(--primary-tint)}
+.formula-term.active,.formula-output.active{border-color:currentColor;box-shadow:0 0 0 1px currentColor}
+.formula-term.dimmed,.formula-output.dimmed,.peer-formula.dimmed{opacity:.28}
+.formula-op{color:var(--muted);font-weight:var(--w-med)}
+.peer-formula{display:flex;flex-wrap:wrap;align-items:center;gap:6px;color:var(--series-3);
+  background:var(--series-3-soft);border:1px solid transparent;border-radius:var(--r-sm);
+  padding:7px 9px;font-size:11.5px}
+.peer-formula.active{border-color:currentColor;box-shadow:0 0 0 1px currentColor}
+.formula-guide{font-size:10.5px;color:var(--muted-2)}
+
+.calc-steps{display:flex;flex-direction:column;gap:14px}
+.calc-step{--step-color:var(--primary);border:1px solid var(--line);border-left:4px solid var(--step-color);
+  border-radius:var(--r-md);padding:16px 17px;display:flex;flex-direction:column;gap:12px;background:var(--surface)}
+.calc-step.step-1{--step-color:var(--series-1)}
+.calc-step.step-2{--step-color:var(--series-2)}
+.calc-step.step-3{--step-color:var(--series-3)}
+.calc-step.step-4{--step-color:var(--primary-ink)}
+.calc-step-head{display:flex;align-items:center;gap:10px}
+.step-badge{width:28px;height:28px;border-radius:var(--r-pill);background:var(--step-color);color:var(--surface);
+  display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;font-weight:var(--w-black)}
+.calc-step-head div{display:flex;flex-direction:column;gap:1px}
+.calc-step-head b{font-size:13.5px}
+.calc-step-head span{font-size:10.5px;color:var(--muted)}
+.step-copy{margin:0;font-size:12.5px;color:var(--muted);line-height:1.6}
+.step-equation{display:flex;flex-wrap:wrap;align-items:center;gap:7px;background:var(--canvas);
+  border-radius:var(--r-sm);padding:10px 12px;font-size:12.5px;color:var(--muted)}
+.step-equation b{color:var(--ink)}
+.step-equation strong{font-size:14px}
+
 .mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .mode{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:15px 17px;
   display:flex;flex-direction:column;gap:5px}
