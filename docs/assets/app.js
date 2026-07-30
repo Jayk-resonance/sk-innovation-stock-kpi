@@ -266,11 +266,11 @@ function graphStartDate() {
     .toISOString().slice(0, 10);
 }
 
-function miniCloseChart(code, name, compact = false) {
+function miniCloseChart(code, name, compact = false, endDate = D.latest.as_of) {
   const bars = D.bars[code];
   if (!bars) return "";
   const start = graphStartDate();
-  const end = D.latest.as_of;
+  const end = endDate;
   const points = bars.dates.map((date, i) => ({ date, close: bars.close[i] }))
     .filter(p => p.date >= start && p.date <= end && p.close != null);
   if (points.length < 2) return "";
@@ -313,7 +313,7 @@ function peerPopover(mem, m) {
   const values = mem.windows_now.map(w => won(w.vwap));
   return `<div class="peer-popover" role="tooltip">
     <div class="peer-pop-head"><b>${esc(mem.name)}</b><span>${koMonthDay(m.eval_date)} 기준 · 종가 추이</span></div>
-    ${miniCloseChart(mem.code, mem.name, true)}
+    ${miniCloseChart(mem.code, mem.name, true, m.eval_date)}
     <div class="peer-calc-title">거래량가중평균의 산술평균</div>
     <div class="peer-window-values">
       ${mem.windows_now.map(w => `<span><small>${esc(w.spec)}</small><b>${won(w.vwap)}원</b></span>`).join("")}
@@ -470,6 +470,56 @@ function sensitivityCard(m) {
   </div>`;
 }
 
+function historicalPanel(kind, label, sub, body) {
+  return `<div class="history-mode-panel ${kind}">
+    <div class="history-mode-head">
+      <b>${esc(label)}</b><span>${esc(sub)}</span>
+    </div>
+    ${body}
+  </div>`;
+}
+
+function historicalStep(step, title, sub, provisionalBody, finalBody) {
+  return `<section class="history-compare-step step-${step}">
+    <div class="history-step-head">
+      <span class="step-badge">${step}</span>
+      <div><b>${esc(title)}</b><span>${esc(sub)}</span></div>
+    </div>
+    <div class="history-compare-grid">
+      ${historicalPanel("provisional", "잠정 방식", "2개월 거래량가중평균", provisionalBody)}
+      ${historicalPanel("final", "최종 방식", "2개월·1개월·1주 산술평균", finalBody)}
+    </div>
+  </section>`;
+}
+
+function historicalSubjectStep(m) {
+  return `${indexedScoreFormula(1)}
+    ${subjectTable(m, true, true)}
+    <div class="step-result">① 산식에 사용되는 값 <b>${won(m.subject_price)}원</b></div>`;
+}
+
+function historicalChangeStep(m) {
+  return `${indexedScoreFormula(2)}
+    <p class="step-copy">${koMonthDay(m.eval_date)} 거래량가중평균을 ${String(D.latest.base_date).slice(0,4)}년末 거래량가중평균과 비교합니다.</p>
+    <div class="step-equation">
+      <span>(</span><b>${won(m.subject_price)}원</b><span>÷</span>
+      <b>${won(m.subject_base_price)}원</b><span>) − 1 =</span>
+      <strong class="${dirClass(m.subject_change)}">${signed(m.subject_change)}</strong>
+    </div>`;
+}
+
+function historicalPeerStep(m) {
+  return `${indexedScoreFormula(3, true)}
+    <p class="step-copy">각 그룹 안의 종목 증감률을 평균한 뒤, 에화 그룹 60%와 배소 그룹 40%를 반영합니다.</p>
+    ${peerSection(m, true)}`;
+}
+
+function historicalPriceStep(m) {
+  return `${indexedScoreFormula(4)}
+    <p class="step-copy">①을 분자로 사용하고, ②에서 ③을 뺀 값을 분모에 반영해 평가주가를 계산합니다.</p>
+    ${finalCalculation(m)}`;
+}
+
 function renderHistoricalScore(V, view) {
   const L = D.latest;
   const baseline = "V3";
@@ -479,6 +529,7 @@ function renderHistoricalScore(V, view) {
   const officialResult = view.modes[officialMode];
   const officialScore = officialResult.scores[baseline];
   const marks = officialResult.score_marks[baseline];
+  const subjectCode = D.latest.tickers.find(t => t.group === "본사").code;
   const appliedScoreNote = s => s.raw < 0
     ? `산식상 ${pts(s.raw)}점 → 최저 0점 적용`
     : `산식상 ${pts(s.raw)}점`;
@@ -491,8 +542,11 @@ function renderHistoricalScore(V, view) {
         <span class="raw">평가 당시 적용 방식(${esc(officialMode)}) · ${appliedScoreNote(officialScore)} · 평가주가 ${won(officialResult.eval_price)}원</span>
       </div>
       ${scoreGauge(marks, officialScore.value)}
-      <div class="hero-note"><b>평가주가</b> = SK이노베이션 거래량가중평균 ÷ [1 − (SK이노베이션 증감률 − Peer 증감률)]<br>
-        <span><b>Peer 증감률</b> = 0.6 × 에화 그룹 평균 + 0.4 × 배소 그룹 평균</span></div>
+      <div class="indexed-formula history-formula">
+        <div class="formula-kicker">평가주가 산식</div>
+        ${indexedScoreFormula(0, true)}
+        <div class="formula-guide">같은 번호를 따라가면 잠정 방식과 최종 방식의 차이를 단계별로 비교할 수 있습니다.</div>
+      </div>
       <div class="mode-grid">
         <div class="mode"><span class="t">잠정 방식 · 2개월 거래량가중평균</span>
           <span class="v">${pts(prov.scores[baseline].value)}점</span>
@@ -506,9 +560,22 @@ function renderHistoricalScore(V, view) {
 
     <div class="card">
       <h3>산출 과정 — 방식별 비교 <span class="sub">기준일 ${esc(L.base_date)} · 연초 안내 기준 가격 ${won(officialScore.anchor)}원 = 40점</span></h3>
-      <div class="mode-compare">
-        ${modeBlock(prov, "잠정 방식", "2개월 거래량가중평균", baseline)}
-        ${modeBlock(fin, "최종 방식", "2개월·1개월·1주 산술평균", baseline)}
+      <div class="history-shared-chart">
+        <div>
+          <b>SK이노베이션 종가 추이</b>
+          <span>두 방식에 공통 · ${String(L.base_date).slice(0,4)}년末 기준 2개월 전부터 ${koMonthDay(view.date)}까지</span>
+        </div>
+        ${miniCloseChart(subjectCode, "SK이노베이션", false, view.date)}
+      </div>
+      <div class="history-compare-steps">
+        ${historicalStep(1, "SK이노베이션 거래량가중평균", "산식의 분자",
+          historicalSubjectStep(prov), historicalSubjectStep(fin))}
+        ${historicalStep(2, "SK이노베이션 증감률", "괄호 안 첫 번째 값",
+          historicalChangeStep(prov), historicalChangeStep(fin))}
+        ${historicalStep(3, "Peer 증감률", "괄호 안 두 번째 값",
+          historicalPeerStep(prov), historicalPeerStep(fin))}
+        ${historicalStep(4, "평가주가 산출", "1~3단계 결과를 산식에 결합",
+          historicalPriceStep(prov), historicalPriceStep(fin))}
       </div>
     </div>
 
