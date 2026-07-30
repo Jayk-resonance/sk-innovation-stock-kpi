@@ -222,7 +222,7 @@ function coverageNotice() {
 
 /** SK이노베이션 거래량 보정 주가 — 종가에서 시작해 윈도우별 VWAP, 증감율까지. */
 function subjectTable(m, weighted = true) {
-  const unit = weighted ? "VWAP" : "종가평균";
+  const unit = weighted ? "거래량가중평균" : "종가평균";
   const rows = m.windows_now.map((w, i) => {
     const base = m.windows_base[i];
     const chg = w.vwap / base.vwap - 1;
@@ -278,8 +278,8 @@ function calcSection(m, xLabel) {
   </div>`;
 }
 
-function modeBlock(m, label, sub) {
-  const s = m.scores.V3;
+function modeBlock(m, label, sub, baseline = "V3") {
+  const s = m.scores[baseline];
   return `<div class="mode-block">
     <div class="mode-block-head">
       <div class="name">${esc(label)}<span class="sub">${esc(sub)}</span></div>
@@ -361,8 +361,59 @@ function sensitivityCard(m) {
   </div>`;
 }
 
+function renderHistoricalScore(V, view) {
+  const L = D.latest;
+  const baseline = "V1";
+  const prov = view.modes["잠정"];
+  const fin = view.modes["최종"];
+  const officialMode = view.official_mode;
+  const officialResult = view.modes[officialMode];
+  const officialScore = officialResult.scores[baseline];
+  const marks = officialResult.score_marks[baseline];
+  const rawDiff = Math.abs(fin.scores[baseline].raw - prov.scores[baseline].raw);
+
+  V.innerHTML = `
+    <div class="hero">
+      <div class="eyebrow">${esc(view.label)} · ${esc(view.date)} 기준${view.confirmed ? " · 확정" : ""} · 기존 V1 기준선</div>
+      <div class="score-main">
+        <b>${pts(officialScore.value)}</b><span class="unit">점</span>
+        <span class="raw">기준 방식(${esc(officialMode)}) · 클리핑 전 ${pts(officialScore.raw)}점 · 평가주가 ${won(officialResult.eval_price)}원</span>
+      </div>
+      ${scoreGauge(marks, officialScore.value)}
+      <div class="mode-grid">
+        <div class="mode"><span class="t">잠정 방식 · 2개월 거래량가중평균</span>
+          <span class="v">${pts(prov.scores[baseline].value)}점</span>
+          <span class="d">클리핑 전 ${pts(prov.scores[baseline].raw)}점 · 평가주가 ${won(prov.eval_price)}원</span></div>
+        <div class="mode"><span class="t">최종 방식 · 2개월·1개월·1주 산술평균</span>
+          <span class="v">${pts(fin.scores[baseline].value)}점</span>
+          <span class="d">클리핑 전 ${pts(fin.scores[baseline].raw)}점 · 평가주가 ${won(fin.eval_price)}원</span></div>
+      </div>
+      <div class="hero-note">두 방식 모두 0점 하한이 적용됐지만, 클리핑 전 원값은 <b>${pts(rawDiff)}점</b> 차이입니다.</div>
+    </div>
+
+    <div class="card">
+      <h3>산출 과정 — 방식별 비교 <span class="sub">기준일 ${esc(L.base_date)} · 기존 V1 기준선 ${won(officialScore.anchor)}원</span></h3>
+      <div class="mode-compare">
+        ${modeBlock(prov, "잠정 방식", "2개월 거래량가중평균", baseline)}
+        ${modeBlock(fin, "최종 방식", "2개월·1개월·1주 산술평균", baseline)}
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>점수 기준 <span class="sub">기존 V1 · 기준일 2개월 거래량가중평균</span></h3>
+      <div class="statpair">
+        <span class="k">기준 가격</span><span class="v r">${won(officialScore.anchor)}원</span>
+        <span class="k">잠정 방식 점수</span><span class="v r">${pts(prov.scores[baseline].value)}점</span>
+        <span class="k">최종 방식 점수</span><span class="v r">${pts(fin.scores[baseline].value)}점</span>
+      </div>
+    </div>
+
+    ${coverageNotice()}`;
+}
+
 function renderScore(V) {
   const view = currentView();
+  if (view.key !== "today") return renderHistoricalScore(V, view);
   const result = view.modes["최종"];
   const score = result.scores.V2;
   const marks = result.score_marks.V2;
@@ -402,6 +453,55 @@ function renderScore(V) {
         <span class="k">현재 점수</span><span class="v r">${pts(score.value)}점</span>
       </div>
     </div>`;
+}
+
+function indexChart() {
+  const H = D.history, W = 900, HT = 300, PAD = { t: 16, r: 84, b: 28, l: 48 };
+  const series = [
+    ["SK이노베이션", H.indexed[H.subject], tok("--series-1"), 2.6],
+    ["에/화 그룹 평균", H.groups["에화"], tok("--series-2"), 1.9],
+    ["배/소 그룹 평균", H.groups["배소"], tok("--series-3"), 1.9],
+  ];
+  const n = H.dates.length;
+  const vals = series.flatMap(s => s[1].filter(v => v != null));
+  if (!n || !vals.length) return `<div class="empty">차트 데이터가 없습니다</div>`;
+  const lo = Math.min(...vals, 100), hi = Math.max(...vals, 100);
+  const pad = (hi - lo) * 0.1 || 5, yMin = lo - pad, yMax = hi + pad;
+  const X = i => PAD.l + (n === 1 ? 0 : i * (W - PAD.l - PAD.r) / (n - 1));
+  const Y = v => PAD.t + (yMax - v) * (HT - PAD.t - PAD.b) / (yMax - yMin);
+  const gaps = new Set(H.gap_after || []);
+
+  const grid = [yMin, (yMin + yMax) / 2, yMax, 100].map(v =>
+    `<line x1="${PAD.l}" y1="${Y(v).toFixed(1)}" x2="${W - PAD.r}" y2="${Y(v).toFixed(1)}"
+       stroke="${v === 100 ? tok("--axis") : tok("--grid")}" stroke-width="1"
+       ${v === 100 ? 'stroke-dasharray="4 3"' : ""}/>
+     <text x="${PAD.l - 8}" y="${(Y(v) + 4).toFixed(1)}" text-anchor="end" font-size="10.5"
+       fill="${tok("--muted")}">${v.toFixed(0)}</text>`).join("");
+
+  const paths = series.map(([name, ys, color, wdt]) => {
+    let d = "", pen = false;
+    ys.forEach((v, i) => {
+      if (v == null) { pen = false; return; }
+      d += `${pen ? "L" : "M"}${X(i).toFixed(1)} ${Y(v).toFixed(1)} `;
+      pen = !gaps.has(i);
+    });
+    const last = ys.reduce((a, v, i) => v == null ? a : i, -1);
+    const label = last >= 0
+      ? `<text x="${(X(last) + 7).toFixed(1)}" y="${(Y(ys[last]) + 3.5).toFixed(1)}"
+           font-size="10.5" fill="${color}" font-weight="700">${esc(ys[last].toFixed(0))}</text>` : "";
+    return `<path d="${d.trim()}" fill="none" stroke="${color}" stroke-width="${wdt}"
+      stroke-linejoin="round" stroke-linecap="round"/>${label}`;
+  }).join("");
+
+  const ticks = [0, Math.floor(n / 3), Math.floor(2 * n / 3), n - 1].map(i =>
+    `<text x="${X(i).toFixed(1)}" y="${HT - 7}" text-anchor="middle" font-size="10.5"
+       fill="${tok("--muted")}">${esc(H.dates[i].slice(2))}</text>`).join("");
+
+  return `<div class="chart"><svg id="indexChartSvg" viewBox="0 0 ${W} ${HT}" role="img"
+    aria-label="기준일 대비 주가 지수 추이 — SK이노베이션, 에/화 그룹 평균, 배/소 그룹 평균">
+    ${grid}${paths}${ticks}</svg></div>
+    <div class="legend">${series.map(([name, , c]) =>
+      `<span><i style="background:${c}"></i>${esc(name)}</span>`).join("")}</div>`;
 }
 
 function groupBars() {
