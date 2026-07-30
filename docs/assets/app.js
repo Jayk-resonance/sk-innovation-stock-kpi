@@ -33,6 +33,10 @@ const koDate = value => {
   const [year, month, day] = String(value || "").split("-").map(Number);
   return year && month && day ? `${year}년 ${month}월 ${day}일` : esc(value);
 };
+const koMonthDay = value => {
+  const [, month, day] = String(value || "").split("-").map(Number);
+  return month && day ? `${month}월 ${day}일` : esc(value);
+};
 
 /* 그룹 → 시리즈 슬롯. 고정 순서이며 순환하지 않는다. */
 const SLOT = { 본사: "--series-1", 에화: "--series-2", 배소: "--series-3" };
@@ -227,8 +231,8 @@ function coverageNotice() {
 /** SK이노베이션 거래량 보정 주가 — 종가에서 시작해 윈도우별 VWAP, 증감율까지. */
 function subjectTable(m, weighted = true, friendlyDates = false) {
   const unit = weighted ? "거래량가중평균" : "종가평균";
-  const latestLabel = friendlyDates ? "최근 업데이트" : "평가일";
-  const baseLabel = friendlyDates ? `${String(D.latest.base_date).slice(0, 4)}년 말` : "기준일";
+  const latestLabel = friendlyDates ? koMonthDay(m.eval_date) : "평가일";
+  const baseLabel = friendlyDates ? `${String(D.latest.base_date).slice(0, 4)}년末` : "기준일";
   const rows = m.windows_now.map((w, i) => {
     const base = m.windows_base[i];
     const chg = w.vwap / base.vwap - 1;
@@ -252,24 +256,123 @@ function subjectTable(m, weighted = true, friendlyDates = false) {
   </div>`;
 }
 
+function graphStartDate() {
+  const [year, month, day] = D.latest.base_date.split("-").map(Number);
+  const total = year * 12 + month - 1 - 2;
+  const startYear = Math.floor(total / 12);
+  const startMonth = ((total % 12) + 12) % 12;
+  const lastDay = new Date(Date.UTC(startYear, startMonth + 1, 0)).getUTCDate();
+  return new Date(Date.UTC(startYear, startMonth, Math.min(day, lastDay) + 1))
+    .toISOString().slice(0, 10);
+}
+
+function miniCloseChart(code, name, compact = false) {
+  const bars = D.bars[code];
+  if (!bars) return "";
+  const start = graphStartDate();
+  const end = D.latest.as_of;
+  const points = bars.dates.map((date, i) => ({ date, close: bars.close[i] }))
+    .filter(p => p.date >= start && p.date <= end && p.close != null);
+  if (points.length < 2) return "";
+
+  const W = 640, H = compact ? 112 : 140;
+  const P = { l: 12, r: 12, t: 12, b: 24 };
+  let lo = Math.min(...points.map(p => p.close));
+  let hi = Math.max(...points.map(p => p.close));
+  if (lo === hi) { lo *= .99; hi *= 1.01; }
+  const x = i => P.l + i / (points.length - 1) * (W - P.l - P.r);
+  const y = value => P.t + (hi - value) / (hi - lo) * (H - P.t - P.b);
+  const path = points.map((p, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${y(p.close).toFixed(1)}`).join(" ");
+  let baseIndex = points.findIndex(p => p.date === D.latest.base_date);
+  if (baseIndex < 0) baseIndex = points.reduce((best, p, i) => p.date <= D.latest.base_date ? i : best, 0);
+  const basePoint = points[baseIndex];
+  const first = points[0], last = points.at(-1);
+  const meta = D.latest.tickers.find(t => t.code === code);
+  const color = slotColor(meta?.group || "본사");
+
+  return `<div class="mini-close-chart${compact ? " compact" : ""}">
+    <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(name)} 종가 추이">
+      <line x1="${P.l}" y1="${y(lo)}" x2="${W-P.r}" y2="${y(lo)}" stroke="${tok("--grid")}"/>
+      <line x1="${P.l}" y1="${y(hi)}" x2="${W-P.r}" y2="${y(hi)}" stroke="${tok("--grid")}"/>
+      <line x1="${x(baseIndex)}" y1="${P.t}" x2="${x(baseIndex)}" y2="${H-P.b}"
+        stroke="${tok("--axis")}" stroke-dasharray="4 4"/>
+      <path d="${path}" fill="none" stroke="${color}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="${x(points.length-1)}" cy="${y(last.close)}" r="3.5" fill="${color}"/>
+      <text x="${x(baseIndex)}" y="${H-7}" text-anchor="middle" font-size="10" fill="${tok("--muted")}">${esc(String(D.latest.base_date).slice(0,4)+"년末")}</text>
+    </svg>
+    <div class="mini-chart-meta">
+      <span>${koMonthDay(first.date)} <b>${won(first.close)}원</b></span>
+      <span>${String(D.latest.base_date).slice(0,4)}년末 <b>${won(basePoint.close)}원</b></span>
+      <span>${koMonthDay(last.date)} <b>${won(last.close)}원</b></span>
+    </div>
+  </div>`;
+}
+
+function peerPopover(mem, m) {
+  if (!mem.windows_now?.length || !mem.code) return "";
+  const values = mem.windows_now.map(w => won(w.vwap));
+  return `<div class="peer-popover" role="tooltip">
+    <div class="peer-pop-head"><b>${esc(mem.name)}</b><span>${koMonthDay(m.eval_date)} 기준 · 종가 추이</span></div>
+    ${miniCloseChart(mem.code, mem.name, true)}
+    <div class="peer-calc-title">거래량가중평균의 산술평균</div>
+    <div class="peer-window-values">
+      ${mem.windows_now.map(w => `<span><small>${esc(w.spec)}</small><b>${won(w.vwap)}원</b></span>`).join("")}
+    </div>
+    <div class="peer-calc-formula">(${values.join(" + ")}) ÷ ${values.length} = <b>${won(mem.price)}원</b></div>
+    <div class="peer-base-line">${String(D.latest.base_date).slice(0,4)}년末 ${won(mem.base_price)}원 대비
+      <b class="${dirClass(mem.change)}">${signed(mem.change)}</b></div>
+  </div>`;
+}
+
 /** Peer 보정 — 그룹별로 묶는다. 60:40 가중치가 그룹 단위이므로 개별사가 아니라
  *  그룹 평균이 실제로 점수에 들어가는 값이다. */
-function peerSection(m) {
+function peerSection(m, interactive = false) {
   const grp = (name) => {
     const g = m.groups[name];
     return `<div class="peer-grp">
       <div class="peer-grp-h"><span>${esc(name)} 그룹</span><span class="w">가중치 ${(g.weight * 100).toFixed(0)}%</span></div>
-      ${g.members.map(mem =>
-        `<div class="m"><span>${esc(mem.name)}</span><span class="${dirClass(mem.change)}">${signed(mem.change)}</span></div>`
+      ${g.members.map(mem => interactive
+        ? `<div class="m peer-member" tabindex="0" aria-label="${esc(mem.name)} 상세 보기">
+            <span class="peer-name">${esc(mem.name)}<small>그래프 보기</small></span>
+            <span class="${dirClass(mem.change)}">${signed(mem.change)}</span>
+            ${peerPopover(mem, m)}
+          </div>`
+        : `<div class="m"><span>${esc(mem.name)}</span><span class="${dirClass(mem.change)}">${signed(mem.change)}</span></div>`
       ).join("")}
       <div class="m"><b>그룹 평균</b><b class="${dirClass(g.average)}">${signed(g.average)}</b></div>
     </div>`;
   };
   return `<div class="group-sec">
-    <div class="group-sec-h">Peer 보정 — 그룹별 증감율</div>
+    <div class="group-sec-h">Peer 보정 — 그룹별 증감율
+      ${interactive ? '<span class="hover-help">회사명에 마우스를 올려 상세 확인</span>' : ""}
+    </div>
     ${grp("에화")}${grp("배소")}
     <div class="wtable"><div class="r sum"><span class="k">Peer 증감율 (0.6×에화 + 0.4×배소)</span>
       <span class="v ${dirClass(m.peer_change)}">${signed(m.peer_change)}</span></div></div>
+  </div>`;
+}
+
+function finalCalculation(m) {
+  return `<div class="actual-calc">
+    <div class="actual-calc-row">
+      <span class="actual-label">상대 증감률</span>
+      <div class="actual-expression">
+        <span class="actual-tag tag-2">② ${signed(m.subject_change)}</span>
+        <span>−</span>
+        <span class="actual-tag tag-3">③ ${signed(m.peer_change)}</span>
+        <span>=</span>
+        <b class="${dirClass(m.relative_change)}">${signed(m.relative_change)}</b>
+      </div>
+    </div>
+    <div class="actual-calc-row final">
+      <span class="actual-label">평가주가</span>
+      <div class="actual-expression">
+        <span class="actual-tag tag-1">① ${won(m.subject_price)}원</span>
+        <span>÷ [1 − (${signed(m.relative_change)})] =</span>
+        <strong>${won(m.eval_price)}원</strong>
+      </div>
+    </div>
+    <div class="actual-note">화면의 퍼센트와 금액은 보기 쉽게 반올림해 표시합니다.</div>
   </div>`;
 }
 
@@ -477,6 +580,9 @@ function renderScore(V) {
           ${indexedScoreFormula(1)}
           <p class="step-copy">2개월·1개월·1주의 거래량가중평균의 산술평균으로 산출합니다.</p>
           ${subjectTable(result, true, true)}
+          <div class="step-result">① 산식에 사용되는 값 <b>${won(result.subject_price)}원</b></div>
+          <div class="chart-caption">SK이노베이션 종가 추이 · ${baseYear}년末 기준 2개월 전부터 ${koMonthDay(result.eval_date)}까지</div>
+          ${miniCloseChart(D.latest.tickers.find(t => t.group === "본사").code, "SK이노베이션")}
         </section>
 
         <section class="calc-step step-2">
@@ -485,7 +591,7 @@ function renderScore(V) {
             <div><b>SK이노베이션 증감률</b><span>괄호 안 첫 번째 값</span></div>
           </div>
           ${indexedScoreFormula(2)}
-          <p class="step-copy">최근 업데이트 거래량가중평균을 ${baseYear}년 말 거래량가중평균과 비교합니다.</p>
+          <p class="step-copy">${koMonthDay(result.eval_date)} 거래량가중평균을 ${baseYear}년末 거래량가중평균과 비교합니다.</p>
           <div class="step-equation">
             <span>(</span><b>${won(result.subject_price)}원</b><span>÷</span>
             <b>${won(result.subject_base_price)}원</b><span>) − 1 =</span>
@@ -500,7 +606,7 @@ function renderScore(V) {
           </div>
           ${indexedScoreFormula(3, true)}
           <p class="step-copy">각 그룹 안의 종목 증감률을 단순 평균한 뒤, 에화 그룹 60%와 배소 그룹 40%를 가중 평균합니다.</p>
-          ${peerSection(result)}
+          ${peerSection(result, true)}
         </section>
 
         <section class="calc-step step-4">
@@ -510,7 +616,7 @@ function renderScore(V) {
           </div>
           ${indexedScoreFormula(4)}
           <p class="step-copy">①을 분자로 사용하고, ②에서 ③을 뺀 값을 분모에 반영해 평가주가를 계산합니다.</p>
-          ${calcSection(result)}
+          ${finalCalculation(result)}
         </section>
       </div>
     </div>
