@@ -375,24 +375,27 @@ function renderScore(V) {
         <span class="raw">점수 산정가격 ${won(result.eval_price)}원</span>
       </div>
       ${scoreGauge(marks, score.value)}
-      <div class="hero-note"><b>점수 산정가격</b> = (2개월 거래량가중평균 + 1개월 거래량가중평균 + 1주 거래량가중평균) ÷ 3</div>
+      <div class="hero-note"><b>평가주가</b> = SK 거래량가중평균 ÷ [1 − (SK 증감률 − Peer 증감률)]<br>
+        <span><b>Peer 증감률</b> = 0.6 × 에화 그룹 평균 + 0.4 × 배소 그룹 평균</span></div>
     </div>
 
     <div class="card">
-      <h3>점수 산출 <span class="sub">최근 거래 흐름을 함께 반영</span></h3>
+      <h3>점수 산출 <span class="sub">평가주가를 만드는 다섯 단계</span></h3>
       <div class="mode-block">
-        <div class="hero-note"><b>① SK이노베이션 가격</b> · 최근 2개월·1개월·1주의 거래량가중평균을 같은 비중으로 평균합니다.</div>
+        <div class="hero-note"><b>① SK 거래량가중평균</b> · 2개월·1개월·1주의 거래량가중평균을 같은 비중으로 평균합니다.</div>
         ${subjectTable(result)}
-        <div class="hero-note"><b>② Peer 보정</b> · Peer 그룹별 주가 변화를 가중 평균해 SK이노베이션의 변화와 비교합니다.</div>
+        <div class="hero-note"><b>② SK 증감률</b> · 평가일 SK 거래량가중평균을 기준일 SK 거래량가중평균과 비교합니다.</div>
+        <div class="hero-note"><b>③ Peer 증감률</b> · 각 그룹 안의 종목 증감률을 단순 평균한 뒤, 에화 그룹 60%와 배소 그룹 40%를 가중 평균합니다.</div>
         ${peerSection(result)}
-        <div class="hero-note"><b>③ 점수 산정가격</b> · SK이노베이션과 Peer의 상대 변화를 반영해 점수 산정가격을 계산합니다.</div>
+        <div class="hero-note"><b>④ 상대 증감률</b> · SK 증감률에서 Peer 증감률을 뺍니다.</div>
+        <div class="hero-note"><b>⑤ 평가주가</b> · SK 거래량가중평균을 1 − 상대 증감률로 나눕니다.</div>
         ${calcSection(result)}
       </div>
     </div>
 
     <div class="card">
-      <h3>점수 기준 <span class="sub">기준일의 거래량을 반영한 평균가격을 기준으로 산정</span></h3>
-      <div class="hero-note"><b>④ 점수 환산</b> · 기준 가격을 중심으로 점수 산정가격의 수준을 점수로 환산합니다.</div>
+      <h3>점수 기준 <span class="sub">기준 가격을 40점으로 환산</span></h3>
+      <div class="hero-note"><b>⑥ 점수 환산</b> · 기준 가격의 85%는 0점, 기준 가격은 40점, 기준 가격의 115%는 100점입니다. 범위 밖 값은 0~100점으로 제한합니다.</div>
       <div class="statpair">
         <span class="k">기준 가격</span><span class="v r">${won(score.anchor)}원</span>
         <span class="k">점수 산정가격</span><span class="v r">${won(result.eval_price)}원</span>
