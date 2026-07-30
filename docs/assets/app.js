@@ -375,13 +375,13 @@ function renderScore(V) {
         <span class="raw">점수 산정가격 ${won(result.eval_price)}원</span>
       </div>
       ${scoreGauge(marks, score.value)}
-      <div class="hero-note"><b>점수 산정가격</b> = (2개월 평균가격 + 1개월 평균가격 + 1주 평균가격) ÷ 3<br><span>각 기간의 평균가격에는 거래량을 함께 반영합니다.</span></div>
+      <div class="hero-note"><b>점수 산정가격</b> = (2개월 거래량가중평균 + 1개월 거래량가중평균 + 1주 거래량가중평균) ÷ 3</div>
     </div>
 
     <div class="card">
       <h3>점수 산출 <span class="sub">최근 거래 흐름을 함께 반영</span></h3>
       <div class="mode-block">
-        <div class="hero-note"><b>① SK이노베이션 가격</b> · 최근 2개월·1개월·1주의 거래량을 반영한 평균가격을 같은 비중으로 평균합니다.</div>
+        <div class="hero-note"><b>① SK이노베이션 가격</b> · 최근 2개월·1개월·1주의 거래량가중평균을 같은 비중으로 평균합니다.</div>
         ${subjectTable(result)}
         <div class="hero-note"><b>② Peer 보정</b> · Peer 그룹별 주가 변화를 가중 평균해 SK이노베이션의 변화와 비교합니다.</div>
         ${peerSection(result)}
