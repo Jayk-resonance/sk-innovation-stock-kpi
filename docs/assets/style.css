@@ -17,8 +17,8 @@
   color-scheme: light;
 
   /* 브랜드 */
-  --primary:#EA002C;  --primary-tint:#FFF1F3;  --primary-border:#FFD4DC;
-  --primary-ink:#B00020;
+  --primary:#6425FE;  --primary-tint:#EFE9FF;  --primary-border:#E8E9FF;
+  --primary-ink:#5B21B6;
 
   /* 잉크 · 면 */
   --ink:#2C2C2C;  --muted:#6E6E6E;  --muted-2:#9A9A9A;
@@ -33,7 +33,7 @@
   --ok:#067647;    --ok-soft:#DCFAE6;
 
   /* 시리즈 — 고정 순서. 순환하지 않는다 */
-  --series-1:#EA002C;  --series-1-soft:#FFF1F3;   /* SK이노베이션 */
+  --series-1:#6425FE;  --series-1-soft:#EDE9FE;   /* SK이노베이션 */
   --series-2:#0284C7;  --series-2-soft:#E0F2FE;   /* 에/화 그룹 */
   --series-3:#15803D;  --series-3-soft:#DCFCE7;   /* 배/소 그룹 */
   --grid:#EAE8EF;  --axis:#D6D3DE;
