@@ -216,7 +216,7 @@ def build_latest(
     # 두 방식의 점수 차이가 어디서 벌어지는지가 이 KPI 의 핵심 논점이다.
     views = [{
         "key": "today", "label": "오늘의 점수", "date": as_of.isoformat(),
-        "official_mode": "잠정", "confirmed": False,
+        "official_mode": "최종", "confirmed": False,
         "modes": {m: _mode_detail(prices, universe, rules, calibration, as_of, m, method)
                   for m in ("잠정", "최종")},
     }]
