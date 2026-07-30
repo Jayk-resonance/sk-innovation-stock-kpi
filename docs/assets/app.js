@@ -285,7 +285,7 @@ function modeBlock(m, label, sub, baseline = "V3") {
       <div class="name">${esc(label)}<span class="sub">${esc(sub)}</span></div>
       <div class="mode-block-score">
         <b class="${dirClass(s.value - 40)}">${pts(s.value)}점</b>
-        <span class="raw">원값 ${pts(s.raw)}점${s.clipped ? " · 클리핑 적용" : ""}</span>
+        <span class="raw">산식상 ${pts(s.raw)}점${s.clipped ? " · 0~100점 범위 적용" : ""}</span>
       </div>
     </div>
     ${subjectTable(m)}
@@ -363,36 +363,40 @@ function sensitivityCard(m) {
 
 function renderHistoricalScore(V, view) {
   const L = D.latest;
-  const baseline = "V1";
+  const baseline = "V3";
   const prov = view.modes["잠정"];
   const fin = view.modes["최종"];
   const officialMode = view.official_mode;
   const officialResult = view.modes[officialMode];
   const officialScore = officialResult.scores[baseline];
   const marks = officialResult.score_marks[baseline];
-  const rawDiff = Math.abs(fin.scores[baseline].raw - prov.scores[baseline].raw);
+  const appliedScoreNote = s => s.raw < 0
+    ? `산식상 ${pts(s.raw)}점 → 최저 0점 적용`
+    : `산식상 ${pts(s.raw)}점`;
 
   V.innerHTML = `
     <div class="hero">
-      <div class="eyebrow">${esc(view.label)} · ${esc(view.date)} 기준${view.confirmed ? " · 확정" : ""} · 기존 V1 기준선</div>
+      <div class="eyebrow">${esc(view.label)} · ${esc(view.date)} 기준${view.confirmed ? " · 확정" : ""} · 연초 안내 기준 가격 ${won(officialScore.anchor)}원 = 40점</div>
       <div class="score-main">
         <b>${pts(officialScore.value)}</b><span class="unit">점</span>
-        <span class="raw">기준 방식(${esc(officialMode)}) · 클리핑 전 ${pts(officialScore.raw)}점 · 평가주가 ${won(officialResult.eval_price)}원</span>
+        <span class="raw">평가 당시 적용 방식(${esc(officialMode)}) · ${appliedScoreNote(officialScore)} · 평가주가 ${won(officialResult.eval_price)}원</span>
       </div>
       ${scoreGauge(marks, officialScore.value)}
+      <div class="hero-note"><b>평가주가</b> = SK 거래량가중평균 ÷ [1 − (SK 증감률 − Peer 증감률)]<br>
+        <span><b>Peer 증감률</b> = 0.6 × 에화 그룹 평균 + 0.4 × 배소 그룹 평균</span></div>
       <div class="mode-grid">
         <div class="mode"><span class="t">잠정 방식 · 2개월 거래량가중평균</span>
           <span class="v">${pts(prov.scores[baseline].value)}점</span>
-          <span class="d">클리핑 전 ${pts(prov.scores[baseline].raw)}점 · 평가주가 ${won(prov.eval_price)}원</span></div>
+          <span class="d">${appliedScoreNote(prov.scores[baseline])} · 평가주가 ${won(prov.eval_price)}원</span></div>
         <div class="mode"><span class="t">최종 방식 · 2개월·1개월·1주 산술평균</span>
           <span class="v">${pts(fin.scores[baseline].value)}점</span>
-          <span class="d">클리핑 전 ${pts(fin.scores[baseline].raw)}점 · 평가주가 ${won(fin.eval_price)}원</span></div>
+          <span class="d">${appliedScoreNote(fin.scores[baseline])} · 평가주가 ${won(fin.eval_price)}원</span></div>
       </div>
-      <div class="hero-note">두 방식 모두 0점 하한이 적용됐지만, 클리핑 전 원값은 <b>${pts(rawDiff)}점</b> 차이입니다.</div>
+      <div class="hero-note">잠정 방식은 계산값이 0점보다 낮아 최저 0점이 적용됐고, 최종 방식은 <b>${pts(fin.scores[baseline].value)}점</b>입니다.</div>
     </div>
 
     <div class="card">
-      <h3>산출 과정 — 방식별 비교 <span class="sub">기준일 ${esc(L.base_date)} · 기존 V1 기준선 ${won(officialScore.anchor)}원</span></h3>
+      <h3>산출 과정 — 방식별 비교 <span class="sub">기준일 ${esc(L.base_date)} · 연초 안내 기준 가격 ${won(officialScore.anchor)}원 = 40점</span></h3>
       <div class="mode-compare">
         ${modeBlock(prov, "잠정 방식", "2개월 거래량가중평균", baseline)}
         ${modeBlock(fin, "최종 방식", "2개월·1개월·1주 산술평균", baseline)}
@@ -400,11 +404,11 @@ function renderHistoricalScore(V, view) {
     </div>
 
     <div class="card">
-      <h3>점수 기준 <span class="sub">기존 V1 · 기준일 2개월 거래량가중평균</span></h3>
+      <h3>점수 기준 <span class="sub">2026년 수립 시 안내된 가격을 40점 기준으로 적용</span></h3>
       <div class="statpair">
-        <span class="k">기준 가격</span><span class="v r">${won(officialScore.anchor)}원</span>
-        <span class="k">잠정 방식 점수</span><span class="v r">${pts(prov.scores[baseline].value)}점</span>
-        <span class="k">최종 방식 점수</span><span class="v r">${pts(fin.scores[baseline].value)}점</span>
+        <span class="k">40점 기준 가격</span><span class="v r">${won(officialScore.anchor)}원</span>
+        <span class="k">잠정 방식</span><span class="v r">${pts(prov.scores[baseline].value)}점</span>
+        <span class="k">최종 방식</span><span class="v r">${pts(fin.scores[baseline].value)}점</span>
       </div>
     </div>
 
