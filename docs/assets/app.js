@@ -29,6 +29,10 @@ const signed = (n, d = 2) => n == null ? "—" : (n >= 0 ? "+" : "") + (n * 100)
 const dirClass = n => n == null ? "" : (n > 0 ? "up" : n < 0 ? "down" : "");
 const pts = n => n == null ? "—" : n.toFixed(2);
 const signedPts = n => n == null ? "—" : (n >= 0 ? "+" : "") + n.toFixed(2) + "점";
+const koDate = value => {
+  const [year, month, day] = String(value || "").split("-").map(Number);
+  return year && month && day ? `${year}년 ${month}월 ${day}일` : esc(value);
+};
 
 /* 그룹 → 시리즈 슬롯. 고정 순서이며 순환하지 않는다. */
 const SLOT = { 본사: "--series-1", 에화: "--series-2", 배소: "--series-3" };
@@ -271,7 +275,7 @@ function calcSection(m, xLabel) {
   return `<div class="group-sec">
     <div class="group-sec-h">평가주가 산출</div>
     <div class="calc-final">
-      <div class="r"><span>${esc(xLabel || "상대 증감율 x = SK − Peer")}</span><span class="${dirClass(m.relative_change)}">${signed(m.relative_change)}</span></div>
+      <div class="r"><span>${esc(xLabel || "상대 증감률 x = SK이노베이션 − Peer")}</span><span class="${dirClass(m.relative_change)}">${signed(m.relative_change)}</span></div>
       <div class="r"><span>배수 1/(1−x)</span><span>${m.multiplier.toFixed(4)}배</span></div>
       <div class="r big"><span>평가주가</span><span>${won(m.eval_price)}원</span></div>
     </div>
@@ -382,7 +386,7 @@ function renderHistoricalScore(V, view) {
         <span class="raw">평가 당시 적용 방식(${esc(officialMode)}) · ${appliedScoreNote(officialScore)} · 평가주가 ${won(officialResult.eval_price)}원</span>
       </div>
       ${scoreGauge(marks, officialScore.value)}
-      <div class="hero-note"><b>평가주가</b> = SK 거래량가중평균 ÷ [1 − (SK 증감률 − Peer 증감률)]<br>
+      <div class="hero-note"><b>평가주가</b> = SK이노베이션 거래량가중평균 ÷ [1 − (SK이노베이션 증감률 − Peer 증감률)]<br>
         <span><b>Peer 증감률</b> = 0.6 × 에화 그룹 평균 + 0.4 × 배소 그룹 평균</span></div>
       <div class="mode-grid">
         <div class="mode"><span class="t">잠정 방식 · 2개월 거래량가중평균</span>
@@ -424,26 +428,26 @@ function renderScore(V) {
 
   V.innerHTML = `
     <div class="hero">
-      <div class="eyebrow">${esc(view.label)} · ${esc(view.date)} 기준</div>
+      <div class="eyebrow">${esc(view.label)} · ${koDate(view.date)} 기준 거래량가중평가 · 기준일 ${koDate(D.latest.base_date)} (2025년 마지막 개장일)</div>
       <div class="score-main">
         <b>${pts(score.value)}</b><span class="unit">점</span>
         <span class="raw">점수 산정가격 ${won(result.eval_price)}원</span>
       </div>
       ${scoreGauge(marks, score.value)}
-      <div class="hero-note"><b>평가주가</b> = SK 거래량가중평균 ÷ [1 − (SK 증감률 − Peer 증감률)]<br>
+      <div class="hero-note"><b>평가주가</b> = SK이노베이션 거래량가중평균 ÷ [1 − (SK이노베이션 증감률 − Peer 증감률)]<br>
         <span><b>Peer 증감률</b> = 0.6 × 에화 그룹 평균 + 0.4 × 배소 그룹 평균</span></div>
     </div>
 
     <div class="card">
       <h3>점수 산출 <span class="sub">평가주가를 만드는 다섯 단계</span></h3>
       <div class="mode-block">
-        <div class="hero-note"><b>① SK 거래량가중평균</b> · 2개월·1개월·1주의 거래량가중평균을 같은 비중으로 평균합니다.</div>
+        <div class="hero-note"><b>① SK이노베이션 거래량가중평균</b> · 2개월·1개월·1주의 거래량가중평균의 산술평균으로 산출합니다.</div>
         ${subjectTable(result)}
-        <div class="hero-note"><b>② SK 증감률</b> · 평가일 SK 거래량가중평균을 기준일 SK 거래량가중평균과 비교합니다.</div>
+        <div class="hero-note"><b>② SK이노베이션 증감률</b> · 평가일 SK이노베이션 거래량가중평균을 기준일 SK이노베이션 거래량가중평균과 비교합니다.</div>
         <div class="hero-note"><b>③ Peer 증감률</b> · 각 그룹 안의 종목 증감률을 단순 평균한 뒤, 에화 그룹 60%와 배소 그룹 40%를 가중 평균합니다.</div>
         ${peerSection(result)}
-        <div class="hero-note"><b>④ 상대 증감률</b> · SK 증감률에서 Peer 증감률을 뺍니다.</div>
-        <div class="hero-note"><b>⑤ 평가주가</b> · SK 거래량가중평균을 1 − 상대 증감률로 나눕니다.</div>
+        <div class="hero-note"><b>④ 상대 증감률</b> · SK이노베이션 증감률에서 Peer 증감률을 뺍니다.</div>
+        <div class="hero-note"><b>⑤ 평가주가</b> · SK이노베이션 거래량가중평균을 1 − 상대 증감률로 나눕니다.</div>
         ${calcSection(result)}
       </div>
     </div>
@@ -803,7 +807,7 @@ function renderDesign(V) {
     error = e.message;
   }
 
-  const xLabel = SIM.formula === "absolute" ? "절대 증감율 x = SK (Peer 무시)" : "상대 증감율 x = SK − Peer";
+  const xLabel = SIM.formula === "absolute" ? "절대 증감율 x = SK (Peer 무시)" : "상대 증감률 x = SK이노베이션 − Peer";
   V.innerHTML = `
     ${controlsPanel()}
     ${error ? `<div class="empty"><span class="ico">⚠️</span>계산할 수 없습니다 — ${esc(error)}</div>` : `
