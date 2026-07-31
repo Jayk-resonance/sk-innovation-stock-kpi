@@ -304,7 +304,8 @@ def build_changelog(repo_root: Path | None = None) -> list[dict]:
     try:
         out = subprocess.run(
             ["git", "log", "--date=iso-strict", "--pretty=format:%H\x1f%ad\x1f%an\x1f%s", "--", "config"],
-            cwd=root, capture_output=True, text=True, check=True, timeout=10,
+            cwd=root, capture_output=True, text=True, encoding="utf-8",
+            errors="replace", check=True, timeout=10,
         ).stdout
     except Exception:
         return []
@@ -323,6 +324,7 @@ def write_site_data(
     rules: dict,
     calibration: dict,
     out_dir: Path | None = None,
+    include_changelog: bool = True,
 ) -> list[Path]:
     root = out_dir or DOCS_DATA
     root.mkdir(parents=True, exist_ok=True)
@@ -331,8 +333,9 @@ def write_site_data(
         "history.json": build_history(prices, rules["base_date"], universe),
         "scenarios.json": build_scenarios(prices, universe, rules, calibration),
         "bars.json": build_bars(prices),
-        "changelog.json": build_changelog(),
     }
+    if include_changelog:
+        payloads["changelog.json"] = build_changelog()
     written = []
     for name, payload in payloads.items():
         path = root / name

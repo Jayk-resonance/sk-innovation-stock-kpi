@@ -1,7 +1,7 @@
 """테스트 픽스처.
 
-`fixtures/prices.csv` 는 KIS(PlayMCP 한국주식정보) 실 데이터다.
-2025-10-28~12-30 (기준일 윈도우) 및 2026-05-15~07-27 (평가일 윈도우) 구간을 담는다.
+`data/normalized/prices.csv`의 최신 KIS(PlayMCP 한국주식정보) 실 데이터를 쓴다.
+일일 갱신 뒤에도 사이트 산출물과 같은 입력으로 회귀 테스트하기 위함이다.
 """
 from __future__ import annotations
 
@@ -16,13 +16,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from core.schema import Bar, load_calibration, load_rules, load_universe  # noqa: E402
 
-FIXTURES = Path(__file__).resolve().parent / "fixtures"
+PRICES_CSV = Path(__file__).resolve().parent.parent / "data" / "normalized" / "prices.csv"
 
 
 @pytest.fixture(scope="session")
 def prices() -> dict[str, list[Bar]]:
     out: dict[str, list[Bar]] = {}
-    with (FIXTURES / "prices.csv").open(encoding="utf-8") as fh:
+    with PRICES_CSV.open(encoding="utf-8") as fh:
         for row in csv.DictReader(fh):
             out.setdefault(row["code"], []).append(
                 Bar(
