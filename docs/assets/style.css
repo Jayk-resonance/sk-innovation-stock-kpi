@@ -182,6 +182,21 @@ main{flex:1;min-width:0;display:flex;flex-direction:column}
 .mini-chart-meta span:nth-child(2){text-align:center}
 .mini-chart-meta span:last-child{text-align:right}
 .mini-chart-meta b{color:var(--ink);font-weight:var(--w-semi);white-space:nowrap}
+.subject-price-chart{position:relative;border:1px solid var(--line-2);border-radius:var(--r-sm);
+  background:var(--canvas);padding:10px 12px 8px;width:100%}
+.subject-price-chart svg{display:block;width:100%;height:230px}
+.subject-chart-hit{cursor:crosshair}
+.subject-chart-legend{display:flex;flex-wrap:wrap;gap:14px;padding:5px 2px 7px;
+  color:var(--muted-2);font-size:10.5px;font-weight:var(--w-med)}
+.subject-chart-legend span{display:inline-flex;align-items:center;gap:5px}
+.subject-chart-legend i{width:18px;height:3px;border-radius:3px}
+.subject-chart-tooltip{position:absolute;z-index:5;top:16px;min-width:168px;padding:8px 9px;
+ border:1px solid var(--line);border-radius:var(--r-xs);background:var(--surface);box-shadow:var(--shadow-sm);
+ display:flex;flex-direction:column;gap:3px;font-size:10.5px;color:var(--muted);pointer-events:none}
+.subject-chart-tooltip[hidden]{display:none}
+.subject-chart-tooltip b{color:var(--ink);font-size:11px;margin-bottom:1px}
+.subject-chart-tooltip span{display:flex;justify-content:space-between;gap:12px}
+.subject-chart-tooltip strong{color:var(--ink);font-weight:var(--w-semi)}
 
 .group-sec-h .hover-help{float:right;color:var(--series-3);font-weight:var(--w-med);letter-spacing:0}
 .peer-member{position:relative;cursor:help;border-radius:var(--r-xs);padding:6px 7px!important;
@@ -424,6 +439,8 @@ tr.subject td:last-child{border-top-right-radius:var(--r-sm);border-bottom-right
   .statpair .k.r,.statpair .v.r{text-align:left}
   .mini-chart-meta{grid-template-columns:1fr}
   .mini-chart-meta span:nth-child(2),.mini-chart-meta span:last-child{text-align:left}
+  .subject-price-chart{padding:8px}
+  .subject-price-chart svg{height:205px}
   .group-sec-h .hover-help{float:none;display:block;margin-top:3px}
   .peer-popover{position:fixed;left:12px;right:12px;top:50%;width:auto;max-height:82vh;
     overflow-y:auto;transform:translateY(-50%)}

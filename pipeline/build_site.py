@@ -6,11 +6,12 @@
 from __future__ import annotations
 
 import json
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 import subprocess
 
+from core.calendar import minus_months, window_bounds
 from core.evaluate import adjusted_prices, evaluate, price_for_points
 from core.scenarios import (
     peer_waterfall,
@@ -118,6 +119,28 @@ def _mode_detail(prices, universe, rules, calibration, eval_date, mode, method) 
                 for s in specs]
 
     by_day = {b.day: b for b in prices[subject]}
+    subject_bars = apply_corporate_actions(prices[subject], subject, actions)
+
+    def subject_chart() -> list[dict]:
+        """단순 종가와 평가에 쓰는 거래량가중평균의 일별 추이."""
+        start = minus_months(rules["base_date"], 2) + timedelta(days=1)
+        first_day = subject_bars[0].day
+        rows = []
+        for bar in subject_bars:
+            if not start <= bar.day <= eval_date:
+                continue
+            has_full_window = all(
+                window_bounds(bar.day, spec)[0] >= first_day for spec in specs
+            )
+            rows.append({
+                "date": bar.day.isoformat(),
+                "close": by_day[bar.day].close,
+                "weighted_price": round(
+                    adjusted_price(subject_bars, bar.day, specs, method), 2
+                ) if has_full_window else None,
+            })
+        return rows
+
     now = adjusted_prices(prices, universe, eval_date, specs, method, actions)
     base = adjusted_prices(prices, universe, rules["base_date"], specs, method, actions)
 
@@ -141,6 +164,8 @@ def _mode_detail(prices, universe, rules, calibration, eval_date, mode, method) 
         **_result_json(result),
         "specs": specs,
         "subject_close": by_day[eval_date].close if eval_date in by_day else None,
+        "subject_base_close": by_day[rules["base_date"]].close,
+        "subject_chart": subject_chart(),
         "windows_now": windows(subject, eval_date),
         "windows_base": windows(subject, rules["base_date"]),
         "subject_base_price": round(base[subject], 2),

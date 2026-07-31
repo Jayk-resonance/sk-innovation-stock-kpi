@@ -72,6 +72,18 @@ def test_mode_detail_groups_have_members_and_windows(prices, universe, rules, ca
     assert fin["groups"]["에화"]["weight"] == pytest.approx(0.6)
 
 
+def test_mode_detail_carries_simple_and_weighted_price_chart(prices, universe, rules, calibration):
+    payload = build_latest(prices, universe, rules, calibration)
+    fin = payload["views"][0]["modes"]["최종"]
+    chart = fin["subject_chart"]
+    base = next(point for point in chart if point["date"] == payload["base_date"])
+    assert chart[-1]["date"] == fin["eval_date"]
+    assert chart[-1]["close"] == fin["subject_close"]
+    assert base["close"] == fin["subject_base_close"]
+    assert base["weighted_price"] == pytest.approx(fin["subject_base_price"], abs=0.01)
+    assert chart[-1]["weighted_price"] == pytest.approx(fin["subject_price"], abs=0.01)
+
+
 def test_mode_detail_carries_target_waterfall_sensitivity(prices, universe, rules, calibration):
     payload = build_latest(prices, universe, rules, calibration)
     prov = payload["views"][0]["modes"]["잠정"]
