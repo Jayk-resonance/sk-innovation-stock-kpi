@@ -43,7 +43,7 @@ const SLOT = { 본사: "--series-1", 에화: "--series-2", 배소: "--series-3" 
 const slotColor = group => tok(SLOT[group] || "--muted");
 
 async function j(path) {
-  const r = await fetch(path);
+  const r = await fetch(path, { cache: "no-store" });
   if (!r.ok) throw new Error(`${path} (${r.status})`);
   return r.json();
 }
