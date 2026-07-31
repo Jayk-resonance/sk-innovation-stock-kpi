@@ -273,7 +273,9 @@ def build_scenarios(prices: dict[str, list[Bar]], universe: Universe, rules: dic
     matrix = score_matrix(prices, universe, rules, calibration, as_of)
     paths = {m: remaining_path_scenarios(prices, universe, rules, calibration, as_of, m, method)
              for m in (1, 2, 3)}
-    timeseries = score_timeseries(prices, universe, rules, calibration, days, method)
+    timeseries = score_timeseries(
+        prices, universe, rules, calibration, days, method, mode="최종"
+    )
     events = [{"label": e["label"], "date": e["date"].isoformat()}
               for e in rules["eval_dates"] if e["date"]]
     return {"as_of": as_of.isoformat(), "matrix": matrix, "remaining_paths": paths,

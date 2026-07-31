@@ -806,36 +806,55 @@ function renderPrices(V) {
 
 /* ── Case 시뮬레이션 탭 ───────────────────────────────────── */
 
-/** 12칸 매트릭스 — 윈도우(잠정/최종) × 산식(A/B) × 기준선(V1/V2/V3).
- *  극단값만 옅게 표시한다(연속 그라데이션은 검증되지 않은 임의 색상이 되므로
- *  피하고, 이미 검증된 상태색 토큰 2개만 재사용한다). */
+/** 최종 평가 방식으로 계산한 기준가격별 점수 비교. */
 function scoreTier(v) {
   if (v <= 20) return "--down-soft";
   if (v >= 70) return "--ok-soft";
   return null;
 }
 function matrixTable() {
-  const M = D.scenarios.matrix, combos = [["잠정", "A"], ["잠정", "B"], ["최종", "A"], ["최종", "B"]];
-  const baselines = ["V3", "V1", "V2"];
-  const cellOf = (mode, method, baseline) => M.find(r => r.mode === mode && r.method === method && r.baseline === baseline);
-  const rows = combos.map(([mode, method]) => {
-    const cells = baselines.map(b => {
-      const c = cellOf(mode, method, b), tier = scoreTier(c.value);
-      return `<td class="num" style="${tier ? `background:var(${tier})` : ""}">
-        <b>${pts(c.value)}점</b>${c.clipped ? ` <span class="badge warn" style="padding:1px 5px">하한</span>` : ""}
-        <div style="font-size:10.5px;color:var(--muted);font-weight:var(--w-reg)">원값 ${pts(c.raw)}</div></td>`;
-    }).join("");
-    return `<tr><td><b>${esc(mode)}</b> <span class="badge grp">산식 ${esc(method)}</span></td>${cells}</tr>`;
+  const M = D.scenarios.matrix;
+  const baselines = [
+    {
+      key: "V2",
+      name: "최종 방식 기준가격",
+      badge: "현재 적용",
+      note: "2025년末 2개월·1개월·1주 거래량가중평균의 산술평균을 40점 기준으로 사용",
+    },
+    {
+      key: "V3",
+      name: "2026년 수립 목표",
+      badge: "수립 목표",
+      note: "2026년 수립 시 안내된 113,109원을 40점 기준으로 사용",
+    },
+    {
+      key: "V1",
+      name: "2개월 기준가격",
+      badge: "참고",
+      note: "2025년末 2개월 거래량가중평균을 40점 기준으로 사용",
+    },
+  ];
+  const rows = baselines.map(b => {
+    const c = M.find(r => r.baseline === b.key);
+    const tier = scoreTier(c.value);
+    const scoreNote = c.clipped
+      ? `<div style="font-size:10.5px;color:var(--muted)">계산값 ${pts(c.raw)}점 → 0~100점 범위 적용</div>`
+      : "";
+    return `<tr>
+      <td><b>${esc(b.name)}</b> <span class="badge ${b.key === "V2" ? "brand" : "grp"}" style="padding:1px 5px">${esc(b.badge)}</span></td>
+      <td class="num">${won(c.anchor)}원</td>
+      <td class="num" style="${tier ? `background:var(${tier})` : ""}"><b>${pts(c.value)}점</b>${scoreNote}</td>
+      <td style="font-size:12px;color:var(--muted)">${esc(b.note)}</td>
+    </tr>`;
   }).join("");
   return `<div class="card">
-    <h3>12개 조합 매트릭스 <span class="sub">윈도우 × 산식 × 기준선 — 기준일 ${esc(D.scenarios.as_of)}</span>
-      ${csvButton("matrixTbl", "12조합매트릭스.csv")}</h3>
+    <h3>최종 방식 기준선별 점수 <span class="sub">2개월·1개월·1주의 거래량가중평균 산술평균과 Peer 보정 적용 · ${esc(D.scenarios.as_of)} 기준</span>
+      ${csvButton("matrixTbl", "최종방식_기준선별점수.csv")}</h3>
     <div class="tbl-wrap"><table id="matrixTbl">
-      <thead><tr><th>윈도우 · 산식</th>${baselines.map(b =>
-        `<th>${esc(b)}${D.latest.baselines[b].official ? ' <span class="badge brand" style="padding:1px 5px">공식</span>' : ""}</th>`).join("")}</tr></thead>
+      <thead><tr><th>점수 기준</th><th>40점 기준가격</th><th>현재 점수</th><th>설명</th></tr></thead>
       <tbody>${rows}</tbody></table></div>
-    <div class="hero-note">빨간 배경은 20점 이하, 초록 배경은 70점 이상 — 같은 날 같은 데이터인데
-      어느 축을 바꾸느냐에 따라 이 정도로 갈립니다.</div>
+    <div class="hero-note">세 행 모두 같은 최종 평가 방식으로 계산했으며, 40점의 기준이 되는 가격만 다릅니다.
+      대시보드의 오늘의 점수는 <b>최종 방식 기준가격</b>을 적용합니다.</div>
   </div>`;
 }
 
@@ -849,7 +868,7 @@ function remainingPathCard() {
       <span class="n">${pts(s.value)}점</span></div>`;
   }).join("");
   return `<div class="card">
-    <h3>잔여기간 경로 시나리오 <span class="sub">가상 평가일 ${esc(p.horizon)} · Peer 현재 수준 고정</span></h3>
+    <h3>잔여기간 경로 시나리오 <span class="sub">최종 평가 방식 · 2026년 수립 목표 기준 · 가상 평가일 ${esc(p.horizon)} · Peer 현재 수준 고정</span></h3>
     <div class="tabs" style="padding-bottom:2px">
       ${[1, 2, 3].map(m => `<button class="tab ${S.horizon === m ? "active" : ""}" data-horizon="${m}">${m}개월 후</button>`).join("")}
     </div>
@@ -857,8 +876,9 @@ function remainingPathCard() {
     <div class="range"><div class="range-track" style="background:var(--track)">
       <span class="range-fill" style="width:${(p.lock_in_pct * 100).toFixed(1)}%;opacity:.6"></span>
     </div></div>
-    <div class="hero-note">윈도우 고착도(이미 확정된 구간 비중) <b>${(p.lock_in_pct * 100).toFixed(0)}%</b> —
-      2개월 윈도우 시작일 ${esc(p.window_start)}. 100%에 가까울수록 남은 기간에 주가가 움직여도 점수를 바꿀 여지가 적습니다.</div>
+    <div class="hero-note">평가 구간 확정도 <b>${(p.lock_in_pct * 100).toFixed(0)}%</b> —
+      2개월·1개월·1주 평가 구간에서 이미 지나간 기간의 평균 비중입니다. 가장 긴 2개월 구간 시작일은
+      ${esc(p.window_start)}이며, 100%에 가까울수록 남은 기간의 주가가 점수에 미치는 영향이 작습니다.</div>
   </div>`;
 }
 
@@ -896,7 +916,7 @@ function renderCase(V) {
     ${matrixTable()}
     ${remainingPathCard()}
     <div class="card">
-      <h3>점수 시계열 <span class="sub">연초 이후 일별 "그날 평가했다면" 점수 · 잠정 방식 · 산식 ${esc(D.latest.method_primary)} · 기준선 V3</span>
+      <h3>점수 시계열 <span class="sub">연초 이후 일별 "그날 최종 평가했다면" 점수 · 2026년 수립 목표(113,109원)를 40점 기준으로 적용</span>
         ${pngButton("timeseriesSvg", "점수시계열.png")}</h3>
       ${timeseriesChart()}
     </div>

@@ -81,12 +81,21 @@ def test_mode_detail_carries_target_waterfall_sensitivity(prices, universe, rule
     assert len(prov["sensitivity"]["rows"]) == 6  # SK/에화/배소 각 ±1%p
 
 
-def test_build_scenarios_has_12_cell_matrix_and_paths(prices, universe, rules, calibration):
+def test_build_scenarios_has_final_baseline_comparison_and_paths(prices, universe, rules, calibration):
     sc = build_scenarios(prices, universe, rules, calibration)
-    assert len(sc["matrix"]) == 12
+    assert len(sc["matrix"]) == 3
+    assert {r["mode"] for r in sc["matrix"]} == {"최종"}
+    assert {r["method"] for r in sc["matrix"]} == {rules["vwap_primary"]}
     assert set(sc["remaining_paths"]) == {1, 2, 3}
     assert len(sc["timeseries"]) > 0
     assert sc["timeseries"][-1]["date"] == sc["as_of"]
+    want = evaluate(
+        prices, universe, rules, calibration, date.fromisoformat(sc["as_of"]),
+        "최종", rules["vwap_primary"],
+    )
+    assert sc["timeseries"][-1]["value"] == pytest.approx(
+        want.scores["V3"].value, abs=0.01
+    )
 
 
 def test_build_bars_has_raw_series_for_every_ticker(prices, universe):

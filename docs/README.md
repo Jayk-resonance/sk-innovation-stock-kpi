@@ -11,7 +11,7 @@ assets/app.js         렌더링 (탭1~3 · 전 탭 공통 기능)
 assets/sim.js         탭4 전용 계산 엔진 — core/ 공식을 JS로 옮긴 것 (아래 참조)
 data/latest.json      최신 산출·평가 실적·목표역산·Peer기여도·민감도·커버리지  ← 자동 생성
 data/history.json     일별 종가/지수 시계열                                  ← 자동 생성
-data/scenarios.json   12조합 매트릭스·잔여기간 시나리오·점수 시계열(탭3)      ← 자동 생성
+data/scenarios.json   최종 방식 기준선별 점수·잔여기간 시나리오·점수 시계열(탭3) ← 자동 생성
 data/bars.json        원자료(종가·거래량·거래대금) — 탭4 sim.js 가 재계산용   ← 자동 생성
 data/changelog.json   config/*.yaml git 변경 이력                            ← 자동 생성
 ```

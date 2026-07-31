@@ -14,22 +14,22 @@ from .schema import Bar, Universe
 
 
 def score_matrix(prices, universe: Universe, rules: dict, calibration: dict, eval_date: date) -> list[dict]:
-    """윈도우(잠정/최종) × 산식(A/B) × 기준선(V1/V2/V3) = 12개 조합.
-
-    PLAN.md §2 부수 발견 — 윈도우 선택이 점수를 최대 53점까지 흔든다.
-    한 화면에서 12칸을 동시에 보면 어느 축이 점수를 가장 크게 흔드는지 바로 보인다.
-    """
-    rows = []
-    for mode in rules["windows"]:
-        for method in rules["vwap_methods"]:
-            result = evaluate(prices, universe, rules, calibration, eval_date, mode, method)
-            for key, score in result.scores.items():
-                rows.append({
-                    "mode": mode, "method": method, "baseline": key,
-                    "raw": round(score.raw, 4), "value": round(score.value, 2),
-                    "clipped": score.clipped,
-                })
-    return rows
+    """최종 평가 방식으로 계산한 기준가격별 점수 비교."""
+    mode = "최종"
+    method = rules["vwap_primary"]
+    result = evaluate(prices, universe, rules, calibration, eval_date, mode, method)
+    return [
+        {
+            "mode": mode,
+            "method": method,
+            "baseline": key,
+            "anchor": round(score.anchor, 2),
+            "raw": round(score.raw, 4),
+            "value": round(score.value, 2),
+            "clipped": score.clipped,
+        }
+        for key, score in result.scores.items()
+    ]
 
 
 def _base_inputs(prices, universe, rules, calibration, eval_date, mode, method):
@@ -189,7 +189,7 @@ def remaining_path_scenarios(
         ext[subject_code] = _synthetic_extend(prices[subject_code], horizon, daily_rate)
         for peer in universe.peers:
             ext[peer.code] = _synthetic_extend(prices[peer.code], horizon, 0.0)
-        result = evaluate(ext, universe, rules, calibration, horizon, "잠정", method)
+        result = evaluate(ext, universe, rules, calibration, horizon, "최종", method)
         score = result.scores[baseline_key]
         scenarios.append({
             "label": labels.get(annual, f"{annual:+.0%}"), "annual_rate": annual,
@@ -197,14 +197,17 @@ def remaining_path_scenarios(
             "raw": round(score.raw, 2), "value": round(score.value, 2),
         })
 
-    spec = rules["windows"]["잠정"][0]
-    window_start, _ = window_bounds(horizon, spec)
-    total_days = (horizon - window_start).days + 1
-    realized_days = max(0, min(total_days, (as_of - window_start).days + 1))
+    windows = [window_bounds(horizon, spec)[0] for spec in rules["windows"]["최종"]]
+    window_start = min(windows)
+    lock_in = []
+    for start in windows:
+        total_days = (horizon - start).days + 1
+        realized_days = max(0, min(total_days, (as_of - start).days + 1))
+        lock_in.append(realized_days / total_days)
     return {
         "horizon": horizon.isoformat(), "horizon_months": horizon_months,
         "window_start": window_start.isoformat(),
-        "lock_in_pct": round(realized_days / total_days, 4),
+        "lock_in_pct": round(sum(lock_in) / len(lock_in), 4),
         "scenarios": scenarios,
     }
 

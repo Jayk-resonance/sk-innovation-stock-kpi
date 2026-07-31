@@ -15,12 +15,13 @@ from core.scenarios import (
 EVAL_DATE = date(2026, 7, 15)
 
 
-def test_score_matrix_has_12_cells(prices, universe, rules, calibration):
+def test_score_matrix_has_final_primary_baselines(prices, universe, rules, calibration):
     rows = score_matrix(prices, universe, rules, calibration, EVAL_DATE)
-    assert len(rows) == 12
-    assert {r["mode"] for r in rows} == {"잠정", "최종"}
-    assert {r["method"] for r in rows} == {"A", "B"}
+    assert len(rows) == 3
+    assert {r["mode"] for r in rows} == {"최종"}
+    assert {r["method"] for r in rows} == {rules["vwap_primary"]}
     assert {r["baseline"] for r in rows} == {"V1", "V2", "V3"}
+    assert all(r["anchor"] > 0 for r in rows)
 
 
 def test_score_matrix_matches_engine(prices, universe, rules, calibration):
