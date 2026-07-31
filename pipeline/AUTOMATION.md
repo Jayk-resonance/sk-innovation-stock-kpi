@@ -5,10 +5,12 @@ directly only after every check passes.
 
 1. Fast-forward the local `main` branch from `origin/main` and require a clean
    working tree.
-2. Read `docs/data/latest.json` and query SK Innovation (`096770`) daily history
-   for the most recent seven calendar days.
-3. If PlayMCP's latest trading date is not newer than `latest.json`'s `as_of`,
-   exit successfully without changing files.
+2. Read `docs/data/latest.json`, query recent KOSPI index history to determine
+   the latest market trading date, and confirm it with SK Innovation (`096770`)
+   daily history for the most recent seven calendar days.
+3. If the market's latest trading date is not newer than `latest.json`'s
+   `as_of`, treat it as a holiday/weekend or an already completed run and exit
+   successfully without changing files.
 4. Query daily history for all nine tickers from the day after `as_of` through
    the latest trading date. Require the same trading dates for every ticker and
    positive close, volume, and trading value.
