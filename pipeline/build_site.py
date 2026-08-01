@@ -11,7 +11,7 @@ from pathlib import Path
 
 import subprocess
 
-from core.calendar import minus_months, window_bounds
+from core.calendar import minus_months
 from core.evaluate import adjusted_prices, evaluate, price_for_points
 from core.scenarios import (
     peer_waterfall,
@@ -126,22 +126,16 @@ def _mode_detail(prices, universe, rules, calibration, eval_date, mode, method) 
         return round(vwap([bar], "A"), 2)
 
     def subject_chart() -> list[dict]:
-        """1일 및 평가에 쓰는 거래량가중평균 종가의 일별 추이."""
+        """단순 종가와 1일 거래량가중평균 종가의 일별 추이."""
         start = minus_months(rules["base_date"], 2) + timedelta(days=1)
-        first_day = subject_bars[0].day
         rows = []
         for bar in subject_bars:
             if not start <= bar.day <= eval_date:
                 continue
-            has_full_window = all(
-                window_bounds(bar.day, spec)[0] >= first_day for spec in specs
-            )
             rows.append({
                 "date": bar.day.isoformat(),
+                "close": bar.close,
                 "daily_weighted_price": daily_weighted_price(bar),
-                "weighted_price": round(
-                    adjusted_price(subject_bars, bar.day, specs, method), 2
-                ) if has_full_window else None,
             })
         return rows
 
@@ -167,6 +161,8 @@ def _mode_detail(prices, universe, rules, calibration, eval_date, mode, method) 
     return {
         **_result_json(result),
         "specs": specs,
+        "subject_close": subject_by_day[eval_date].close,
+        "subject_base_close": subject_by_day[rules["base_date"]].close,
         "subject_daily_weighted_price": daily_weighted_price(subject_by_day[eval_date]),
         "subject_base_daily_weighted_price": daily_weighted_price(
             subject_by_day[rules["base_date"]]

@@ -78,10 +78,10 @@ def test_mode_detail_carries_daily_and_weighted_price_chart(prices, universe, ru
     chart = fin["subject_chart"]
     base = next(point for point in chart if point["date"] == payload["base_date"])
     assert chart[-1]["date"] == fin["eval_date"]
+    assert chart[-1]["close"] == fin["subject_close"]
+    assert base["close"] == fin["subject_base_close"]
     assert chart[-1]["daily_weighted_price"] == fin["subject_daily_weighted_price"]
     assert base["daily_weighted_price"] == fin["subject_base_daily_weighted_price"]
-    assert base["weighted_price"] == pytest.approx(fin["subject_base_price"], abs=0.01)
-    assert chart[-1]["weighted_price"] == pytest.approx(fin["subject_price"], abs=0.01)
 
 
 def test_mode_detail_carries_target_waterfall_sensitivity(prices, universe, rules, calibration):
