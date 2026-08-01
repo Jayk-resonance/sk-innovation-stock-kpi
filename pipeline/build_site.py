@@ -106,7 +106,7 @@ def _mode_detail(prices, universe, rules, calibration, eval_date, mode, method) 
     잠정과 최종을 나란히 놓고 어디서 갈라지는지 보려면 윈도우별 VWAP 까지
     필요하다. 화면에서 다시 계산하지 않도록 여기서 전부 펼쳐 넘긴다.
     """
-    from core.vwap import adjusted_price, apply_corporate_actions
+    from core.vwap import adjusted_price, apply_corporate_actions, vwap
 
     specs = rules["windows"][mode]
     actions = calibration.get("corporate_actions") or []
@@ -118,11 +118,15 @@ def _mode_detail(prices, universe, rules, calibration, eval_date, mode, method) 
         return [{"spec": s, "vwap": round(adjusted_price(bars, anchor_date, [s], method), 2)}
                 for s in specs]
 
-    by_day = {b.day: b for b in prices[subject]}
     subject_bars = apply_corporate_actions(prices[subject], subject, actions)
+    subject_by_day = {bar.day: bar for bar in subject_bars}
+
+    def daily_weighted_price(bar):
+        """거래대금÷거래량으로 계산한 1일 거래량가중평균 종가."""
+        return round(vwap([bar], "A"), 2)
 
     def subject_chart() -> list[dict]:
-        """단순 종가와 평가에 쓰는 거래량가중평균의 일별 추이."""
+        """1일 및 평가에 쓰는 거래량가중평균 종가의 일별 추이."""
         start = minus_months(rules["base_date"], 2) + timedelta(days=1)
         first_day = subject_bars[0].day
         rows = []
@@ -134,7 +138,7 @@ def _mode_detail(prices, universe, rules, calibration, eval_date, mode, method) 
             )
             rows.append({
                 "date": bar.day.isoformat(),
-                "close": by_day[bar.day].close,
+                "daily_weighted_price": daily_weighted_price(bar),
                 "weighted_price": round(
                     adjusted_price(subject_bars, bar.day, specs, method), 2
                 ) if has_full_window else None,
@@ -163,8 +167,10 @@ def _mode_detail(prices, universe, rules, calibration, eval_date, mode, method) 
     return {
         **_result_json(result),
         "specs": specs,
-        "subject_close": by_day[eval_date].close if eval_date in by_day else None,
-        "subject_base_close": by_day[rules["base_date"]].close,
+        "subject_daily_weighted_price": daily_weighted_price(subject_by_day[eval_date]),
+        "subject_base_daily_weighted_price": daily_weighted_price(
+            subject_by_day[rules["base_date"]]
+        ),
         "subject_chart": subject_chart(),
         "windows_now": windows(subject, eval_date),
         "windows_base": windows(subject, rules["base_date"]),

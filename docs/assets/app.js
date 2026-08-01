@@ -242,15 +242,15 @@ function subjectTable(m, weighted = true, friendlyDates = false) {
       <td class="num ${dirClass(chg)}">${signed(chg)}</td></tr>`;
   });
   return `<div class="group-sec">
-    <div class="group-sec-h">SK이노베이션 ${weighted ? "단순 종가와 거래량가중평균 종가" : "종가평균 (거래량 무시)"}</div>
+    <div class="group-sec-h">SK이노베이션 ${weighted ? "1일 거래량가중평균 종가와 거래량가중평균" : "종가평균 (거래량 무시)"}</div>
     <div class="tbl-wrap"><table>
       <thead><tr><th>구간</th><th>${latestLabel}</th><th>${baseLabel}</th><th>증감율</th></tr></thead>
       <tbody>
-        <tr><td>단순 종가</td><td class="num">${won(m.subject_close)}원</td>
-          <td class="num">${won(m.subject_base_close)}원</td>
-          <td class="num ${dirClass(m.subject_close / m.subject_base_close - 1)}">${signed(m.subject_close / m.subject_base_close - 1)}</td></tr>
+        <tr><td>1일 거래량가중평균 종가</td><td class="num">${won(m.subject_daily_weighted_price)}원</td>
+          <td class="num">${won(m.subject_base_daily_weighted_price)}원</td>
+          <td class="num ${dirClass(m.subject_daily_weighted_price / m.subject_base_daily_weighted_price - 1)}">${signed(m.subject_daily_weighted_price / m.subject_base_daily_weighted_price - 1)}</td></tr>
         ${rows.join("")}
-        <tr class="subject"><td><b>평가에 쓰는 ${unit} 종가${m.windows_now.length > 1 ? " (산술평균)" : ""}</b></td>
+        <tr class="subject"><td><b>${m.windows_now.length > 1 ? `${unit}의 산술평균` : unit}</b></td>
           <td class="num"><b>${won(m.subject_price)}원</b></td>
           <td class="num"><b>${won(m.subject_base_price)}원</b></td>
           <td class="num ${dirClass(m.subject_change)}"><b>${signed(m.subject_change)}</b></td></tr>
@@ -262,7 +262,7 @@ function subjectPriceChart(m, name = "SK이노베이션") {
   const points = m.subject_chart || [];
   if (points.length < 2) return "";
   const W = 920, H = 250, P = { l: 46, r: 22, t: 20, b: 30 };
-  const values = points.flatMap(p => [p.close, p.weighted_price]).filter(v => v != null);
+  const values = points.flatMap(p => [p.daily_weighted_price, p.weighted_price]).filter(v => v != null);
   let lo = Math.min(...values), hi = Math.max(...values);
   const pad = (hi - lo) * 0.08 || 1;
   lo -= pad; hi += pad;
@@ -281,18 +281,18 @@ function subjectPriceChart(m, name = "SK이노베이션") {
   if (baseIndex < 0) baseIndex = points.reduce((best, p, i) => p.date <= D.latest.base_date ? i : best, 0);
   const first = points[0], basePoint = points[baseIndex], last = points.at(-1);
   const weightedLabel = m.specs.length > 1
-    ? "거래량가중평균 종가 (2개월·1개월·1주 산술평균)"
+    ? "거래량가중평균의 산술평균 (2개월·1개월·1주)"
     : "거래량가중평균 종가 (2개월)";
   const data = esc(JSON.stringify(points));
   const ticks = [0, baseIndex, points.length - 1].filter((v, i, a) => a.indexOf(v) === i).map(i =>
     `<text x="${x(i).toFixed(1)}" y="${H - 8}" text-anchor="middle" font-size="10.5" fill="${tok("--muted")}">${esc(koMonthDay(points[i].date))}</text>`
   ).join("");
   return `<div class="subject-price-chart" data-subject-chart="${data}" data-subject-range="${esc(JSON.stringify({ lo, hi }))}">
-    <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(name)} 단순 종가와 거래량가중평균 종가 추이">
+    <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(name)} 1일 및 거래량가중평균 종가 추이">
       <line x1="${P.l}" y1="${y(lo).toFixed(1)}" x2="${W - P.r}" y2="${y(lo).toFixed(1)}" stroke="${tok("--grid")}"/>
       <line x1="${P.l}" y1="${y(hi).toFixed(1)}" x2="${W - P.r}" y2="${y(hi).toFixed(1)}" stroke="${tok("--grid")}"/>
       <line x1="${x(baseIndex).toFixed(1)}" y1="${P.t}" x2="${x(baseIndex).toFixed(1)}" y2="${H - P.b}" stroke="${tok("--axis")}" stroke-dasharray="4 4"/>
-      <path d="${pathFor("close")}" fill="none" stroke="${tok("--series-1")}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="${pathFor("daily_weighted_price")}" fill="none" stroke="${tok("--series-1")}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
       <path d="${pathFor("weighted_price")}" fill="none" stroke="${tok("--series-3")}" stroke-width="2.7" stroke-linejoin="round" stroke-linecap="round"/>
       <g class="subject-chart-hover" hidden>
         <line class="subject-chart-guide" y1="${P.t}" y2="${H - P.b}" stroke="${tok("--muted")}" stroke-dasharray="3 3"/>
@@ -302,12 +302,12 @@ function subjectPriceChart(m, name = "SK이노베이션") {
       <rect class="subject-chart-hit" x="${P.l}" y="${P.t}" width="${W - P.l - P.r}" height="${H - P.t - P.b}" fill="transparent"/>
       ${ticks}
     </svg>
-    <div class="subject-chart-legend"><span><i style="background:${tok("--series-1")}"></i>단순 종가</span><span><i style="background:${tok("--series-3")}"></i>${weightedLabel}</span></div>
+    <div class="subject-chart-legend"><span><i style="background:${tok("--series-1")}"></i>1일 거래량가중평균 종가</span><span><i style="background:${tok("--series-3")}"></i>${weightedLabel}</span></div>
     <div class="subject-chart-tooltip" hidden></div>
     <div class="mini-chart-meta">
-      <span>${koMonthDay(first.date)} <b>단순 ${won(first.close)}원</b></span>
-      <span>${String(D.latest.base_date).slice(0,4)}년末 <b>단순 ${won(basePoint.close)}원</b></span>
-      <span>${koMonthDay(last.date)} <b>단순 ${won(last.close)}원</b></span>
+      <span>${koMonthDay(first.date)} <b>1일 ${won(first.daily_weighted_price)}원</b></span>
+      <span>${String(D.latest.base_date).slice(0,4)}년末 <b>1일 ${won(basePoint.daily_weighted_price)}원</b></span>
+      <span>${koMonthDay(last.date)} <b>1일 ${won(last.daily_weighted_price)}원</b></span>
     </div>
   </div>`;
 }
@@ -329,7 +329,7 @@ function bindSubjectPriceCharts(root) {
       const y = value => P.t + (hi - value) / (hi - lo) * (H - P.t - P.b);
       hover.hidden = false;
       guide.setAttribute("x1", cx); guide.setAttribute("x2", cx);
-      closeDot.setAttribute("cx", cx); closeDot.setAttribute("cy", y(p.close));
+      closeDot.setAttribute("cx", cx); closeDot.setAttribute("cy", y(p.daily_weighted_price));
       weightedDot.setAttribute("cx", cx);
       if (p.weighted_price == null) {
         weightedDot.setAttribute("visibility", "hidden");
@@ -337,7 +337,7 @@ function bindSubjectPriceCharts(root) {
         weightedDot.setAttribute("cy", y(p.weighted_price));
         weightedDot.removeAttribute("visibility");
       }
-      tip.innerHTML = `<b>${koMonthDay(p.date)}</b><span>단순 종가 <strong>${won(p.close)}원</strong></span><span>거래량가중평균 종가 <strong>${p.weighted_price == null ? "계산 시작 전" : `${won(p.weighted_price)}원`}</strong></span>`;
+      tip.innerHTML = `<b>${koMonthDay(p.date)}</b><span>1일 거래량가중평균 종가 <strong>${won(p.daily_weighted_price)}원</strong></span><span>거래량가중평균의 산술평균 <strong>${p.weighted_price == null ? "계산 시작 전" : `${won(p.weighted_price)}원`}</strong></span>`;
       tip.hidden = false;
       tip.style.left = `${Math.max(8, Math.min(chart.clientWidth - tip.offsetWidth - 8, event.clientX - rect.left + 12))}px`;
     };
@@ -652,12 +652,12 @@ function renderHistoricalScore(V, view) {
       <div class="history-shared-chart">
         <div>
           <b>SK이노베이션 주가 추이</b>
-          <span>단순 종가와 최종 방식 거래량가중평균 종가 · ${String(L.base_date).slice(0,4)}년末 기준 2개월 전부터 ${koMonthDay(view.date)}까지</span>
+          <span>1일 거래량가중평균 종가와 최종 방식 거래량가중평균의 산술평균 · ${String(L.base_date).slice(0,4)}년末 기준 2개월 전부터 ${koMonthDay(view.date)}까지</span>
         </div>
         ${subjectPriceChart(fin)}
       </div>
       <div class="history-compare-steps">
-        ${historicalStep(1, "SK이노베이션 단순 종가와 거래량가중평균", "산식의 분자",
+        ${historicalStep(1, "SK이노베이션 1일 거래량가중평균 종가와 거래량가중평균", "산식의 분자",
           historicalSubjectStep(prov), historicalSubjectStep(fin))}
         ${historicalStep(2, "SK이노베이션 증감률", "괄호 안 첫 번째 값",
           historicalChangeStep(prov), historicalChangeStep(fin))}
@@ -732,13 +732,13 @@ function renderScore(V) {
         <section class="calc-step step-1">
           <div class="calc-step-head">
             <span class="step-badge">1</span>
-            <div><b>SK이노베이션 단순 종가와 거래량가중평균</b><span>산식의 분자</span></div>
+            <div><b>SK이노베이션 1일 거래량가중평균 종가와 거래량가중평균</b><span>산식의 분자</span></div>
           </div>
           ${indexedScoreFormula(1)}
           <p class="step-copy">2개월·1개월·1주의 거래량가중평균의 산술평균으로 산출합니다.</p>
           ${subjectTable(result, true, true)}
           <div class="step-result">① 산식에 사용되는 값 <b>${won(result.subject_price)}원</b></div>
-          <div class="chart-caption">SK이노베이션 주가 추이 · 단순 종가와 최종 방식 거래량가중평균 종가 · ${baseYear}년末 기준 2개월 전부터 ${koMonthDay(result.eval_date)}까지</div>
+          <div class="chart-caption">SK이노베이션 주가 추이 · 1일 거래량가중평균 종가와 최종 방식 거래량가중평균의 산술평균 · ${baseYear}년末 기준 2개월 전부터 ${koMonthDay(result.eval_date)}까지</div>
           ${subjectPriceChart(result)}
         </section>
 
