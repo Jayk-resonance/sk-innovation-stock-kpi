@@ -1,0 +1,25 @@
+{
+  "collected_at": "2026-08-04T20:04:23+09:00",
+  "source": "KIS via PlayMCP koreaStock",
+  "note": "Daily history collected for all KPI tickers from 2026-08-01 through 2026-08-04.",
+  "prices": [
+    {"code": "096770", "date": "2026-08-04", "close": 111300, "volume": 574466, "trading_value": 62904398050},
+    {"code": "096770", "date": "2026-08-03", "close": 108000, "volume": 573157, "trading_value": 61246458950},
+    {"code": "051910", "date": "2026-08-04", "close": 256500, "volume": 217286, "trading_value": 54701021750},
+    {"code": "051910", "date": "2026-08-03", "close": 247000, "volume": 263827, "trading_value": 64417723750},
+    {"code": "010950", "date": "2026-08-04", "close": 125800, "volume": 388861, "trading_value": 48674114650},
+    {"code": "010950", "date": "2026-08-03", "close": 121700, "volume": 457356, "trading_value": 55365963050},
+    {"code": "011170", "date": "2026-08-04", "close": 57700, "volume": 82435, "trading_value": 4664817000},
+    {"code": "011170", "date": "2026-08-03", "close": 55200, "volume": 96921, "trading_value": 5317801950},
+    {"code": "047050", "date": "2026-08-04", "close": 54000, "volume": 375949, "trading_value": 20118185300},
+    {"code": "047050", "date": "2026-08-03", "close": 51300, "volume": 376050, "trading_value": 19267717500},
+    {"code": "373220", "date": "2026-08-04", "close": 328500, "volume": 270560, "trading_value": 87507123250},
+    {"code": "373220", "date": "2026-08-03", "close": 316000, "volume": 279360, "trading_value": 87952424500},
+    {"code": "006400", "date": "2026-08-04", "close": 419500, "volume": 401740, "trading_value": 162912283250},
+    {"code": "006400", "date": "2026-08-03", "close": 389500, "volume": 318802, "trading_value": 123804137000},
+    {"code": "247540", "date": "2026-08-04", "close": 102500, "volume": 556835, "trading_value": 56083276700},
+    {"code": "247540", "date": "2026-08-03", "close": 96800, "volume": 649492, "trading_value": 61819241150},
+    {"code": "003670", "date": "2026-08-04", "close": 142800, "volume": 183174, "trading_value": 25679505300},
+    {"code": "003670", "date": "2026-08-03", "close": 136800, "volume": 295681, "trading_value": 40226366900}
+  ]
+}

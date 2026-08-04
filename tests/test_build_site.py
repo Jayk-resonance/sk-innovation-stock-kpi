@@ -124,7 +124,7 @@ def test_coverage_is_clean_after_backfill(prices, universe, rules, calibration):
     assert cov["gaps"] == []
     assert cov["unverified_months"] == []
     assert cov["mismatched_months"] == []
-    assert len(cov["verified_months"]) == 10
+    assert len(cov["verified_months"]) == 11
 
 
 def test_next_eval_is_null_when_unannounced(prices, universe, rules, calibration):
