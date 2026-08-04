@@ -19,6 +19,7 @@ const D = { latest: null, history: null, scenarios: null, bars: null };
 const HIDDEN_EVAL_KEYS = new Set(["2026-1분기"]); // 다시 표시하려면 이 키를 제거한다.
 const WINDOW_OPTS = ["1D", "1W", "1M", "2M", "3M", "6M"];
 let SIM = null;   // 탭4 파라미터 상태. D.latest 로딩 후 첫 방문 시 simDefaults() 로 채운다.
+const MOBILE_NAV_MEDIA = window.matchMedia("(max-width: 760px)");
 
 const tok = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 
@@ -73,7 +74,7 @@ async function init() {
     if (MAIN_TABS.some(t => t.key === hTab)) S.tab = hTab;
     if (hSub && visibleViews().some(v => v.key === hSub)) S.evalKey = hSub;
     document.getElementById("todayStr").textContent = koDate(D.latest.as_of) + " 기준";
-    renderMainNav(); renderTickerList(); renderSubtabs(); render();
+    wireMobileNav(); renderMainNav(); renderTickerList(); renderSubtabs(); render();
   } catch (e) {
     document.getElementById("view").innerHTML =
       `<div class="empty"><span class="ico">⚠️</span><b style="color:var(--ink)">데이터를 불러오지 못했습니다</b><br><small>${esc(e.message)}</small></div>`;
@@ -85,7 +86,34 @@ function pushHash() {
     ? `${S.tab}/${encodeURIComponent(S.evalKey)}` : S.tab;
 }
 
+function setMobileNavOpen(open) {
+  const siteNav = document.getElementById("siteNav");
+  const openButton = document.getElementById("mobileNavOpen");
+  const focusWasInside = siteNav.contains(document.activeElement);
+  open = MOBILE_NAV_MEDIA.matches && open;
+  document.body.classList.toggle("mobile-nav-opened", open);
+  openButton.setAttribute("aria-expanded", String(open));
+  siteNav.inert = MOBILE_NAV_MEDIA.matches && !open;
+  if (open) document.getElementById("mobileNavClose").focus();
+  else if (MOBILE_NAV_MEDIA.matches && focusWasInside) openButton.focus();
+}
+
+function wireMobileNav() {
+  document.getElementById("mobileNavOpen").addEventListener("click", () => setMobileNavOpen(true));
+  document.getElementById("mobileNavClose").addEventListener("click", () => setMobileNavOpen(false));
+  document.getElementById("mobileNavScrim").addEventListener("click", () => setMobileNavOpen(false));
+  document.addEventListener("keydown", event => {
+    if (event.key === "Escape" && document.body.classList.contains("mobile-nav-opened")) {
+      setMobileNavOpen(false);
+    }
+  });
+  MOBILE_NAV_MEDIA.addEventListener("change", () => setMobileNavOpen(false));
+  setMobileNavOpen(false);
+}
+
 function renderMainNav() {
+  const current = MAIN_TABS.find(t => t.key === S.tab);
+  document.getElementById("mobileSection").textContent = current?.label || "메뉴";
   document.getElementById("mainNav").innerHTML = MAIN_TABS.map(t => `
     <button class="nav-main-item ${S.tab === t.key ? "active" : ""}" data-main="${t.key}">
       <span class="nav-ico" aria-hidden="true">${t.icon}</span>
@@ -95,7 +123,7 @@ function renderMainNav() {
     b.addEventListener("click", () => {
       S.tab = b.dataset.main;
       if (S.tab === "score" && !visibleViews().some(v => v.key === S.evalKey)) S.evalKey = "today";
-      pushHash(); renderMainNav(); renderSubtabs(); render();
+      setMobileNavOpen(false); pushHash(); renderMainNav(); renderSubtabs(); render();
     }));
 }
 
