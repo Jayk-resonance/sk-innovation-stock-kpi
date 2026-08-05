@@ -1,0 +1,135 @@
+{
+  "collected_at": "2026-08-05T17:33:00+09:00",
+  "source": "KIS via PlayMCP koreaStock",
+  "note": "Daily history collected for all KPI tickers on 2026-08-05.",
+  "prices": [
+    {
+      "code": "096770",
+      "date": "2026-08-05",
+      "close": 109200,
+      "volume": 832094,
+      "trading_value": 91085278100
+    },
+    {
+      "code": "051910",
+      "date": "2026-08-05",
+      "close": 255500,
+      "volume": 172045,
+      "trading_value": 44441118250
+    },
+    {
+      "code": "010950",
+      "date": "2026-08-05",
+      "close": 122500,
+      "volume": 445466,
+      "trading_value": 54882348400
+    },
+    {
+      "code": "011170",
+      "date": "2026-08-05",
+      "close": 57700,
+      "volume": 96728,
+      "trading_value": 5628402300
+    },
+    {
+      "code": "047050",
+      "date": "2026-08-05",
+      "close": 54400,
+      "volume": 331282,
+      "trading_value": 17984705550
+    },
+    {
+      "code": "373220",
+      "date": "2026-08-05",
+      "close": 335500,
+      "volume": 286160,
+      "trading_value": 96003973250
+    },
+    {
+      "code": "006400",
+      "date": "2026-08-05",
+      "close": 429000,
+      "volume": 301925,
+      "trading_value": 129031583250
+    },
+    {
+      "code": "247540",
+      "date": "2026-08-05",
+      "close": 101700,
+      "volume": 454007,
+      "trading_value": 46431281650
+    },
+    {
+      "code": "003670",
+      "date": "2026-08-05",
+      "close": 146200,
+      "volume": 139772,
+      "trading_value": 20408423650
+    }
+  ],
+  "shares": [
+    {
+      "code": "096770",
+      "date": "2026-08-05",
+      "market_cap_100m": 184606,
+      "price": 109200,
+      "shares": 169053114
+    },
+    {
+      "code": "051910",
+      "date": "2026-08-05",
+      "market_cap_100m": 180363,
+      "price": 255500,
+      "shares": 70592172
+    },
+    {
+      "code": "010950",
+      "date": "2026-08-05",
+      "market_cap_100m": 137914,
+      "price": 122500,
+      "shares": 112582857
+    },
+    {
+      "code": "011170",
+      "date": "2026-08-05",
+      "market_cap_100m": 24681,
+      "price": 57700,
+      "shares": 42774697
+    },
+    {
+      "code": "047050",
+      "date": "2026-08-05",
+      "market_cap_100m": 95702,
+      "price": 54400,
+      "shares": 175922794
+    },
+    {
+      "code": "373220",
+      "date": "2026-08-05",
+      "market_cap_100m": 785070,
+      "price": 335500,
+      "shares": 234000000
+    },
+    {
+      "code": "006400",
+      "date": "2026-08-05",
+      "market_cap_100m": 345712,
+      "price": 429000,
+      "shares": 80585548
+    },
+    {
+      "code": "247540",
+      "date": "2026-08-05",
+      "market_cap_100m": 99494,
+      "price": 101700,
+      "shares": 97830875
+    },
+    {
+      "code": "003670",
+      "date": "2026-08-05",
+      "market_cap_100m": 130039,
+      "price": 146200,
+      "shares": 88945964
+    }
+  ]
+}
