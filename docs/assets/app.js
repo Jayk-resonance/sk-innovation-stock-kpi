@@ -856,11 +856,72 @@ function indexChart() {
     `<text x="${X(i).toFixed(1)}" y="${HT - 7}" text-anchor="middle" font-size="10.5"
        fill="${tok("--muted")}">${esc(H.dates[i].slice(2))}</text>`).join("");
 
-  return `<div class="chart"><svg id="indexChartSvg" viewBox="0 0 ${W} ${HT}" role="img"
-    aria-label="기준일 대비 주가 지수 추이 — SK이노베이션, 에/화 그룹 평균, 배/소 그룹 평균">
-    ${grid}${paths}${ticks}</svg></div>
+  const hoverDots = series.map(([, , color], i) =>
+    `<circle class="index-chart-dot" data-series="${i}" r="4" fill="${color}"/>`).join("");
+
+  return `<div class="index-chart-wrap" data-index-chart data-y-min="${yMin}" data-y-max="${yMax}">
+    <div class="chart"><svg id="indexChartSvg" viewBox="0 0 ${W} ${HT}" role="img"
+      aria-label="기준일 대비 주가 지수 추이 — SK이노베이션, 에/화 그룹 평균, 배/소 그룹 평균">
+      ${grid}${paths}
+      <g class="index-chart-hover" hidden>
+        <line class="index-chart-guide" y1="${PAD.t}" y2="${HT - PAD.b}" stroke="${tok("--muted")}" stroke-dasharray="3 3"/>
+        ${hoverDots}
+      </g>
+      <rect class="index-chart-hit" x="${PAD.l}" y="${PAD.t}" width="${W - PAD.l - PAD.r}"
+        height="${HT - PAD.t - PAD.b}" fill="transparent"/>
+      ${ticks}</svg></div>
+    <div class="index-chart-tooltip" role="status" aria-live="polite" hidden></div>
+  </div>
     <div class="legend">${series.map(([name, , c]) =>
       `<span><i style="background:${c}"></i>${esc(name)}</span>`).join("")}</div>`;
+}
+
+function bindIndexChart(root) {
+  const wrap = root.querySelector("[data-index-chart]");
+  if (!wrap) return;
+  const H = D.history, W = 900, HT = 300, PAD = { t: 16, r: 84, b: 28, l: 48 };
+  const series = [
+    ["SK이노베이션", H.indexed[H.subject], tok("--series-1")],
+    ["에/화 그룹 평균", H.groups["에화"], tok("--series-2")],
+    ["배/소 그룹 평균", H.groups["배소"], tok("--series-3")],
+  ];
+  const svg = wrap.querySelector("svg"), hit = wrap.querySelector(".index-chart-hit");
+  const hover = wrap.querySelector(".index-chart-hover"), guide = wrap.querySelector(".index-chart-guide");
+  const dots = [...wrap.querySelectorAll(".index-chart-dot")];
+  const tooltip = wrap.querySelector(".index-chart-tooltip");
+  const yMin = Number(wrap.dataset.yMin), yMax = Number(wrap.dataset.yMax);
+  const X = i => PAD.l + i * (W - PAD.l - PAD.r) / Math.max(1, H.dates.length - 1);
+  const Y = v => PAD.t + (yMax - v) * (HT - PAD.t - PAD.b) / (yMax - yMin);
+
+  const show = event => {
+    const svgRect = svg.getBoundingClientRect();
+    const svgX = (event.clientX - svgRect.left) / svgRect.width * W;
+    const ratio = (svgX - PAD.l) / (W - PAD.l - PAD.r);
+    const index = Math.max(0, Math.min(H.dates.length - 1, Math.round(ratio * (H.dates.length - 1))));
+    const cx = X(index);
+    guide.setAttribute("x1", cx); guide.setAttribute("x2", cx);
+    hover.hidden = false;
+    dots.forEach((dot, i) => {
+      const value = series[i][1][index];
+      dot.setAttribute("cx", cx);
+      if (value == null) dot.setAttribute("visibility", "hidden");
+      else {
+        dot.setAttribute("cy", Y(value));
+        dot.removeAttribute("visibility");
+      }
+    });
+    tooltip.innerHTML = `<b>${koDate(H.dates[index])}</b>${series.map(([name, values, color]) => {
+      const value = values[index];
+      return `<span><i style="background:${color}"></i><em>${esc(name)}</em><strong>${value == null ? "—" : value.toFixed(2)}</strong><small>${value == null ? "" : signed(value / 100 - 1)}</small></span>`;
+    }).join("")}`;
+    tooltip.hidden = false;
+    const wrapRect = wrap.getBoundingClientRect();
+    const pointerX = event.clientX - wrapRect.left;
+    tooltip.style.left = `${Math.max(8, Math.min(wrap.clientWidth - tooltip.offsetWidth - 8, pointerX + 12))}px`;
+  };
+  hit.addEventListener("pointermove", show);
+  hit.addEventListener("pointerdown", show);
+  hit.addEventListener("pointerleave", () => { hover.hidden = true; tooltip.hidden = true; });
 }
 
 function groupBars() {
@@ -890,7 +951,7 @@ function renderPrices(V) {
     </div>
 
     <div class="card">
-      <h3>기준일 대비 주가 지수 <span class="sub">${esc(L.base_date)} = 100 · 종가 기준 · 개별 Peer 는 아래 표 스파크라인 참조</span>
+      <h3>기준일 대비 주가 지수 <span class="sub">${esc(L.base_date)} = 100 · 종가 기준 · 그래프에 커서를 올리거나 눌러 날짜별 지수 확인</span>
         ${pngButton("indexChartSvg", "기준일대비주가지수.png")}</h3>
       ${indexChart()}
     </div>
@@ -917,6 +978,7 @@ function renderPrices(V) {
     </div>
 
     ${coverageNotice()}`;
+  bindIndexChart(V);
 }
 
 /* ── Case 시뮬레이션 탭 ───────────────────────────────────── */
