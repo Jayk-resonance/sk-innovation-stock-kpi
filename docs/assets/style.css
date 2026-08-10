@@ -289,6 +289,9 @@ main{flex:1;min-width:0;display:flex;flex-direction:column}
 .mode .t{font-size:11.5px;color:var(--muted);font-weight:var(--w-med)}
 .mode .v{font-size:26px;font-weight:var(--w-black);line-height:1;color:var(--ink)}
 .mode .d{font-size:11.5px;color:var(--muted)}
+.design-score-compare{margin:0 0 18px}
+.design-score-compare .mode.active{border-color:var(--brand);background:var(--brand-soft);box-shadow:0 0 0 1px var(--brand) inset}
+.control-help{margin-top:7px;color:var(--muted);font-size:11px;line-height:1.55}
 
 /* ── 레인지 바 (점수 게이지 · 52주 최저/최고 패턴) ──────────── */
 .range{display:flex;flex-direction:column;gap:6px}

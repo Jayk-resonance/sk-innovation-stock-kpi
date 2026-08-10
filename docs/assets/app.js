@@ -509,12 +509,12 @@ function finalCalculation(m) {
   </div>`;
 }
 
-function calcSection(m, xLabel) {
+function calcSection(m, xLabel, friendly = false) {
   return `<div class="group-sec">
     <div class="group-sec-h">평가주가 산출</div>
     <div class="calc-final">
       <div class="r"><span>${esc(xLabel || "상대 증감률 x = SK이노베이션 − Peer")}</span><span class="${dirClass(m.relative_change)}">${signed(m.relative_change)}</span></div>
-      <div class="r"><span>배수 1/(1−x)</span><span>${m.multiplier.toFixed(4)}배</span></div>
+      <div class="r"><span>${friendly ? "Peer 보정 배수 = 1 ÷ (1 − 위 증감률)" : "배수 1/(1−x)"}</span><span>${m.multiplier.toFixed(4)}배</span></div>
       <div class="r big"><span>평가주가</span><span>${won(m.eval_price)}원</span></div>
     </div>
   </div>`;
@@ -1166,7 +1166,7 @@ function renderCase(V) {
 /* ── 27년 과제 설계 탭 ─────────────────────────────────────── */
 
 function simDefaults() {
-  const today = D.latest.views.find(v => v.key === "today").modes["잠정"];
+  const today = D.latest.views.find(v => v.key === "today").modes["최종"];
   return {
     method: D.latest.method_primary,
     weighted: true,
@@ -1178,17 +1178,29 @@ function simDefaults() {
   };
 }
 
-/** 기본값(잠정·산식B·에화60:배소40·전종목·±15%·상대)이 탭2 "오늘의 점수"와
+function simMethodLabel(method) {
+  return method === "A" ? "실제 거래대금 기준" : "종가·거래량 기준";
+}
+
+function simWindowLabel(spec) {
+  return ({ "1D": "최근 1일", "1W": "최근 1주", "1M": "최근 1개월", "2M": "최근 2개월", "3M": "최근 3개월", "6M": "최근 6개월" })[spec] || spec;
+}
+
+function simFormulaLabel(formula) {
+  return formula === "absolute" ? "SK이노베이션만 반영" : "Peer 대비 성과 반영";
+}
+
+/** 기본값(최종 방식·종가와 거래량 기준·에화60:배소40·전종목·±15%·Peer 보정)이 탭2 "오늘의 점수"와
  *  정확히 같은 값을 내는지 확인한다. sim.js 는 core/ 의 공식을 옮겨 적은
  *  두 번째 구현이므로, 이 확인이 둘이 어긋나지 않았다는 유일한 안전장치다. */
 function verifyDefaultsMatchToday() {
   try {
-    const today = D.latest.views.find(v => v.key === "today").modes["잠정"];
+    const today = D.latest.views.find(v => v.key === "today").modes["최종"];
     const params = simDefaults();
     const baseDate = parseISOJS(D.latest.base_date), evalDate = parseISOJS(D.latest.as_of);
-    const anchor = today.scores.V3.anchor;
+    const anchor = today.scores.V2.anchor;
     const result = computeSim(D.bars, D.latest.tickers, params, baseDate, evalDate, anchor, D.latest.score_scale);
-    const diff = Math.abs(result.scores.V3.value - today.scores.V3.value);
+    const diff = Math.abs(result.scores.V3.value - today.scores.V2.value);
     if (diff > 0.05) {
       console.error(`[sim.js] 기본값이 탭2 오늘의 점수와 어긋납니다 — 차이 ${diff.toFixed(4)}점. ` +
         `core/scenarios.py 와 docs/assets/sim.js 공식이 갈라졌을 수 있습니다.`);
@@ -1202,26 +1214,27 @@ function controlsPanel() {
   const groupNames = D.latest.tickers.map(t => t.group).filter((g, i, a) => g !== "본사" && a.indexOf(g) === i);
   const membersOf = name => D.latest.tickers.filter(t => t.group === name);
   return `<div class="card">
-    <h3>파라미터 <span class="sub">바꾸면 아래 산출 과정이 즉시 다시 계산됩니다</span></h3>
+    <h3>평가 조건 <span class="sub">조건을 바꾸면 평가주가와 최종 점수가 즉시 다시 계산됩니다</span></h3>
     <div style="display:flex;flex-direction:column;gap:16px">
       <div>
-        <div class="group-sec-h">거래량가중 적용 여부</div>
+        <div class="group-sec-h">평균주가 계산 방식</div>
         <div class="tabs" style="padding-bottom:0">
-          <button class="tab ${SIM.weighted ? "active" : ""}" data-sim-weighted="1">거래량가중 (VWAP)</button>
+          <button class="tab ${SIM.weighted ? "active" : ""}" data-sim-weighted="1">거래량가중평균 주가</button>
           <button class="tab ${!SIM.weighted ? "active" : ""}" data-sim-weighted="0">단순 종가평균</button>
         </div>
       </div>
       <div ${SIM.weighted ? "" : 'style="opacity:.4;pointer-events:none"'}>
-        <div class="group-sec-h">VWAP 산식 <span style="font-weight:var(--w-reg)">(단순 종가평균 선택 시 무의미)</span></div>
+        <div class="group-sec-h">거래량가중평균 계산 기준 <span style="font-weight:var(--w-reg)">(선택에 따라 아래 최종 점수도 달라집니다)</span></div>
         <div class="tabs" style="padding-bottom:0">
-          ${["A", "B"].map(m => `<button class="tab ${SIM.method === m ? "active" : ""}" data-sim-method="${m}">산식 ${m}</button>`).join("")}
+          ${["A", "B"].map(m => `<button class="tab ${SIM.method === m ? "active" : ""}" data-sim-method="${m}">${simMethodLabel(m)}</button>`).join("")}
         </div>
+        <div class="control-help">실제 거래대금 기준 = 거래대금 합계 ÷ 거래량 합계 · 종가·거래량 기준 = (종가 × 거래량) 합계 ÷ 거래량 합계</div>
       </div>
       <div>
-        <div class="group-sec-h">윈도우 조합 <span style="font-weight:var(--w-reg)">(2개 이상 선택 시 산술평균 — 최종 방식이 2M·1M·1W 세 개를 고르는 경우다)</span></div>
+        <div class="group-sec-h">평균 산정기간 <span style="font-weight:var(--w-reg)">(여러 기간을 선택하면 각 기간의 거래량가중평균 주가를 산술평균합니다)</span></div>
         <div style="display:flex;flex-wrap:wrap;gap:10px 16px">
           ${WINDOW_OPTS.map(w => `<label style="display:flex;align-items:center;gap:5px;font-size:12.5px;cursor:pointer">
-            <input type="checkbox" data-sim-window="${w}" ${SIM.windows.includes(w) ? "checked" : ""}>${w}</label>`).join("")}
+            <input type="checkbox" data-sim-window="${w}" ${SIM.windows.includes(w) ? "checked" : ""}>${simWindowLabel(w)}</label>`).join("")}
         </div>
       </div>
       <div>
@@ -1249,17 +1262,17 @@ function controlsPanel() {
         </div>
       </div>
       <div>
-        <div class="group-sec-h">점수 스케일 — 기준선 ±${(SIM.scaleWidth * 100).toFixed(0)}%</div>
+        <div class="group-sec-h">점수 범위 — 40점 기준가격 대비 ±${(SIM.scaleWidth * 100).toFixed(0)}%</div>
         <input type="range" id="simScale" min="5" max="30" step="1" value="${SIM.scaleWidth * 100}" style="width:100%">
       </div>
       <div>
-        <div class="group-sec-h">공식 해석</div>
+        <div class="group-sec-h">Peer 보정 방식</div>
         <div class="tabs" style="padding-bottom:0">
-          <button class="tab ${SIM.formula === "relative" ? "active" : ""}" data-sim-formula="relative">상대 (SK − Peer)</button>
-          <button class="tab ${SIM.formula === "absolute" ? "active" : ""}" data-sim-formula="absolute">절대 (SK 단독, Peer 무시)</button>
+          <button class="tab ${SIM.formula === "relative" ? "active" : ""}" data-sim-formula="relative">Peer 대비 성과 반영</button>
+          <button class="tab ${SIM.formula === "absolute" ? "active" : ""}" data-sim-formula="absolute">SK이노베이션만 반영</button>
         </div>
       </div>
-      <button class="btn-mini" id="simReset" style="align-self:flex-start">기본값으로 초기화 (잠정 방식과 동일)</button>
+      <button class="btn-mini" id="simReset" style="align-self:flex-start">최종 방식으로 초기화</button>
     </div>
   </div>`;
 }
@@ -1292,33 +1305,49 @@ function wireDesignEvents(V) {
 function renderDesign(V) {
   if (!SIM) SIM = simDefaults();
   const baseDate = parseISOJS(D.latest.base_date), evalDate = parseISOJS(D.latest.as_of);
-  const anchor = D.latest.views.find(v => v.key === "today").modes["잠정"].scores.V3.anchor;
+  const todayFinal = D.latest.views.find(v => v.key === "today").modes["최종"];
+  const anchor = todayFinal.scores.V2.anchor;
 
-  let result, error = null;
+  let result, methodScores = [], error = null;
   try {
     result = computeSim(D.bars, D.latest.tickers, SIM, baseDate, evalDate, anchor, D.latest.score_scale);
+    if (SIM.weighted) {
+      methodScores = ["A", "B"].map(method => ({
+        method,
+        result: computeSim(D.bars, D.latest.tickers, { ...SIM, method }, baseDate, evalDate, anchor, D.latest.score_scale),
+      }));
+    }
   } catch (e) {
     error = e.message;
   }
 
-  const xLabel = SIM.formula === "absolute" ? "절대 증감율 x = SK (Peer 무시)" : "상대 증감률 x = SK이노베이션 − Peer";
+  const xLabel = SIM.formula === "absolute"
+    ? "SK이노베이션 증감률만 반영 (Peer 보정 없음)"
+    : "SK이노베이션 증감률 − Peer 증감률";
   V.innerHTML = `
     ${controlsPanel()}
     ${error ? `<div class="empty"><span class="ico">⚠️</span>계산할 수 없습니다 — ${esc(error)}</div>` : `
     <div class="card">
-      <h3>산출 결과 <span class="sub">기준일 ${esc(D.latest.base_date)} · 평가일(오늘) ${esc(D.latest.as_of)} · 기준선 V3(${won(anchor)}원) 고정</span></h3>
+      <h3>산출 결과 <span class="sub">${String(D.latest.base_date).slice(0, 4)}년末 최종 방식의 40점 기준가격 ${won(anchor)}원 적용</span></h3>
+      ${SIM.weighted ? `<div class="mode-grid design-score-compare">
+        ${methodScores.map(({ method, result: compared }) => `<div class="mode ${SIM.method === method ? "active" : ""}">
+          <span class="t">${simMethodLabel(method)}${SIM.method === method ? " · 현재 선택" : ""}</span>
+          <span class="v">${pts(compared.scores.V3.value)}점</span>
+          <span class="d">평가주가 ${won(compared.eval_price)}원 · ${simFormulaLabel(SIM.formula)}</span>
+        </div>`).join("")}
+      </div>` : ""}
       <div class="mode-block" style="border:none;padding:0">
         <div class="mode-block-head">
-          <div class="name">시뮬레이션 결과<span class="sub">파라미터를 기본값으로 두면 탭2 "오늘의 점수" · 잠정 방식과 같습니다</span></div>
+          <div class="name">선택 조건에 따른 최종 평가 점수<span class="sub">${SIM.weighted ? simMethodLabel(SIM.method) : "단순 종가평균"} · ${simFormulaLabel(SIM.formula)} · 선택한 모든 조건이 반영된 결과입니다</span></div>
           <div class="mode-block-score">
             <b class="${dirClass(result.scores.V3.value - 40)}">${pts(result.scores.V3.value)}점</b>
-            <span class="raw">원값 ${pts(result.scores.V3.raw)}점${result.scores.V3.clipped ? " · 클리핑 적용" : ""}</span>
+            <span class="raw">${result.scores.V3.clipped ? `산식상 ${pts(result.scores.V3.raw)}점 → 0~100점 범위 적용` : "0~100점 범위 내"}</span>
           </div>
         </div>
         ${scoreGauge(result.score_marks.V3, result.scores.V3.value)}
         ${subjectTable(result, SIM.weighted)}
         ${peerSection(result)}
-        ${calcSection(result, xLabel)}
+        ${calcSection(result, xLabel, true)}
       </div>
     </div>`}
     ${coverageNotice()}`;
