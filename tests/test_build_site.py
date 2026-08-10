@@ -82,6 +82,8 @@ def test_mode_detail_carries_daily_and_weighted_price_chart(prices, universe, ru
     assert base["close"] == fin["subject_base_close"]
     assert chart[-1]["daily_weighted_price"] == fin["subject_daily_weighted_price"]
     assert base["daily_weighted_price"] == fin["subject_base_daily_weighted_price"]
+    assert chart[-1]["vwap_2m"] == pytest.approx(fin["windows_now"][0]["vwap"])
+    assert chart[-1]["vwap_final"] == pytest.approx(fin["subject_price"])
 
 
 def test_mode_detail_carries_target_waterfall_sensitivity(prices, universe, rules, calibration):
@@ -108,6 +110,9 @@ def test_build_scenarios_has_final_baseline_comparison_and_paths(prices, univers
     assert sc["timeseries"][-1]["value"] == pytest.approx(
         want.scores["V3"].value, abs=0.01
     )
+    assert sc["timeseries"][-1]["subject_price"] == pytest.approx(want.subject_price, abs=0.01)
+    assert sc["timeseries"][-1]["peer_change"] == pytest.approx(want.peer_change, abs=0.000001)
+    assert sc["timeseries"][-1]["eval_price"] == pytest.approx(want.eval_price, abs=0.01)
 
 
 def test_build_bars_has_raw_series_for_every_ticker(prices, universe):

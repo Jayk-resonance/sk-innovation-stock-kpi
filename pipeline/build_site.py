@@ -126,7 +126,7 @@ def _mode_detail(prices, universe, rules, calibration, eval_date, mode, method) 
         return round(vwap([bar], "A"), 2)
 
     def subject_chart() -> list[dict]:
-        """단순 종가와 1일 거래량가중평균 종가의 일별 추이."""
+        """단순 종가와 평가 방식별 거래량가중평균 주가의 일별 추이."""
         start = minus_months(rules["base_date"], 2) + timedelta(days=1)
         rows = []
         for bar in subject_bars:
@@ -136,6 +136,10 @@ def _mode_detail(prices, universe, rules, calibration, eval_date, mode, method) 
                 "date": bar.day.isoformat(),
                 "close": bar.close,
                 "daily_weighted_price": daily_weighted_price(bar),
+                "vwap_2m": round(adjusted_price(subject_bars, bar.day, ["2M"], method), 2),
+                "vwap_final": round(
+                    adjusted_price(subject_bars, bar.day, ["2M", "1M", "1W"], method), 2
+                ),
             })
         return rows
 

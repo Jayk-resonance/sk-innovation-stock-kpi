@@ -270,14 +270,14 @@ function subjectTable(m, weighted = true, friendlyDates = false) {
       <td class="num ${dirClass(chg)}">${signed(chg)}</td></tr>`;
   });
   return `<div class="group-sec">
-    <div class="group-sec-h">SK이노베이션 ${weighted ? "단순 종가와 거래량가중평균 종가" : "종가평균 (거래량 무시)"}</div>
+    <div class="group-sec-h">SK이노베이션 ${weighted ? "거래량가중평균 주가" : "종가평균 (거래량 무시)"}</div>
     <div class="tbl-wrap"><table>
       <thead><tr><th>구간</th><th>${latestLabel}</th><th>${baseLabel}</th><th>증감율</th></tr></thead>
       <tbody>
         <tr><td>단순 종가</td><td class="num">${won(m.subject_close)}원</td>
           <td class="num">${won(m.subject_base_close)}원</td>
           <td class="num ${dirClass(m.subject_close / m.subject_base_close - 1)}">${signed(m.subject_close / m.subject_base_close - 1)}</td></tr>
-        <tr><td>1일 거래량가중평균 종가</td><td class="num">${won(m.subject_daily_weighted_price)}원</td>
+        <tr><td>1일 거래량가중평균 주가</td><td class="num">${won(m.subject_daily_weighted_price)}원</td>
           <td class="num">${won(m.subject_base_daily_weighted_price)}원</td>
           <td class="num ${dirClass(m.subject_daily_weighted_price / m.subject_base_daily_weighted_price - 1)}">${signed(m.subject_daily_weighted_price / m.subject_base_daily_weighted_price - 1)}</td></tr>
         ${rows.join("")}
@@ -289,11 +289,19 @@ function subjectTable(m, weighted = true, friendlyDates = false) {
   </div>`;
 }
 
-function subjectPriceChart(m, name = "SK이노베이션") {
+function subjectPriceChart(m, name = "SK이노베이션", mode = "daily") {
   const points = m.subject_chart || [];
   if (points.length < 2) return "";
   const W = 920, H = 250, P = { l: 46, r: 22, t: 20, b: 30 };
-  const values = points.flatMap(p => [p.close, p.daily_weighted_price]).filter(v => v != null);
+  const series = mode === "evaluation" ? [
+    { key: "close", label: "단순 종가", color: "--series-1", width: 2.1 },
+    { key: "vwap_2m", label: "2개월 거래량가중평균 주가", color: "--series-2", width: 2.3 },
+    { key: "vwap_final", label: "2개월·1개월·1주 거래량가중평균 주가의 산술평균", color: "--series-3", width: 2.8 },
+  ] : [
+    { key: "close", label: "단순 종가", color: "--series-1", width: 2.2 },
+    { key: "daily_weighted_price", label: "1일 거래량가중평균 주가", color: "--series-3", width: 2.7 },
+  ];
+  const values = points.flatMap(p => series.map(s => p[s.key])).filter(v => v != null);
   let lo = Math.min(...values), hi = Math.max(...values);
   const pad = (hi - lo) * 0.08 || 1;
   lo -= pad; hi += pad;
@@ -315,22 +323,23 @@ function subjectPriceChart(m, name = "SK이노베이션") {
   const ticks = [0, baseIndex, points.length - 1].filter((v, i, a) => a.indexOf(v) === i).map(i =>
     `<text x="${x(i).toFixed(1)}" y="${H - 8}" text-anchor="middle" font-size="10.5" fill="${tok("--muted")}">${esc(koMonthDay(points[i].date))}</text>`
   ).join("");
-  return `<div class="subject-price-chart" data-subject-chart="${data}" data-subject-range="${esc(JSON.stringify({ lo, hi }))}">
-    <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(name)} 단순 종가와 1일 거래량가중평균 종가 추이">
+  const paths = series.map(s => `<path d="${pathFor(s.key)}" fill="none" stroke="${tok(s.color)}" stroke-width="${s.width}" stroke-linejoin="round" stroke-linecap="round"/>`).join("");
+  const dots = series.map(s => `<circle class="subject-chart-dot" data-chart-key="${s.key}" r="4" fill="${tok(s.color)}"/>`).join("");
+  const legend = series.map(s => `<span><i style="background:${tok(s.color)}"></i>${esc(s.label)}</span>`).join("");
+  return `<div class="subject-price-chart" data-subject-chart="${data}" data-subject-range="${esc(JSON.stringify({ lo, hi }))}" data-subject-mode="${mode}">
+    <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(name)} ${esc(series.map(s => s.label).join(', '))} 추이">
       <line x1="${P.l}" y1="${y(lo).toFixed(1)}" x2="${W - P.r}" y2="${y(lo).toFixed(1)}" stroke="${tok("--grid")}"/>
       <line x1="${P.l}" y1="${y(hi).toFixed(1)}" x2="${W - P.r}" y2="${y(hi).toFixed(1)}" stroke="${tok("--grid")}"/>
       <line x1="${x(baseIndex).toFixed(1)}" y1="${P.t}" x2="${x(baseIndex).toFixed(1)}" y2="${H - P.b}" stroke="${tok("--axis")}" stroke-dasharray="4 4"/>
-      <path d="${pathFor("close")}" fill="none" stroke="${tok("--series-1")}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
-      <path d="${pathFor("daily_weighted_price")}" fill="none" stroke="${tok("--series-3")}" stroke-width="2.7" stroke-linejoin="round" stroke-linecap="round"/>
+      ${paths}
       <g class="subject-chart-hover" hidden>
         <line class="subject-chart-guide" y1="${P.t}" y2="${H - P.b}" stroke="${tok("--muted")}" stroke-dasharray="3 3"/>
-        <circle class="subject-chart-close-dot" r="4" fill="${tok("--series-1")}"/>
-        <circle class="subject-chart-weighted-dot" r="4" fill="${tok("--series-3")}"/>
+        ${dots}
       </g>
       <rect class="subject-chart-hit" x="${P.l}" y="${P.t}" width="${W - P.l - P.r}" height="${H - P.t - P.b}" fill="transparent"/>
       ${ticks}
     </svg>
-    <div class="subject-chart-legend"><span><i style="background:${tok("--series-1")}"></i>단순 종가</span><span><i style="background:${tok("--series-3")}"></i>1일 거래량가중평균 종가</span></div>
+    <div class="subject-chart-legend">${legend}</div>
     <div class="subject-chart-tooltip" hidden></div>
     <div class="mini-chart-meta">
       <span>${koMonthDay(first.date)} <b>단순 ${won(first.close)}원</b></span>
@@ -346,7 +355,15 @@ function bindSubjectPriceCharts(root) {
     const { lo, hi } = JSON.parse(chart.dataset.subjectRange);
     const svg = chart.querySelector("svg"), hit = chart.querySelector(".subject-chart-hit");
     const hover = chart.querySelector(".subject-chart-hover"), guide = chart.querySelector(".subject-chart-guide");
-    const closeDot = chart.querySelector(".subject-chart-close-dot"), weightedDot = chart.querySelector(".subject-chart-weighted-dot");
+    const series = chart.dataset.subjectMode === "evaluation" ? [
+      { key: "close", label: "단순 종가" },
+      { key: "vwap_2m", label: "2개월 거래량가중평균 주가" },
+      { key: "vwap_final", label: "최종 산술평균" },
+    ] : [
+      { key: "close", label: "단순 종가" },
+      { key: "daily_weighted_price", label: "1일 거래량가중평균 주가" },
+    ];
+    const dots = new Map([...chart.querySelectorAll(".subject-chart-dot")].map(dot => [dot.dataset.chartKey, dot]));
     const tip = chart.querySelector(".subject-chart-tooltip"), W = 920, H = 250, P = { l: 46, r: 22, t: 20, b: 30 };
     const show = event => {
       const rect = svg.getBoundingClientRect();
@@ -357,11 +374,13 @@ function bindSubjectPriceCharts(root) {
       const y = value => P.t + (hi - value) / (hi - lo) * (H - P.t - P.b);
       hover.hidden = false;
       guide.setAttribute("x1", cx); guide.setAttribute("x2", cx);
-      closeDot.setAttribute("cx", cx); closeDot.setAttribute("cy", y(p.close));
-      weightedDot.setAttribute("cx", cx);
-      weightedDot.setAttribute("cy", y(p.daily_weighted_price));
-      weightedDot.removeAttribute("visibility");
-      tip.innerHTML = `<b>${koMonthDay(p.date)}</b><span>단순 종가 <strong>${won(p.close)}원</strong></span><span>1일 거래량가중평균 종가 <strong>${won(p.daily_weighted_price)}원</strong></span>`;
+      series.forEach(s => {
+        const dot = dots.get(s.key), value = p[s.key];
+        dot.setAttribute("cx", cx);
+        if (value == null) dot.setAttribute("visibility", "hidden");
+        else { dot.setAttribute("cy", y(value)); dot.removeAttribute("visibility"); }
+      });
+      tip.innerHTML = `<b>${koMonthDay(p.date)}</b>${series.map(s => `<span>${esc(s.label)} <strong>${p[s.key] == null ? "계산 시작 전" : `${won(p[s.key])}원`}</strong></span>`).join("")}`;
       tip.hidden = false;
       tip.style.left = `${Math.max(8, Math.min(chart.clientWidth - tip.offsetWidth - 8, event.clientX - rect.left + 12))}px`;
     };
@@ -756,14 +775,14 @@ function renderScore(V) {
         <section class="calc-step step-1">
           <div class="calc-step-head">
             <span class="step-badge">1</span>
-            <div><b>SK이노베이션 단순 종가와 1일 거래량가중평균 종가</b><span>산식의 분자</span></div>
+            <div><b>SK이노베이션 거래량가중평균 주가</b><span>산식의 분자</span></div>
           </div>
           ${indexedScoreFormula(1)}
           <p class="step-copy">2개월·1개월·1주의 거래량가중평균의 산술평균으로 산출합니다.</p>
           ${subjectTable(result, true, true)}
           <div class="step-result">① 산식에 사용되는 값 <b>${won(result.subject_price)}원</b></div>
-          <div class="chart-caption">SK이노베이션 주가 추이 · 단순 종가와 1일 거래량가중평균 종가 · ${baseYear}년末 기준 2개월 전부터 ${koMonthDay(result.eval_date)}까지</div>
-          ${subjectPriceChart(result)}
+          <div class="chart-caption">SK이노베이션 주가 추이 · 단순 종가·2개월 거래량가중평균 주가·최종 산술평균 · ${baseYear}년末 기준 2개월 전부터 ${koMonthDay(result.eval_date)}까지</div>
+          ${subjectPriceChart(result, "SK이노베이션", "evaluation")}
         </section>
 
         <section class="calc-step step-2">
@@ -1084,8 +1103,49 @@ function timeseriesChart() {
   const ticks = [0, Math.floor(n / 3), Math.floor(2 * n / 3), n - 1].map(i =>
     `<text x="${X(i).toFixed(1)}" y="${HT - 7}" text-anchor="middle" font-size="10.5"
        fill="${tok("--muted")}">${esc(T[i].date.slice(2))}</text>`).join("");
-  return `<div class="chart"><svg id="timeseriesSvg" viewBox="0 0 ${W} ${HT}" role="img"
-    aria-label="일별 점수 시계열, 확정 평가일 마커 포함">${grid}${path}${markers}${ticks}</svg></div>`;
+  return `<div class="score-timeseries-wrap" data-score-timeseries="${esc(JSON.stringify(T))}">
+    <div class="chart"><svg id="timeseriesSvg" viewBox="0 0 ${W} ${HT}" role="img"
+      aria-label="일별 점수 시계열, 확정 평가일 마커 포함">${grid}${path}${markers}${ticks}
+      <g class="score-timeseries-hover" hidden>
+        <line class="score-timeseries-guide" y1="${PAD.t}" y2="${HT - PAD.b}" stroke="${tok("--muted")}" stroke-dasharray="3 3"/>
+        <circle class="score-timeseries-dot" r="4.5" fill="${tok("--series-1")}"/>
+      </g>
+      <rect class="score-timeseries-hit" x="${PAD.l}" y="${PAD.t}" width="${W - PAD.l - PAD.r}" height="${HT - PAD.t - PAD.b}" fill="transparent"/>
+    </svg></div>
+    <div class="score-timeseries-tooltip" hidden></div>
+  </div>`;
+}
+
+function bindScoreTimeseries(root) {
+  root.querySelectorAll("[data-score-timeseries]").forEach(chart => {
+    const points = JSON.parse(chart.dataset.scoreTimeseries);
+    const svg = chart.querySelector("svg"), hit = chart.querySelector(".score-timeseries-hit");
+    const hover = chart.querySelector(".score-timeseries-hover"), guide = chart.querySelector(".score-timeseries-guide");
+    const dot = chart.querySelector(".score-timeseries-dot"), tip = chart.querySelector(".score-timeseries-tooltip");
+    const W = 900, HT = 260, PAD = { t: 26, r: 20, b: 28, l: 40 };
+    const show = event => {
+      const rect = svg.getBoundingClientRect();
+      const ratio = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width));
+      const i = Math.max(0, Math.min(points.length - 1,
+        Math.round(((ratio * W) - PAD.l) / (W - PAD.l - PAD.r) * (points.length - 1))));
+      const p = points[i];
+      const cx = PAD.l + i * (W - PAD.l - PAD.r) / Math.max(1, points.length - 1);
+      const cy = PAD.t + (100 - Math.max(0, Math.min(100, p.value))) * (HT - PAD.t - PAD.b) / 100;
+      hover.hidden = false;
+      guide.setAttribute("x1", cx); guide.setAttribute("x2", cx);
+      dot.setAttribute("cx", cx); dot.setAttribute("cy", cy);
+      tip.innerHTML = `<b>${koDate(p.date)}</b>
+        <span>점수 <strong>${pts(p.value)}점</strong></span>
+        <span>SK이노베이션 최종 산술평균 <strong>${won(p.subject_price)}원</strong></span>
+        <span>SK이노베이션 증감률 <strong>${signed(p.subject_change)}</strong></span>
+        <span>Peer 증감률 <strong>${signed(p.peer_change)}</strong></span>
+        <span>Peer 보정 평가주가 <strong>${won(p.eval_price)}원</strong></span>`;
+      tip.hidden = false;
+      tip.style.left = `${Math.max(8, Math.min(chart.clientWidth - tip.offsetWidth - 8, event.clientX - rect.left + 12))}px`;
+    };
+    hit.addEventListener("pointermove", show);
+    hit.addEventListener("pointerleave", () => { hover.hidden = true; tip.hidden = true; });
+  });
 }
 
 function renderCase(V) {
@@ -1097,7 +1157,8 @@ function renderCase(V) {
         ${pngButton("timeseriesSvg", "점수시계열.png")}</h3>
       ${timeseriesChart()}
     </div>
-    ${coverageNotice()}`;
+      ${coverageNotice()}`;
+  bindScoreTimeseries(V);
   document.querySelectorAll("[data-horizon]").forEach(b =>
     b.addEventListener("click", () => { S.horizon = Number(b.dataset.horizon); renderCase(V); }));
 }

@@ -224,5 +224,13 @@ def score_timeseries(
             continue
         result = evaluate(prices, universe, rules, calibration, d, mode, method)
         score = result.scores[baseline_key]
-        out.append({"date": d.isoformat(), "value": round(score.value, 2), "raw": round(score.raw, 2)})
+        out.append({
+            "date": d.isoformat(),
+            "value": round(score.value, 2),
+            "raw": round(score.raw, 2),
+            "subject_price": round(result.subject_price, 2),
+            "subject_change": round(result.subject_change, 6),
+            "peer_change": round(result.peer_change, 6),
+            "eval_price": round(result.eval_price, 2),
+        })
     return out
