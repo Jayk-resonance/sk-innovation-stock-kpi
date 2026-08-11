@@ -1170,6 +1170,7 @@ function simDefaults() {
   return {
     method: D.latest.method_primary,
     weighted: true,
+    periodMode: "average",
     windows: [...today.specs],
     weight: today.groups["에화"].weight,
     excluded: new Set(),
@@ -1190,6 +1191,29 @@ function simFormulaLabel(formula) {
   return formula === "absolute" ? "SK이노베이션만 반영" : "Peer 대비 성과 반영";
 }
 
+function simPeriodSummary(params) {
+  const periods = params.windows.map(simWindowLabel).join("·");
+  return params.periodMode === "single" || params.windows.length === 1
+    ? `${periods} 한 기간 사용`
+    : `${periods} 거래량가중평균 주가의 산술평균`;
+}
+
+function simAnchor(params, baseDate) {
+  const subject = D.latest.tickers.find(t => t.group === "본사");
+  return adjustedPriceJS(D.bars[subject.code], baseDate, params.windows, params.method, params.weighted);
+}
+
+function designScorePrices(result) {
+  const marks = result.score_marks.V3.filter(mark => [0, 40, 100].includes(mark.points));
+  return `<div class="design-scale-card">
+    <div class="group-sec-h">선택한 평가 방식으로 다시 계산한 2025년末 점수 기준가격</div>
+    <div class="design-scale-grid">
+      ${marks.map(mark => `<div><span>${mark.points}점</span><b>${won(mark.price)}원</b></div>`).join("")}
+    </div>
+    <div class="control-help">평균주가 계산 기준·산정기간·점수 범위를 바꾸면 세 가격이 함께 다시 계산됩니다.</div>
+  </div>`;
+}
+
 /** 기본값(최종 방식·종가와 거래량 기준·에화60:배소40·전종목·±15%·Peer 보정)이 탭2 "오늘의 점수"와
  *  정확히 같은 값을 내는지 확인한다. sim.js 는 core/ 의 공식을 옮겨 적은
  *  두 번째 구현이므로, 이 확인이 둘이 어긋나지 않았다는 유일한 안전장치다. */
@@ -1198,11 +1222,12 @@ function verifyDefaultsMatchToday() {
     const today = D.latest.views.find(v => v.key === "today").modes["최종"];
     const params = simDefaults();
     const baseDate = parseISOJS(D.latest.base_date), evalDate = parseISOJS(D.latest.as_of);
-    const anchor = today.scores.V2.anchor;
+    const anchor = simAnchor(params, baseDate);
     const result = computeSim(D.bars, D.latest.tickers, params, baseDate, evalDate, anchor, D.latest.score_scale);
     const diff = Math.abs(result.scores.V3.value - today.scores.V2.value);
-    if (diff > 0.05) {
-      console.error(`[sim.js] 기본값이 탭2 오늘의 점수와 어긋납니다 — 차이 ${diff.toFixed(4)}점. ` +
+    const anchorDiff = Math.abs(anchor - today.scores.V2.anchor);
+    if (diff > 0.05 || anchorDiff > 0.05) {
+      console.error(`[sim.js] 기본값이 탭2 오늘의 점수와 어긋납니다 — 점수 차이 ${diff.toFixed(4)}점, 40점 기준가격 차이 ${anchorDiff.toFixed(2)}원. ` +
         `core/scenarios.py 와 docs/assets/sim.js 공식이 갈라졌을 수 있습니다.`);
     }
   } catch (e) {
@@ -1231,11 +1256,27 @@ function controlsPanel() {
         <div class="control-help">실제 거래대금 기준 = 거래대금 합계 ÷ 거래량 합계 · 종가·거래량 기준 = (종가 × 거래량) 합계 ÷ 거래량 합계</div>
       </div>
       <div>
-        <div class="group-sec-h">평균 산정기간 <span style="font-weight:var(--w-reg)">(여러 기간을 선택하면 각 기간의 거래량가중평균 주가를 산술평균합니다)</span></div>
-        <div style="display:flex;flex-wrap:wrap;gap:10px 16px">
-          ${WINDOW_OPTS.map(w => `<label style="display:flex;align-items:center;gap:5px;font-size:12.5px;cursor:pointer">
-            <input type="checkbox" data-sim-window="${w}" ${SIM.windows.includes(w) ? "checked" : ""}>${simWindowLabel(w)}</label>`).join("")}
+        <div class="group-sec-h">평가주가 구성</div>
+        <div class="tabs" style="padding-bottom:0">
+          <button class="tab ${SIM.periodMode === "single" ? "active" : ""}" data-sim-period-mode="single">한 기간의 평균주가 사용</button>
+          <button class="tab ${SIM.periodMode === "average" ? "active" : ""}" data-sim-period-mode="average">여러 기간 평균주가의 산술평균</button>
         </div>
+      </div>
+      <div>
+        <div class="group-sec-h">평균 산정기간 <span style="font-weight:var(--w-reg)">(${SIM.periodMode === "single" ? "한 기간을 선택합니다" : "두 개 이상의 기간을 선택합니다"})</span></div>
+        ${SIM.periodMode === "single" ? `
+          <div class="tabs" style="padding-bottom:0">
+            ${WINDOW_OPTS.map(w => `<button class="tab ${SIM.windows[0] === w ? "active" : ""}" data-sim-single-window="${w}">${simWindowLabel(w)}</button>`).join("")}
+          </div>` : `
+          <div style="display:flex;flex-wrap:wrap;gap:10px 16px">
+            ${WINDOW_OPTS.map(w => {
+              const checked = SIM.windows.includes(w);
+              const lockedOn = checked && SIM.windows.length <= 2;
+              return `<label style="display:flex;align-items:center;gap:5px;font-size:12.5px;cursor:pointer">
+                <input type="checkbox" data-sim-window="${w}" ${checked ? "checked" : ""} ${lockedOn ? "disabled" : ""}>${simWindowLabel(w)}</label>`;
+            }).join("")}
+          </div>`}
+        <div class="control-help">현재 적용: ${simPeriodSummary(SIM)}</div>
       </div>
       <div>
         <div class="group-sec-h">그룹 가중치 — 에화 ${(SIM.weight * 100).toFixed(0)}% · 배소 ${(100 - SIM.weight * 100).toFixed(0)}%</div>
@@ -1283,11 +1324,23 @@ function wireDesignEvents(V) {
     b.addEventListener("click", () => { SIM.weighted = b.dataset.simWeighted === "1"; renderDesign(V); }));
   document.querySelectorAll("[data-sim-method]").forEach(b =>
     b.addEventListener("click", () => { SIM.method = b.dataset.simMethod; renderDesign(V); }));
+  document.querySelectorAll("[data-sim-period-mode]").forEach(b =>
+    b.addEventListener("click", () => {
+      SIM.periodMode = b.dataset.simPeriodMode;
+      if (SIM.periodMode === "single") {
+        SIM.windows = [SIM.windows.includes("2M") ? "2M" : (SIM.windows[0] || "2M")];
+      } else if (SIM.windows.length < 2) {
+        SIM.windows = ["2M", "1M", "1W"];
+      }
+      renderDesign(V);
+    }));
+  document.querySelectorAll("[data-sim-single-window]").forEach(b =>
+    b.addEventListener("click", () => { SIM.windows = [b.dataset.simSingleWindow]; renderDesign(V); }));
   document.querySelectorAll("[data-sim-window]").forEach(cb =>
     cb.addEventListener("change", () => {
       const w = cb.dataset.simWindow;
       if (cb.checked) { if (!SIM.windows.includes(w)) SIM.windows.push(w); }
-      else if (SIM.windows.length > 1) { SIM.windows = SIM.windows.filter(x => x !== w); }
+      else if (SIM.windows.length > 2) { SIM.windows = SIM.windows.filter(x => x !== w); }
       renderDesign(V);
     }));
   document.getElementById("simWeight")?.addEventListener("change", e => { SIM.weight = Number(e.target.value) / 100; renderDesign(V); });
@@ -1305,17 +1358,20 @@ function wireDesignEvents(V) {
 function renderDesign(V) {
   if (!SIM) SIM = simDefaults();
   const baseDate = parseISOJS(D.latest.base_date), evalDate = parseISOJS(D.latest.as_of);
-  const todayFinal = D.latest.views.find(v => v.key === "today").modes["최종"];
-  const anchor = todayFinal.scores.V2.anchor;
+  const anchor = simAnchor(SIM, baseDate);
 
   let result, methodScores = [], error = null;
   try {
     result = computeSim(D.bars, D.latest.tickers, SIM, baseDate, evalDate, anchor, D.latest.score_scale);
     if (SIM.weighted) {
-      methodScores = ["A", "B"].map(method => ({
-        method,
-        result: computeSim(D.bars, D.latest.tickers, { ...SIM, method }, baseDate, evalDate, anchor, D.latest.score_scale),
-      }));
+      methodScores = ["A", "B"].map(method => {
+        const params = { ...SIM, method };
+        const comparedAnchor = simAnchor(params, baseDate);
+        return {
+          method,
+          result: computeSim(D.bars, D.latest.tickers, params, baseDate, evalDate, comparedAnchor, D.latest.score_scale),
+        };
+      });
     }
   } catch (e) {
     error = e.message;
@@ -1328,12 +1384,12 @@ function renderDesign(V) {
     ${controlsPanel()}
     ${error ? `<div class="empty"><span class="ico">⚠️</span>계산할 수 없습니다 — ${esc(error)}</div>` : `
     <div class="card">
-      <h3>산출 결과 <span class="sub">${String(D.latest.base_date).slice(0, 4)}년末 최종 방식의 40점 기준가격 ${won(anchor)}원 적용</span></h3>
+      <h3>산출 결과 <span class="sub">${String(D.latest.base_date).slice(0, 4)}년末 선택한 평가 방식의 40점 기준가격 ${won(anchor)}원 적용</span></h3>
       ${SIM.weighted ? `<div class="mode-grid design-score-compare">
         ${methodScores.map(({ method, result: compared }) => `<div class="mode ${SIM.method === method ? "active" : ""}">
           <span class="t">${simMethodLabel(method)}${SIM.method === method ? " · 현재 선택" : ""}</span>
           <span class="v">${pts(compared.scores.V3.value)}점</span>
-          <span class="d">평가주가 ${won(compared.eval_price)}원 · ${simFormulaLabel(SIM.formula)}</span>
+          <span class="d">평가주가 ${won(compared.eval_price)}원 · 40점 기준가격 ${won(compared.score_marks.V3.find(mark => mark.points === 40).price)}원</span>
         </div>`).join("")}
       </div>` : ""}
       <div class="mode-block" style="border:none;padding:0">
@@ -1345,6 +1401,7 @@ function renderDesign(V) {
           </div>
         </div>
         ${scoreGauge(result.score_marks.V3, result.scores.V3.value)}
+        ${designScorePrices(result)}
         ${subjectTable(result, SIM.weighted)}
         ${peerSection(result)}
         ${calcSection(result, xLabel, true)}

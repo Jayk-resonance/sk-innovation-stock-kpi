@@ -292,6 +292,11 @@ main{flex:1;min-width:0;display:flex;flex-direction:column}
 .design-score-compare{margin:0 0 18px}
 .design-score-compare .mode.active{border-color:var(--brand);background:var(--brand-soft);box-shadow:0 0 0 1px var(--brand) inset}
 .control-help{margin-top:7px;color:var(--muted);font-size:11px;line-height:1.55}
+.design-scale-card{margin:16px 0 18px;padding:14px 16px;border:1px solid var(--line-2);border-radius:var(--r-sm);background:var(--canvas)}
+.design-scale-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.design-scale-grid div{display:flex;flex-direction:column;gap:3px;padding:10px 12px;border-radius:var(--r-xs);background:var(--surface)}
+.design-scale-grid span{font-size:10.5px;color:var(--muted);font-weight:var(--w-med)}
+.design-scale-grid b{font-size:16px;color:var(--ink)}
 
 /* ── 레인지 바 (점수 게이지 · 52주 최저/최고 패턴) ──────────── */
 .range{display:flex;flex-direction:column;gap:6px}
@@ -483,6 +488,7 @@ tr.subject td:last-child{border-top-right-radius:var(--r-sm);border-bottom-right
   .bar-row .lb{width:34vw}
   .statpair{grid-template-columns:1fr}
   .statpair .k.r,.statpair .v.r{text-align:left}
+  .design-scale-grid{grid-template-columns:1fr}
   .mini-chart-meta{grid-template-columns:1fr}
   .mini-chart-meta span:nth-child(2),.mini-chart-meta span:last-child{text-align:left}
   .subject-price-chart{padding:8px}
