@@ -408,8 +408,8 @@ function miniCloseChart(code, name, compact = false, endDate = D.latest.as_of) {
     .filter(p => p.date >= start && p.date <= end && p.close != null);
   if (points.length < 2) return "";
 
-  const W = 640, H = compact ? 112 : 140;
-  const P = { l: 12, r: 12, t: 12, b: 24 };
+  const W = 640, H = compact ? 129 : 140;
+  const P = { l: 62, r: 12, t: 12, b: 24 };
   let lo = Math.min(...points.map(p => p.close));
   let hi = Math.max(...points.map(p => p.close));
   if (lo === hi) { lo *= .99; hi *= 1.01; }
@@ -427,6 +427,8 @@ function miniCloseChart(code, name, compact = false, endDate = D.latest.as_of) {
     <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(name)} 종가 추이">
       <line x1="${P.l}" y1="${y(lo)}" x2="${W-P.r}" y2="${y(lo)}" stroke="${tok("--grid")}"/>
       <line x1="${P.l}" y1="${y(hi)}" x2="${W-P.r}" y2="${y(hi)}" stroke="${tok("--grid")}"/>
+      <text x="${P.l - 6}" y="${(y(lo) + 3).toFixed(1)}" text-anchor="end" font-size="9.5" fill="${tok("--muted")}">${won(lo)}원</text>
+      <text x="${P.l - 6}" y="${(y(hi) + 3).toFixed(1)}" text-anchor="end" font-size="9.5" fill="${tok("--muted")}">${won(hi)}원</text>
       <line x1="${x(baseIndex)}" y1="${P.t}" x2="${x(baseIndex)}" y2="${H-P.b}"
         stroke="${tok("--axis")}" stroke-dasharray="4 4"/>
       <path d="${path}" fill="none" stroke="${color}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
