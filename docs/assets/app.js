@@ -1341,6 +1341,12 @@ function controlsPanel() {
       <div>
         <div class="group-sec-h">그룹 가중치 — 에화 ${(SIM.weight * 100).toFixed(0)}% · 배소 ${(100 - SIM.weight * 100).toFixed(0)}%</div>
         <input type="range" id="simWeight" min="0" max="100" step="5" value="${SIM.weight * 100}" style="width:100%">
+        <div class="control-help">참고 · SK이노베이션 2025년말(제15기) 연결 사업부문별 비유동자산 —
+          사업보고서(2026-03-16 제출) 주석 36 "영업부문별 정보": 에너지·화학 12.97조원(24.9%) ·
+          배터리·소재 26.00조원(49.8%) · E&S 12.49조원(23.9%) · 기타부문 0.71조원(1.4%).
+          공교롭게도 이 두 보고부문("에너지 및 화학", "배터리 및 소재")이 지금 에화·배소 그룹과
+          정확히 대응한다 — 다만 슬라이더는 편의상 60:40 을 쓰고, 이 자산 비중(약 33:67)과는
+          다르다. E&S(2024-11-01 합병)와 기타부문은 아직 어느 그룹에도 들어있지 않다.</div>
       </div>
       <div>
         <div class="group-sec-h">Peer 종목 포함/제외 <span style="font-weight:var(--w-reg)">(그룹당 최소 1종목 · ⓘ에 커서를 올리면 선정 적정성 확인)</span></div>
