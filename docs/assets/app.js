@@ -769,7 +769,7 @@ function renderScore(V) {
       <div class="eyebrow">${koDate(view.date)} 기준</div>
       <div class="score-main">
         <b>${pts(score.value)}</b><span class="unit">점</span>
-        <span class="raw">점수 산정가격 ${won(result.eval_price)}원</span>
+        <span class="raw">평가 주가 ${won(result.eval_price)}원</span>
       </div>
       ${scoreGauge(marks, score.value)}
       <div class="indexed-formula">
@@ -836,7 +836,7 @@ function renderScore(V) {
       <div class="hero-note"><b>⑤ 점수 환산</b> · 기준 가격의 85%는 0점, 기준 가격은 40점, 기준 가격의 115%는 100점입니다. 범위 밖 값은 0~100점으로 제한합니다.</div>
       <div class="statpair">
         <span class="k">기준 가격</span><span class="v r">${won(score.anchor)}원</span>
-        <span class="k">점수 산정가격</span><span class="v r">${won(result.eval_price)}원</span>
+        <span class="k">평가 주가</span><span class="v r">${won(result.eval_price)}원</span>
         <span class="k">현재 점수</span><span class="v r">${pts(score.value)}점</span>
       </div>
     </div>`;
