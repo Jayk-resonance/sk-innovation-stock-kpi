@@ -12,28 +12,31 @@
 # ②③은 매일 갱신되는 시세·시가총액 데이터로 자동 계산한다(pipeline/build_site.py).
 # ①④는 판단이 들어가므로 자동 산출하지 않고 사람이 여기 등록한다 — 근거 없이
 # 등급만 매기면 나중에 왜 그런지 아무도 설명 못 한다.
+#
+# 생산능력 수치는 2026-08-13 웹 검색으로 확인한 최신 공개 자료 기준이며,
+# 공정 특성상 계열사·공장별 수치가 기사마다 조금씩 다를 수 있다.
 peers:
   "051910":  # LG화학
-    business_match: { rating: 매우 높음, note: "SK지오센트릭(화학)과 직접 비교되는 종합화학사. 배터리소재 사업도 겸영해 SK 포트폴리오 전반과 겹친다" }
+    business_match: { rating: 매우 높음, note: "SK지오센트릭(NCC 기반 에틸렌 66만톤/년)과 같은 나프타분해 기반 PE·PP 생산사. LG화학은 여수·대산 NCC로 에틸렌 약 330만톤/년(국내 1위) 생산 — 규모는 5배가량 크지만 같은 산식 구조. 구미 공장에 양극재 투자도 겸영해 배터리소재까지 포트폴리오가 겹친다" }
     independence: { rating: 적정, note: "SK그룹 계열사 아님" }
   "010950":  # S-Oil
-    business_match: { rating: 매우 높음, note: "SK에너지(정유)와 국내 직접 경쟁사. 정유 마진 사이클을 대표하는 핵심 비교군" }
+    business_match: { rating: 매우 높음, note: "SK에너지(정유)와 온산·울산 기반 국내 직접 경쟁사. 2026년 가동 예정인 '샤힌 프로젝트'로 에틸렌 180만톤/년·LLDPE 88만톤/년·HDPE 44만톤/년 자체 생산까지 진출해 SK지오센트릭과도 겹치기 시작한다" }
     independence: { rating: 적정, note: "SK그룹 계열사 아님" }
   "011170":  # 롯데케미칼
-    business_match: { rating: 높음, note: "순수 석유화학사. SK지오센트릭과 유사한 범용화학 포지션" }
+    business_match: { rating: 매우 높음, note: "SK지오센트릭(NCC 에틸렌 66만톤/년)과 동일하게 나프타분해(NCC) 기반 PE·PP 중심 — 여수 NCC 100만톤/년 + 대산 NCC 110만톤/년으로 SK지오센트릭과 가장 근접한 upstream 폴리올레핀 생산구조" }
     independence: { rating: 적정, note: "SK그룹 계열사 아님" }
   "047050":  # 포스코인터내셔널
-    business_match: { rating: 낮음, note: "본질은 상사(트레이딩)+E&P사. SK어스온(E&P)과 일부 접점은 있으나 '화학' 그룹에 넣기엔 사업 성격이 이질적" }
+    business_match: { rating: 중간, note: "본질은 상사(트레이딩)+E&P사로 SK지오센트릭(화학)과는 제품이 겹치지 않는다. 다만 SK어스온(E&P, 미얀마 가스전 등)과 자원개발 사업이 겹치고, SK이노베이션 사업보고서에 '자가소비용 LNG 직도입' 참여사로 SK에너지와 나란히 명시돼(주석 13 LNG사업) SK E&S 사업과도 접점이 있다 — 화학 하나로만 보면 낮지만 종합하면 중간" }
     independence: { rating: 적정, note: "SK그룹 계열사 아님" }
   "373220":  # LG에너지솔루션
-    business_match: { rating: 매우 높음, note: "SK온과 국내 배터리셀 3강 중 직접 경쟁사" }
+    business_match: { rating: 매우 높음, note: "SK온(2025년 생산능력 94.6GWh/년)과 국내 배터리셀 3강 중 직접 경쟁사. LG에너지솔루션은 2025년 목표 생산능력 540GWh/년(자동차·소형·ESS 합산)으로 SK온보다 훨씬 크지만 같은 제품(중대형 리튬이온 배터리)" }
     independence: { rating: 적정, note: "SK그룹 계열사 아님" }
   "006400":  # 삼성SDI
-    business_match: { rating: 매우 높음, note: "SK온과 국내 배터리셀 3강 중 직접 경쟁사" }
+    business_match: { rating: 매우 높음, note: "SK온(2025년 생산능력 94.6GWh/년)과 국내 배터리셀 3강 중 직접 경쟁사. 삼성SDI는 2025년 추정 생산능력 약 200GWh/년(울산·헝가리·중국 시안)으로 SK온보다 2배가량 크지만 같은 제품" }
     independence: { rating: 적정, note: "SK그룹 계열사 아님" }
   "247540":  # 에코프로비엠
-    business_match: { rating: 높음, note: "양극재 밸류체인 비교에 적합. 다만 성장주 특성상 변동성이 크고, 지분증권 발행이 진행 중(calibration.yaml watchlist 등록)" }
+    business_match: { rating: 중간, note: "SK 계열사가 실제 생산하는 배터리소재는 SKIET의 분리막(필름, ㎡ 단위)뿐이다. 에코프로비엠이 만드는 양극재(분말 화학소재, 톤 단위 — 2026년 CAPA 목표 55만톤/년)는 완전히 다른 소재 카테고리라 '같은 제품'은 아니다. 다만 SK온의 핵심 원가 공급자라 배터리 밸류체인 비교로는 의미가 있다" }
     independence: { rating: 적정, note: "SK그룹 계열사 아님" }
   "003670":  # 포스코퓨처엠
-    business_match: { rating: 높음, note: "양극재·음극재를 동시 생산해 배터리소재 밸류체인 비교에 적합" }
+    business_match: { rating: 중간, note: "SK 계열사가 실제 생산하는 배터리소재는 SKIET의 분리막(필름, ㎡ 단위)뿐이다. 포스코퓨처엠이 만드는 양극재·음극재(분말 화학소재, 톤 단위 — 음극재 2025년 17.2만톤/년, 2030년 26만톤 목표)는 완전히 다른 소재 카테고리라 '같은 제품'은 아니다. 다만 SK온의 핵심 원가 공급자라 배터리 밸류체인 비교로는 의미가 있다" }
     independence: { rating: 적정, note: "SK그룹 계열사 아님" }
