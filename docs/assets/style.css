@@ -289,6 +289,15 @@ main{flex:1;min-width:0;display:flex;flex-direction:column}
 .mode .t{font-size:11.5px;color:var(--muted);font-weight:var(--w-med)}
 .mode .v{font-size:26px;font-weight:var(--w-black);line-height:1;color:var(--ink)}
 .mode .d{font-size:11.5px;color:var(--muted)}
+/* 웹에서는 평가 조건(좌)·산출 결과(우) 좌우 배치 — 조건을 바꾸며 결과를
+   한눈에 보려는 목적. 좁은 화면(모바일)에서는 가로 폭이 부족해 조건 패널이
+   찌그러지므로 위아래로 쌓는다(아래 760px 미디어쿼리).
+   그리드 트랙과 그 안의 카드 둘 다 기본값이 min-width:auto 라 내용(표·탭
+   버튼줄)의 min-content 폭 아래로는 줄어들지 않고 넘친다. 트랙은
+   minmax(0,…), 카드는 min-width:0 으로 바닥을 열어야 컨테이너 폭에 맞춰
+   실제로 줄어든다 — 하나만 고치면 다른 하나에서 다시 넘친다. */
+.design-layout{display:grid;grid-template-columns:minmax(0,360px) minmax(0,1fr);gap:18px;align-items:start}
+.design-layout>*{min-width:0}
 .design-score-compare{margin:0 0 18px}
 .design-score-compare .mode.active{border-color:var(--brand);background:var(--brand-soft);box-shadow:0 0 0 1px var(--brand) inset}
 .control-help{margin-top:7px;color:var(--muted);font-size:11px;line-height:1.55}
@@ -483,6 +492,7 @@ tr.subject td:last-child{border-top-right-radius:var(--r-sm);border-bottom-right
   .hero{padding:20px 17px}
   .mode-grid{grid-template-columns:1fr}
   .mode-compare{grid-template-columns:1fr}
+  .design-layout{grid-template-columns:minmax(0,1fr)}
   .score-main b{font-size:46px}
   .card{padding:16px 15px}
   .bar-row .lb{width:34vw}

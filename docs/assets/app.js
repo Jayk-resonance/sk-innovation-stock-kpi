@@ -1392,32 +1392,34 @@ function renderDesign(V) {
     ? "SK이노베이션 증감률만 반영 (Peer 보정 없음)"
     : "SK이노베이션 증감률 − Peer 증감률";
   V.innerHTML = `
-    ${controlsPanel()}
-    ${error ? `<div class="empty"><span class="ico">⚠️</span>계산할 수 없습니다 — ${esc(error)}</div>` : `
-    <div class="card">
-      <h3>산출 결과 <span class="sub">${String(D.latest.base_date).slice(0, 4)}년末 선택한 평가 방식의 40점 기준가격 ${won(anchor)}원 적용</span></h3>
-      ${SIM.weighted ? `<div class="mode-grid design-score-compare">
-        ${methodScores.map(({ method, result: compared }) => `<div class="mode ${SIM.method === method ? "active" : ""}">
-          <span class="t">${simMethodLabel(method)}${SIM.method === method ? " · 현재 선택" : ""}</span>
-          <span class="v">${pts(compared.scores.V3.value)}점</span>
-          <span class="d">평가주가 ${won(compared.eval_price)}원 · 40점 기준가격 ${won(compared.score_marks.V3.find(mark => mark.points === 40).price)}원</span>
-        </div>`).join("")}
-      </div>` : ""}
-      <div class="mode-block" style="border:none;padding:0">
-        <div class="mode-block-head">
-          <div class="name">선택 조건에 따른 최종 평가 점수<span class="sub">${SIM.weighted ? simMethodLabel(SIM.method) : "단순 종가평균"} · ${simFormulaLabel(SIM.formula)} · 선택한 모든 조건이 반영된 결과입니다</span></div>
-          <div class="mode-block-score">
-            <b class="${dirClass(result.scores.V3.value - 40)}">${pts(result.scores.V3.value)}점</b>
-            <span class="raw">${result.scores.V3.clipped ? `산식상 ${pts(result.scores.V3.raw)}점 → 0~100점 범위 적용` : "0~100점 범위 내"}</span>
+    <div class="design-layout">
+      ${controlsPanel()}
+      ${error ? `<div class="empty"><span class="ico">⚠️</span>계산할 수 없습니다 — ${esc(error)}</div>` : `
+      <div class="card">
+        <h3>산출 결과 <span class="sub">${String(D.latest.base_date).slice(0, 4)}년末 선택한 평가 방식의 40점 기준가격 ${won(anchor)}원 적용</span></h3>
+        ${SIM.weighted ? `<div class="mode-grid design-score-compare">
+          ${methodScores.map(({ method, result: compared }) => `<div class="mode ${SIM.method === method ? "active" : ""}">
+            <span class="t">${simMethodLabel(method)}${SIM.method === method ? " · 현재 선택" : ""}</span>
+            <span class="v">${pts(compared.scores.V3.value)}점</span>
+            <span class="d">평가주가 ${won(compared.eval_price)}원 · 40점 기준가격 ${won(compared.score_marks.V3.find(mark => mark.points === 40).price)}원</span>
+          </div>`).join("")}
+        </div>` : ""}
+        <div class="mode-block" style="border:none;padding:0">
+          <div class="mode-block-head">
+            <div class="name">선택 조건에 따른 최종 평가 점수<span class="sub">${SIM.weighted ? simMethodLabel(SIM.method) : "단순 종가평균"} · ${simFormulaLabel(SIM.formula)} · 선택한 모든 조건이 반영된 결과입니다</span></div>
+            <div class="mode-block-score">
+              <b class="${dirClass(result.scores.V3.value - 40)}">${pts(result.scores.V3.value)}점</b>
+              <span class="raw">${result.scores.V3.clipped ? `산식상 ${pts(result.scores.V3.raw)}점 → 0~100점 범위 적용` : "0~100점 범위 내"}</span>
+            </div>
           </div>
+          ${scoreGauge(result.score_marks.V3, result.scores.V3.value)}
+          ${designScorePrices(result)}
+          ${subjectTable(result, SIM.weighted)}
+          ${peerSection(result)}
+          ${calcSection(result, xLabel, true)}
         </div>
-        ${scoreGauge(result.score_marks.V3, result.scores.V3.value)}
-        ${designScorePrices(result)}
-        ${subjectTable(result, SIM.weighted)}
-        ${peerSection(result)}
-        ${calcSection(result, xLabel, true)}
-      </div>
-    </div>`}
+      </div>`}
+    </div>
     ${coverageNotice()}`;
   wireDesignEvents(V);
 }
