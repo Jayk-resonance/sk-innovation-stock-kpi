@@ -1234,9 +1234,19 @@ function simDefaults() {
     windows: [...today.specs],
     weight: today.groups["에화"].weight,
     excluded: new Set(),
+    candidatesOn: new Set(),
     scaleWidth: D.latest.score_scale.upper_bound_pct,
     formula: "relative",
   };
+}
+
+/** 정식 8개 Peer(D.latest.tickers) 에, 사용자가 탭4에서 켠 실험용 후보를 얹은
+ *  목록 — computeSim() 은 이 목록을 그대로 그룹별로 묶어 평균을 낸다. 후보를
+ *  하나도 켜지 않으면 D.latest.tickers 와 완전히 같으므로 "오늘의 점수"는
+ *  건드리지 않는다. */
+function simActiveTickers() {
+  const active = (D.latest.candidates || []).filter(c => SIM.candidatesOn.has(c.code));
+  return D.latest.tickers.concat(active.map(c => ({ code: c.code, name: c.name, group: c.group, weight: null })));
 }
 
 function simMethodLabel(method) {
@@ -1376,6 +1386,25 @@ function controlsPanel() {
           }).join("")}
         </div>
       </div>
+      ${(D.latest.candidates || []).length ? `<div>
+        <div class="group-sec-h">추가 후보 <span style="font-weight:var(--w-reg)">(실험용 · 기본 제외 · 켜면 해당 그룹 평균에 포함됩니다)</span></div>
+        <div style="display:flex;flex-wrap:wrap;gap:20px">
+          ${D.latest.candidates.map(c => {
+            const checked = SIM.candidatesOn.has(c.code);
+            return `<div>
+              <b style="font-size:11.5px;color:var(--muted-2)">${esc(c.group)}</b>
+              <div style="display:flex;flex-direction:column;gap:4px;margin-top:4px">
+                <div class="sim-peer-row">
+                  <label style="display:flex;align-items:center;gap:5px;font-size:12.5px;cursor:pointer">
+                    <input type="checkbox" data-sim-candidate="${c.code}" ${checked ? "checked" : ""}>${esc(c.name)}
+                  </label>
+                  <span class="peer-eval-trigger" tabindex="0" aria-label="${esc(c.name)} Peer 선정 적정성 보기">ⓘ${peerCriteriaPopover(c)}</span>
+                </div>
+              </div>
+            </div>`;
+          }).join("")}
+        </div>
+      </div>` : ""}
       <div>
         <div class="group-sec-h">점수 범위 — 40점 기준가격 대비 ±${(SIM.scaleWidth * 100).toFixed(0)}%</div>
         <input type="range" id="simScale" min="5" max="30" step="1" value="${SIM.scaleWidth * 100}" style="width:100%">
@@ -1424,6 +1453,12 @@ function wireDesignEvents(V) {
       if (cb.checked) SIM.excluded.delete(code); else SIM.excluded.add(code);
       renderDesign(V);
     }));
+  document.querySelectorAll("[data-sim-candidate]").forEach(cb =>
+    cb.addEventListener("change", () => {
+      const code = cb.dataset.simCandidate;
+      if (cb.checked) SIM.candidatesOn.add(code); else SIM.candidatesOn.delete(code);
+      renderDesign(V);
+    }));
   document.getElementById("simScale")?.addEventListener("change", e => { SIM.scaleWidth = Number(e.target.value) / 100; renderDesign(V); });
   document.querySelectorAll("[data-sim-formula]").forEach(b =>
     b.addEventListener("click", () => { SIM.formula = b.dataset.simFormula; renderDesign(V); }));
@@ -1436,14 +1471,15 @@ function renderDesign(V) {
 
   let result, methodScores = [], error = null;
   try {
-    result = computeSim(D.bars, D.latest.tickers, SIM, baseDate, evalDate, anchor, D.latest.score_scale);
+    const activeTickers = simActiveTickers();
+    result = computeSim(D.bars, activeTickers, SIM, baseDate, evalDate, anchor, D.latest.score_scale);
     if (SIM.weighted) {
       methodScores = ["A", "B"].map(method => {
         const params = { ...SIM, method };
         const comparedAnchor = simAnchor(params, baseDate);
         return {
           method,
-          result: computeSim(D.bars, D.latest.tickers, params, baseDate, evalDate, comparedAnchor, D.latest.score_scale),
+          result: computeSim(D.bars, activeTickers, params, baseDate, evalDate, comparedAnchor, D.latest.score_scale),
         };
       });
     }

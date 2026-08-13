@@ -7,6 +7,7 @@ from datetime import date
 import pytest
 
 from core.evaluate import evaluate
+from core.schema import load_candidates
 from pipeline.build_site import (
     _market_cap_rating,
     build_bars,
@@ -213,6 +214,34 @@ def test_market_cap_rating_thresholds():
     assert _market_cap_rating(3.0) == "격차 있음"
     assert _market_cap_rating(0.1) == "격차 큼"
     assert _market_cap_rating(5.0) == "격차 큼"
+
+
+def test_load_candidates_returns_experimental_peers():
+    """27년 과제 설계 탭 전용 후보 — universe.groups 와는 별도 섹션이다."""
+    candidates = load_candidates()
+    codes = {c.ticker.code for c in candidates}
+    assert codes == {"006650", "004690"}
+    assert all(c.group in ("에화", "배소") for c in candidates)
+
+
+def test_candidates_excluded_from_official_score_but_present_in_payload(prices, universe, rules, calibration):
+    """실험용 후보는 오늘의 점수(tickers/views)에는 나타나지 않고, candidates 필드에만 실린다."""
+    payload = build_latest(prices, universe, rules, calibration)
+    official_codes = {t["code"] for t in payload["tickers"]}
+    assert {"006650", "004690"}.isdisjoint(official_codes)
+
+    candidate_codes = {c["code"] for c in payload["candidates"]}
+    assert candidate_codes == {"006650", "004690"}
+    for c in payload["candidates"]:
+        for key in ("business_match", "independence", "market_cap", "liquidity"):
+            assert key in c["peer_eval"]
+
+
+def test_build_bars_includes_candidate_codes(prices):
+    """sim.js 가 후보를 켰을 때 계산할 수 있도록 원자료가 있어야 한다."""
+    bars = build_bars(prices)
+    assert "006650" in bars
+    assert "004690" in bars
 
 
 def test_peer_eval_present_for_every_peer_and_absent_for_subject(prices, universe, rules, calibration):

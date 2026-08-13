@@ -23,7 +23,7 @@ from core.scenarios import (
     sensitivity_table,
     target_price,
 )
-from core.schema import Bar, Universe, load_peer_criteria
+from core.schema import Bar, Universe, load_candidates, load_peer_criteria
 from pipeline.ingest import load_shares
 from pipeline.qc import GAP_ERROR_DAYS, check_calendar_gaps, trading_days
 from pipeline.verify import cross_check_monthly
@@ -60,37 +60,39 @@ def _market_cap_rating(ratio: float | None) -> str:
     return "격차 큼"
 
 
-def _peer_evaluation(prices: dict[str, list[Bar]], universe: Universe) -> dict[str, dict]:
-    """Peer 선정 적정성 4개 기준을 종목별로 계산한다.
+def _latest_cap(shares: dict[str, list[tuple[date, int]]], code: str) -> int | None:
+    rows = shares.get(code)
+    return rows[-1][1] if rows else None
+
+
+def _avg_trading_value(prices: dict[str, list[Bar]], code: str) -> float | None:
+    bars = prices.get(code)
+    if not bars:
+        return None
+    recent = bars[-LIQUIDITY_WINDOW:]
+    return sum(b.trading_value for b in recent) / len(recent)
+
+
+def _evaluate_tickers(
+    tickers, prices: dict[str, list[Bar]],
+    shares: dict[str, list[tuple[date, int]]], curated: dict[str, dict],
+    subject_cap: int | None,
+) -> dict[str, dict]:
+    """Peer 선정 적정성 4개 기준을 종목 목록에 대해 계산한다.
 
     ①사업 유사도 ④독립성(이해상충)은 판단이 들어가므로 config/peer_criteria.yaml
     에 사람이 등록한 값을 그대로 쓴다. ②시가총액 ③거래 유동성은 최신 시세로
-    매번 다시 계산해, 데이터가 갱신되면 화면도 그대로 따라온다.
+    매번 다시 계산해, 데이터가 갱신되면 화면도 그대로 따라온다. 유동성 순위는
+    인자로 받은 tickers 목록 안에서만 매긴다 — 후보를 평가할 땐 그 후보가
+    속하게 될 그룹의 공식 Peer 들과 함께 넣어 호출해야 순위가 의미 있다.
     """
-    curated = load_peer_criteria()
-    shares = load_shares()
-    subject = universe.subject.code
-
-    def latest_cap(code: str) -> int | None:
-        rows = shares.get(code)
-        return rows[-1][1] if rows else None
-
-    def avg_trading_value(code: str) -> float | None:
-        bars = prices.get(code)
-        if not bars:
-            return None
-        recent = bars[-LIQUIDITY_WINDOW:]
-        return sum(b.trading_value for b in recent) / len(recent)
-
-    subject_cap = latest_cap(subject)
-    peers = universe.peers
-    liquidity = {t.code: avg_trading_value(t.code) for t in peers}
+    liquidity = {t.code: _avg_trading_value(prices, t.code) for t in tickers}
     ranked = sorted((c for c in liquidity if liquidity[c] is not None),
                      key=lambda c: liquidity[c], reverse=True)
 
     out = {}
-    for t in peers:
-        cap = latest_cap(t.code)
+    for t in tickers:
+        cap = _latest_cap(shares, t.code)
         ratio = cap / subject_cap if cap and subject_cap else None
         entry = curated.get(t.code, {})
         out[t.code] = {
@@ -110,6 +112,38 @@ def _peer_evaluation(prices: dict[str, list[Bar]], universe: Universe) -> dict[s
                 "of": len(ranked),
             },
         }
+    return out
+
+
+def _peer_evaluation(prices: dict[str, list[Bar]], universe: Universe) -> dict[str, dict]:
+    curated = load_peer_criteria()
+    shares = load_shares()
+    subject_cap = _latest_cap(shares, universe.subject.code)
+    return _evaluate_tickers(universe.peers, prices, shares, curated, subject_cap)
+
+
+def _candidate_evaluation(
+    prices: dict[str, list[Bar]], universe: Universe, candidates,
+) -> list[dict]:
+    """실험용 후보를, 배정된 그룹의 공식 Peer 들과 함께 평가한다(유동성 순위 기준).
+
+    candidates 는 core.schema.Candidate 목록이다(config/universe.yaml 의
+    candidates 섹션). 이 결과는 오늘의 점수(build_latest 의 tickers/views)에는
+    전혀 쓰이지 않고, 탭4 시뮬레이터의 후보 hover 설명에만 쓰인다.
+    """
+    curated = load_peer_criteria()
+    shares = load_shares()
+    subject_cap = _latest_cap(shares, universe.subject.code)
+    out = []
+    for cand in candidates:
+        group_peers = universe.groups[cand.group][1]
+        combined = tuple(group_peers) + (cand.ticker,)
+        evaluated = _evaluate_tickers(combined, prices, shares, curated, subject_cap)
+        out.append({
+            "code": cand.ticker.code, "name": cand.ticker.name,
+            "market": cand.ticker.market, "group": cand.group,
+            "peer_eval": evaluated[cand.ticker.code],
+        })
     return out
 
 
@@ -362,6 +396,7 @@ def build_latest(
                        "days": (upcoming[0]["date"] - as_of).days} if upcoming else None),
         "coverage": _coverage(prices),
         "watchlist": calibration.get("watchlist") or [],
+        "candidates": _candidate_evaluation(prices, universe, load_candidates()),
     }
 
 

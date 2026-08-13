@@ -23,3 +23,12 @@ groups:
       # 에코프로비엠만 KOSDAQ GLOBAL. 휴장일 캘린더는 KOSPI와 동일하다.
       - { name: 에코프로비엠,   code: "247540", market: KOSDAQ }
       - { name: 포스코퓨처엠,   code: "003670", market: KOSPI }
+
+# "27년 과제 설계" 탭 전용 실험용 Peer 후보.
+#
+# groups(위)와 분리된 이유: groups 는 core/evaluate.py 가 오늘의 공식 점수 계산에
+# 무조건 사용한다. 여기 candidates 는 site 시뮬레이터(docs/assets/sim.js)에서만
+# 토글로 켜지며, 기본은 꺼짐 — 켜지 않는 한 오늘의 점수에 어떤 영향도 주지 않는다.
+candidates:
+  - { name: 대한유화, code: "006650", market: KOSPI, group: 에화 }
+  - { name: 삼천리,   code: "004690", market: KOSPI, group: 에화 }

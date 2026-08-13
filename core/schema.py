@@ -48,6 +48,16 @@ class Universe:
         return (self.subject,) + self.peers
 
 
+@dataclass(frozen=True)
+class Candidate:
+    """"27년 과제 설계" 탭 전용 실험용 Peer 후보. 어느 그룹에 넣어봤을 때를
+    가정하는지(group)만 들고 있을 뿐, Universe.groups 에는 속하지 않는다 —
+    core/evaluate.py 의 공식 점수 계산에는 전혀 관여하지 않는다."""
+
+    ticker: Ticker
+    group: str
+
+
 def _to_date(value: str | date) -> date:
     return value if isinstance(value, date) else date.fromisoformat(value)
 
@@ -63,6 +73,16 @@ def load_universe(path: Path | None = None) -> Universe:
     if abs(total - 1.0) > 1e-9:
         raise ValueError(f"그룹 가중치 합이 1.0이 아니다: {total}")
     return Universe(subject=subject, groups=groups)
+
+
+def load_candidates(path: Path | None = None) -> tuple[Candidate, ...]:
+    """universe.yaml 의 candidates 섹션. 파일에 없으면 빈 튜플이다."""
+    raw = yaml.safe_load((path or CONFIG_DIR / "universe.yaml").read_text(encoding="utf-8"))
+    entries = raw.get("candidates") or []
+    return tuple(
+        Candidate(ticker=Ticker(name=e["name"], code=e["code"], market=e["market"]), group=e["group"])
+        for e in entries
+    )
 
 
 def load_rules(path: Path | None = None) -> dict:
