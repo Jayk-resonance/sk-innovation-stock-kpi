@@ -74,7 +74,7 @@ def _avg_trading_value(prices: dict[str, list[Bar]], code: str) -> float | None:
 
 
 def _evaluate_tickers(
-    tickers, prices: dict[str, list[Bar]],
+    tickers, rank_pool, prices: dict[str, list[Bar]],
     shares: dict[str, list[tuple[date, int]]], curated: dict[str, dict],
     subject_cap: int | None,
 ) -> dict[str, dict]:
@@ -83,10 +83,12 @@ def _evaluate_tickers(
     ①사업 유사도 ④독립성(이해상충)은 판단이 들어가므로 config/peer_criteria.yaml
     에 사람이 등록한 값을 그대로 쓴다. ②시가총액 ③거래 유동성은 최신 시세로
     매번 다시 계산해, 데이터가 갱신되면 화면도 그대로 따라온다. 유동성 순위는
-    인자로 받은 tickers 목록 안에서만 매긴다 — 후보를 평가할 땐 그 후보가
-    속하게 될 그룹의 공식 Peer 들과 함께 넣어 호출해야 순위가 의미 있다.
+    출력 대상(tickers)이 아니라 rank_pool 전체 안에서 매긴다 — 공식 Peer와
+    실험용 후보를 같은 "n개사 중 m위" 기준으로 비교할 수 있어야 하므로, 그룹이
+    다르거나 후보/공식 여부가 달라도 항상 같은 모집단(공식 Peer 전체 + 후보
+    전체)으로 순위를 매긴다.
     """
-    liquidity = {t.code: _avg_trading_value(prices, t.code) for t in tickers}
+    liquidity = {t.code: _avg_trading_value(prices, t.code) for t in rank_pool}
     ranked = sorted((c for c in liquidity if liquidity[c] is not None),
                      key=lambda c: liquidity[c], reverse=True)
 
@@ -119,32 +121,33 @@ def _peer_evaluation(prices: dict[str, list[Bar]], universe: Universe) -> dict[s
     curated = load_peer_criteria()
     shares = load_shares()
     subject_cap = _latest_cap(shares, universe.subject.code)
-    return _evaluate_tickers(universe.peers, prices, shares, curated, subject_cap)
+    pool = universe.peers + tuple(c.ticker for c in load_candidates())
+    return _evaluate_tickers(universe.peers, pool, prices, shares, curated, subject_cap)
 
 
 def _candidate_evaluation(
     prices: dict[str, list[Bar]], universe: Universe, candidates,
 ) -> list[dict]:
-    """실험용 후보를, 배정된 그룹의 공식 Peer 들과 함께 평가한다(유동성 순위 기준).
+    """실험용 후보를 공식 Peer 8개 + 후보 전체와 함께 평가한다(유동성 순위 기준).
 
     candidates 는 core.schema.Candidate 목록이다(config/universe.yaml 의
     candidates 섹션). 이 결과는 오늘의 점수(build_latest 의 tickers/views)에는
-    전혀 쓰이지 않고, 탭4 시뮬레이터의 후보 hover 설명에만 쓰인다.
+    전혀 쓰이지 않고, 탭4 시뮬레이터의 후보 hover 설명에만 쓰인다. 유동성 순위는
+    _peer_evaluation 과 같은 모집단(공식 Peer + 후보 전체)을 써서, 공식 Peer
+    hover 와 후보 hover 의 "n개사 중" 이 항상 같은 n 을 가리키게 한다.
     """
     curated = load_peer_criteria()
     shares = load_shares()
     subject_cap = _latest_cap(shares, universe.subject.code)
-    out = []
-    for cand in candidates:
-        group_peers = universe.groups[cand.group][1]
-        combined = tuple(group_peers) + (cand.ticker,)
-        evaluated = _evaluate_tickers(combined, prices, shares, curated, subject_cap)
-        out.append({
-            "code": cand.ticker.code, "name": cand.ticker.name,
-            "market": cand.ticker.market, "group": cand.group,
-            "peer_eval": evaluated[cand.ticker.code],
-        })
-    return out
+    pool = universe.peers + tuple(c.ticker for c in candidates)
+    evaluated = _evaluate_tickers(
+        tuple(c.ticker for c in candidates), pool, prices, shares, curated, subject_cap
+    )
+    return [{
+        "code": cand.ticker.code, "name": cand.ticker.name,
+        "market": cand.ticker.market, "group": cand.group,
+        "peer_eval": evaluated[cand.ticker.code],
+    } for cand in candidates]
 
 
 def _group_index(indexed: dict[str, list], universe: Universe) -> dict[str, list]:

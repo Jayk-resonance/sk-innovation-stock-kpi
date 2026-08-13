@@ -249,6 +249,7 @@ def test_peer_eval_present_for_every_peer_and_absent_for_subject(prices, univers
     payload = build_latest(prices, universe, rules, calibration)
     by_code = {t["code"]: t for t in payload["tickers"]}
     assert "peer_eval" not in by_code[universe.subject.code]
+    pool_size = len(universe.peers) + len(load_candidates())
     for peer in universe.peers:
         evaluation = by_code[peer.code]["peer_eval"]
         for key in ("business_match", "independence", "market_cap", "liquidity"):
@@ -257,4 +258,14 @@ def test_peer_eval_present_for_every_peer_and_absent_for_subject(prices, univers
         assert cap["rating"] in {"적정", "격차 있음", "격차 큼", "확인 불가"}
         liquidity = evaluation["liquidity"]
         if liquidity["rank"] is not None:
-            assert 1 <= liquidity["rank"] <= liquidity["of"] == len(universe.peers)
+            assert 1 <= liquidity["rank"] <= liquidity["of"] == pool_size
+
+
+def test_peer_and_candidate_liquidity_share_same_ranking_pool(prices, universe, rules, calibration):
+    """공식 Peer hover 와 후보 hover 의 "n개사 중" 이 같은 모집단을 가리켜야 한다 —
+    그룹별로 따로 매기면 8개사 중/5개사 중 처럼 기준이 달라 보여 혼란스럽다."""
+    payload = build_latest(prices, universe, rules, calibration)
+    pool_size = len(universe.peers) + len(load_candidates())
+    peer_ofs = {t["peer_eval"]["liquidity"]["of"] for t in payload["tickers"] if "peer_eval" in t}
+    candidate_ofs = {c["peer_eval"]["liquidity"]["of"] for c in payload["candidates"]}
+    assert peer_ofs == candidate_ofs == {pool_size}
