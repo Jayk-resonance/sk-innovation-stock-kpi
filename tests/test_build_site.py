@@ -91,6 +91,10 @@ def test_mode_detail_carries_daily_and_weighted_price_chart(prices, universe, ru
     assert base["close"] == fin["subject_base_close"]
     assert chart[-1]["daily_weighted_price"] == fin["subject_daily_weighted_price"]
     assert base["daily_weighted_price"] == fin["subject_base_daily_weighted_price"]
+    # 기본 산식 B는 종가×거래량을 사용하므로 1일 값은 그날 종가와 같다.
+    assert fin["method"] == "B"
+    assert fin["subject_daily_weighted_price"] == pytest.approx(fin["subject_close"])
+    assert fin["subject_base_daily_weighted_price"] == pytest.approx(fin["subject_base_close"])
     assert chart[-1]["vwap_2m"] == pytest.approx(fin["windows_now"][0]["vwap"])
     assert chart[-1]["vwap_final"] == pytest.approx(fin["subject_price"])
 

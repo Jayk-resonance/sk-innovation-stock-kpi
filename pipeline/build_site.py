@@ -231,8 +231,8 @@ def _mode_detail(prices, universe, rules, calibration, eval_date, mode, method) 
     subject_by_day = {bar.day: bar for bar in subject_bars}
 
     def daily_weighted_price(bar):
-        """거래대금÷거래량으로 계산한 1일 거래량가중평균 종가."""
-        return round(vwap([bar], "A"), 2)
+        """대시보드 기본 산식으로 계산한 1일 거래량가중평균 주가."""
+        return round(vwap([bar], method), 2)
 
     def subject_chart() -> list[dict]:
         """단순 종가와 평가 방식별 거래량가중평균 주가의 일별 추이."""

@@ -281,6 +281,9 @@ function coverageNotice() {
 /** SK이노베이션 거래량 보정 주가 — 종가에서 시작해 윈도우별 VWAP, 증감율까지. */
 function subjectTable(m, weighted = true, friendlyDates = false) {
   const unit = weighted ? "거래량가중평균" : "종가평균";
+  const dailyLabel = m.method === "B"
+    ? "1일 거래량가중평균 주가 (종가 × 거래량 기준)"
+    : "1일 거래량가중평균 주가 (실제 거래대금 기준)";
   const latestLabel = friendlyDates ? koMonthDay(m.eval_date) : "평가일";
   const baseLabel = friendlyDates ? `${String(D.latest.base_date).slice(0, 4)}년末` : "기준일";
   const rows = m.windows_now.map((w, i) => {
@@ -299,7 +302,7 @@ function subjectTable(m, weighted = true, friendlyDates = false) {
         <tr><td>단순 종가</td><td class="num">${won(m.subject_close)}원</td>
           <td class="num">${won(m.subject_base_close)}원</td>
           <td class="num ${dirClass(m.subject_close / m.subject_base_close - 1)}">${signed(m.subject_close / m.subject_base_close - 1)}</td></tr>
-        <tr><td>1일 거래량가중평균 주가</td><td class="num">${won(m.subject_daily_weighted_price)}원</td>
+        <tr><td>${dailyLabel}</td><td class="num">${won(m.subject_daily_weighted_price)}원</td>
           <td class="num">${won(m.subject_base_daily_weighted_price)}원</td>
           <td class="num ${dirClass(m.subject_daily_weighted_price / m.subject_base_daily_weighted_price - 1)}">${signed(m.subject_daily_weighted_price / m.subject_base_daily_weighted_price - 1)}</td></tr>
         ${rows.join("")}
@@ -321,7 +324,7 @@ function subjectPriceChart(m, name = "SK이노베이션", mode = "daily") {
     { key: "vwap_final", label: "2개월·1개월·1주 거래량가중평균 주가의 산술평균", color: "--series-3", width: 2.8 },
   ] : [
     { key: "close", label: "단순 종가", color: "--series-1", width: 2.2 },
-    { key: "daily_weighted_price", label: "1일 거래량가중평균 주가", color: "--series-3", width: 2.7 },
+    { key: "daily_weighted_price", label: m.method === "B" ? "1일 거래량가중평균 주가 (종가와 동일)" : "1일 거래량가중평균 주가", color: "--series-3", width: 2.7 },
   ];
   const values = points.flatMap(p => series.map(s => p[s.key])).filter(v => v != null);
   let lo = Math.min(...values), hi = Math.max(...values);
@@ -348,7 +351,7 @@ function subjectPriceChart(m, name = "SK이노베이션", mode = "daily") {
   const paths = series.map(s => `<path d="${pathFor(s.key)}" fill="none" stroke="${tok(s.color)}" stroke-width="${s.width}" stroke-linejoin="round" stroke-linecap="round"/>`).join("");
   const dots = series.map(s => `<circle class="subject-chart-dot" data-chart-key="${s.key}" r="4" fill="${tok(s.color)}"/>`).join("");
   const legend = series.map(s => `<span><i style="background:${tok(s.color)}"></i>${esc(s.label)}</span>`).join("");
-  return `<div class="subject-price-chart" data-subject-chart="${data}" data-subject-range="${esc(JSON.stringify({ lo, hi }))}" data-subject-mode="${mode}">
+  return `<div class="subject-price-chart" data-subject-chart="${data}" data-subject-range="${esc(JSON.stringify({ lo, hi }))}" data-subject-mode="${mode}" data-subject-method="${esc(m.method)}">
     <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="${esc(name)} ${esc(series.map(s => s.label).join(', '))} 추이">
       <line x1="${P.l}" y1="${y(lo).toFixed(1)}" x2="${W - P.r}" y2="${y(lo).toFixed(1)}" stroke="${tok("--grid")}"/>
       <line x1="${P.l}" y1="${y(hi).toFixed(1)}" x2="${W - P.r}" y2="${y(hi).toFixed(1)}" stroke="${tok("--grid")}"/>
@@ -383,7 +386,7 @@ function bindSubjectPriceCharts(root) {
       { key: "vwap_final", label: "최종 산술평균" },
     ] : [
       { key: "close", label: "단순 종가" },
-      { key: "daily_weighted_price", label: "1일 거래량가중평균 주가" },
+      { key: "daily_weighted_price", label: chart.dataset.subjectMethod === "B" ? "1일 거래량가중평균 주가 (종가와 동일)" : "1일 거래량가중평균 주가" },
     ];
     const dots = new Map([...chart.querySelectorAll(".subject-chart-dot")].map(dot => [dot.dataset.chartKey, dot]));
     const tip = chart.querySelector(".subject-chart-tooltip"), W = 920, H = 250, P = { l: 46, r: 22, t: 20, b: 30 };
@@ -685,6 +688,7 @@ function historicalStep(step, title, sub, provisionalBody, finalBody) {
 
 function historicalSubjectStep(m) {
   return `${indexedScoreFormula(1)}
+    <p class="step-copy">각 기간은 (종가 × 거래량) 합계 ÷ 거래량 합계로 계산합니다.</p>
     ${subjectTable(m, true, true)}
     <div class="step-result">① 산식에 사용되는 값 <b>${won(m.subject_price)}원</b></div>`;
 }
@@ -836,7 +840,7 @@ function renderScore(V) {
             <div><b>SK이노베이션 거래량가중평균 주가</b><span>산식의 분자</span></div>
           </div>
           ${indexedScoreFormula(1)}
-          <p class="step-copy">2개월·1개월·1주의 거래량가중평균의 산술평균으로 산출합니다.</p>
+          <p class="step-copy">각 기간은 (종가 × 거래량) 합계 ÷ 거래량 합계로 계산하고, 2개월·1개월·1주 값을 산술평균합니다.</p>
           ${subjectTable(result, true, true)}
           <div class="step-result">① 산식에 사용되는 값 <b>${won(result.subject_price)}원</b></div>
           <div class="chart-caption">SK이노베이션 주가 추이 · 단순 종가·2개월 거래량가중평균 주가·최종 산술평균 · ${baseYear}년末 기준 2개월 전부터 ${koMonthDay(result.eval_date)}까지</div>
@@ -1035,7 +1039,7 @@ function renderPrices(V) {
     </div>
 
     <div class="card">
-      <h3>종목별 현황 <span class="sub">거래량 보정 주가는 2개월 VWAP · 산식 ${esc(L.method_primary)}</span>
+      <h3>종목별 현황 <span class="sub">2개월 거래량가중평균 주가 · (종가 × 거래량) 합계 ÷ 거래량 합계</span>
         ${csvButton("tickerTbl", "종목별현황.csv")}</h3>
       <div class="tbl-wrap"><table id="tickerTbl">
         <thead><tr><th>종목</th><th>그룹</th><th>최근 추세</th><th>종가</th><th>전일 대비</th><th>2M 보정주가</th><th>기준일 대비</th></tr></thead>
@@ -1110,7 +1114,7 @@ function matrixTable() {
     </tr>`;
   }).join("");
   return `<div class="card">
-    <h3>최종 방식 기준선별 점수 <span class="sub">2개월·1개월·1주의 거래량가중평균 산술평균과 Peer 보정 적용 · ${esc(D.scenarios.as_of)} 기준</span>
+    <h3>최종 방식 기준선별 점수 <span class="sub">종가 × 거래량 기준 · 2개월·1개월·1주의 거래량가중평균 산술평균과 Peer 보정 적용 · ${esc(D.scenarios.as_of)} 기준</span>
       ${csvButton("matrixTbl", "최종방식_기준선별점수.csv")}</h3>
     <div class="tbl-wrap"><table id="matrixTbl">
       <thead><tr><th>점수 기준</th><th>40점 기준가격</th><th>현재 점수</th><th>설명</th></tr></thead>
