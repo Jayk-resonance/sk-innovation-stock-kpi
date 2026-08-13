@@ -8,6 +8,7 @@ import pytest
 
 from core.evaluate import evaluate
 from pipeline.build_site import (
+    _market_cap_rating,
     build_bars,
     build_history,
     build_latest,
@@ -200,3 +201,31 @@ def test_sync_asset_versions_rewrites_stale_hash(tmp_path):
 
     # 다시 돌리면(내용 변화 없음) 더 손대지 않는다 — 반복 실행이 안전해야 한다.
     assert sync_asset_versions(docs) is None
+
+
+def test_market_cap_rating_thresholds():
+    """0.5~2배는 적정, 그 밖은 격차 — 경계값에서 뒤집히지 않는지 고정한다."""
+    assert _market_cap_rating(None) == "확인 불가"
+    assert _market_cap_rating(1.0) == "적정"
+    assert _market_cap_rating(0.5) == "적정"
+    assert _market_cap_rating(2.0) == "적정"
+    assert _market_cap_rating(0.49) == "격차 있음"
+    assert _market_cap_rating(3.0) == "격차 있음"
+    assert _market_cap_rating(0.1) == "격차 큼"
+    assert _market_cap_rating(5.0) == "격차 큼"
+
+
+def test_peer_eval_present_for_every_peer_and_absent_for_subject(prices, universe, rules, calibration):
+    """Peer 선정 적정성은 8개 Peer 전부에 붙고, 본사(SK이노베이션)에는 붙지 않는다."""
+    payload = build_latest(prices, universe, rules, calibration)
+    by_code = {t["code"]: t for t in payload["tickers"]}
+    assert "peer_eval" not in by_code[universe.subject.code]
+    for peer in universe.peers:
+        evaluation = by_code[peer.code]["peer_eval"]
+        for key in ("business_match", "independence", "market_cap", "liquidity"):
+            assert key in evaluation
+        cap = evaluation["market_cap"]
+        assert cap["rating"] in {"적정", "격차 있음", "격차 큼", "확인 불가"}
+        liquidity = evaluation["liquidity"]
+        if liquidity["rank"] is not None:
+            assert 1 <= liquidity["rank"] <= liquidity["of"] == len(universe.peers)

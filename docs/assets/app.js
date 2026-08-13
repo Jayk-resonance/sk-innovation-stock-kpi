@@ -25,6 +25,9 @@ const MAIN_TABS = [
 const S = { tab: "score", evalKey: "today", method: null, horizon: 2 };
 const D = { latest: null, history: null, scenarios: null, bars: null };
 const HIDDEN_EVAL_KEYS = new Set(["2026-1분기"]); // 다시 표시하려면 이 키를 제거한다.
+// 점수 시계열을 주가 현황 탭으로 옮기면서 나머지(기준선별 점수·잔여기간 시나리오)만
+// 남은 Case 시뮬레이션 탭을 숨겼다. 코드는 그대로 두었으니 이 키를 지우면 복원된다.
+const HIDDEN_MAIN_TABS = new Set(["case"]);
 const WINDOW_OPTS = ["1D", "1W", "1M", "2M", "3M", "6M"];
 let SIM = null;   // 탭4 파라미터 상태. D.latest 로딩 후 첫 방문 시 simDefaults() 로 채운다.
 const MOBILE_NAV_MEDIA = window.matchMedia("(max-width: 760px)");
@@ -38,6 +41,13 @@ const signed = (n, d = 2) => n == null ? "—" : (n >= 0 ? "+" : "") + (n * 100)
 const dirClass = n => n == null ? "" : (n > 0 ? "up" : n < 0 ? "down" : "");
 const pts = n => n == null ? "—" : n.toFixed(2);
 const signedPts = n => n == null ? "—" : (n >= 0 ? "+" : "") + n.toFixed(2) + "점";
+const jo = n100m => n100m == null ? "—" : (n100m / 10000).toFixed(1) + "조원";   // 억원 단위 입력
+const eok = won_ => won_ == null ? "—" : Math.round(won_ / 1e8).toLocaleString("ko-KR") + "억원";
+const peerRatingClass = r => ({
+  "적정": "ok", "매우 높음": "ok", "높음": "ok",
+  "격차 있음": "warn", "중간": "warn",
+  "격차 큼": "down", "낮음": "down",
+}[r] || "grp");
 const koDate = value => {
   const [year, month, day] = String(value || "").split("-").map(Number);
   return year && month && day ? `${year}년 ${month}월 ${day}일` : esc(value);
@@ -61,6 +71,10 @@ function visibleViews() {
   return D.latest.views.filter(v => !HIDDEN_EVAL_KEYS.has(v.key));
 }
 
+function visibleMainTabs() {
+  return MAIN_TABS.filter(t => !HIDDEN_MAIN_TABS.has(t.key));
+}
+
 function currentView() {
   return visibleViews().find(v => v.key === S.evalKey) || visibleViews()[0];
 }
@@ -79,7 +93,7 @@ async function init() {
     const [hTab, hSubRaw] = location.hash.slice(1).split("/");
     let hSub = hSubRaw;
     try { hSub = hSubRaw ? decodeURIComponent(hSubRaw) : hSubRaw; } catch (e) { /* 잘못된 인코딩은 무시 */ }
-    if (MAIN_TABS.some(t => t.key === hTab)) S.tab = hTab;
+    if (visibleMainTabs().some(t => t.key === hTab)) S.tab = hTab;
     if (hSub && visibleViews().some(v => v.key === hSub)) S.evalKey = hSub;
     document.getElementById("todayStr").textContent = koDate(D.latest.as_of) + " 기준";
     wireMobileNav(); renderMainNav(); renderTickerList(); renderSubtabs(); render();
@@ -122,7 +136,7 @@ function wireMobileNav() {
 function renderMainNav() {
   const current = MAIN_TABS.find(t => t.key === S.tab);
   document.getElementById("mobileSection").textContent = current?.label || "메뉴";
-  document.getElementById("mainNav").innerHTML = MAIN_TABS.map(t => `
+  document.getElementById("mainNav").innerHTML = visibleMainTabs().map(t => `
     <button class="nav-main-item ${S.tab === t.key ? "active" : ""}" data-main="${t.key}">
       <span class="nav-ico" aria-hidden="true">${t.icon}</span>
       <span class="nav-lbl">${esc(t.label)}</span>
@@ -464,6 +478,40 @@ function peerPopover(mem, m) {
     <div class="peer-calc-formula">(${values.join(" + ")}) ÷ ${values.length} = <b>${won(mem.price)}원</b></div>
     <div class="peer-base-line">${String(D.latest.base_date).slice(0,4)}년末 ${won(mem.base_price)}원 대비
       <b class="${dirClass(mem.change)}">${signed(mem.change)}</b></div>
+  </div>`;
+}
+
+/** Peer 선정 적정성 popover — 27년 과제 설계 탭의 Peer 종목 포함/제외에서 쓴다.
+ *  ①사업 유사도 ④독립성은 config/peer_criteria.yaml 에 사람이 등록한 판단,
+ *  ②시가총액 ③유동성은 pipeline/build_site.py 가 최신 시세로 매번 계산한 값이다. */
+function peerCriteriaRow(index, label, ratingBadge, note) {
+  return `<div class="peer-eval-row">
+      <span class="peer-eval-label">${index} ${esc(label)}</span>${ratingBadge}
+    </div>
+    <p class="peer-eval-note">${esc(note || "")}</p>`;
+}
+function peerCriteriaPopover(t) {
+  const e = t.peer_eval;
+  if (!e) return "";
+  const cap = e.market_cap, liq = e.liquidity;
+  const capBadge = `<span class="badge ${peerRatingClass(cap.rating)}">${esc(cap.rating)}</span>`;
+  const liqBadge = liq.rank
+    ? `<span class="badge grp">Peer ${liq.of}개사 중 ${liq.rank}위</span>` : "";
+  const bizBadge = e.business_match
+    ? `<span class="badge ${peerRatingClass(e.business_match.rating)}">${esc(e.business_match.rating)}</span>` : "";
+  const indBadge = e.independence
+    ? `<span class="badge ${peerRatingClass(e.independence.rating)}">${esc(e.independence.rating)}</span>` : "";
+  return `<div class="peer-popover peer-eval-popover" role="tooltip">
+    <div class="peer-pop-head"><b>${esc(t.name)}</b><span>Peer 선정 적정성</span></div>
+    ${peerCriteriaRow("①", "사업 유사도", bizBadge, e.business_match?.note)}
+    ${peerCriteriaRow("②", "시가총액 비교가능성", capBadge,
+      `SK이노베이션 대비 ${cap.ratio_to_subject != null ? cap.ratio_to_subject.toFixed(2) + "배" : "확인 불가"}` +
+      (cap.value_100m != null ? ` · 시가총액 ${jo(cap.value_100m)}` : ""))}
+    ${peerCriteriaRow("③", "거래 유동성", liqBadge,
+      liq.avg_daily_trading_value != null
+        ? `최근 ${liq.window_days}거래일 일평균 거래대금 ${eok(liq.avg_daily_trading_value)}`
+        : "거래대금 데이터 부족")}
+    ${peerCriteriaRow("④", "독립성(이해상충)", indBadge, e.independence?.note)}
   </div>`;
 }
 
@@ -970,6 +1018,7 @@ function groupBars() {
 
 function renderPrices(V) {
   const L = D.latest, sk = L.tickers[0];
+  const v2 = D.latest.views.find(v => v.key === "today")?.modes?.["최종"]?.scores?.V2;
   V.innerHTML = `
     <div class="card">
       <h3>SK이노베이션 <span class="sub">${esc(L.as_of)} 종가 기준</span></h3>
@@ -1006,8 +1055,15 @@ function renderPrices(V) {
       <div style="display:flex;flex-direction:column;gap:10px">${groupBars()}</div>
     </div>
 
+    <div class="card">
+      <h3>점수 시계열 <span class="sub">연초 이후 일별 "그날 최종 평가했다면" 점수 · 2025년末 최종방식(2M·1M·1W 거래량가중평균의 산술평균) 기준 가격${v2 ? `(${won(v2.anchor)}원)` : ""}을 40점 기준으로 적용</span>
+        ${pngButton("timeseriesSvg", "점수시계열.png")}</h3>
+      ${timeseriesChart()}
+    </div>
+
     ${coverageNotice()}`;
   bindIndexChart(V);
+  bindScoreTimeseries(V);
 }
 
 /* ── Case 시뮬레이션 탭 ───────────────────────────────────── */
@@ -1159,17 +1215,10 @@ function bindScoreTimeseries(root) {
 }
 
 function renderCase(V) {
-  const v2 = D.latest.views.find(v => v.key === "today")?.modes?.["최종"]?.scores?.V2;
   V.innerHTML = `
     ${matrixTable()}
     ${remainingPathCard()}
-    <div class="card">
-      <h3>점수 시계열 <span class="sub">연초 이후 일별 "그날 최종 평가했다면" 점수 · 2025년末 최종방식(2M·1M·1W 거래량가중평균의 산술평균) 기준 가격${v2 ? `(${won(v2.anchor)}원)` : ""}을 40점 기준으로 적용</span>
-        ${pngButton("timeseriesSvg", "점수시계열.png")}</h3>
-      ${timeseriesChart()}
-    </div>
-      ${coverageNotice()}`;
-  bindScoreTimeseries(V);
+    ${coverageNotice()}`;
   document.querySelectorAll("[data-horizon]").forEach(b =>
     b.addEventListener("click", () => { S.horizon = Number(b.dataset.horizon); renderCase(V); }));
 }
@@ -1294,7 +1343,7 @@ function controlsPanel() {
         <input type="range" id="simWeight" min="0" max="100" step="5" value="${SIM.weight * 100}" style="width:100%">
       </div>
       <div>
-        <div class="group-sec-h">Peer 종목 포함/제외 <span style="font-weight:var(--w-reg)">(그룹당 최소 1종목)</span></div>
+        <div class="group-sec-h">Peer 종목 포함/제외 <span style="font-weight:var(--w-reg)">(그룹당 최소 1종목 · ⓘ에 커서를 올리면 선정 적정성 확인)</span></div>
         <div style="display:flex;flex-wrap:wrap;gap:20px">
           ${groupNames.map(name => {
             const members = membersOf(name);
@@ -1305,8 +1354,12 @@ function controlsPanel() {
                 ${members.map(t => {
                   const checked = !SIM.excluded.has(t.code);
                   const lockedOn = checked && includedCount <= 1;
-                  return `<label style="display:flex;align-items:center;gap:5px;font-size:12.5px;cursor:pointer">
-                    <input type="checkbox" data-sim-peer="${t.code}" ${checked ? "checked" : ""} ${lockedOn ? "disabled" : ""}>${esc(t.name)}</label>`;
+                  return `<div class="sim-peer-row">
+                    <label style="display:flex;align-items:center;gap:5px;font-size:12.5px;cursor:pointer">
+                      <input type="checkbox" data-sim-peer="${t.code}" ${checked ? "checked" : ""} ${lockedOn ? "disabled" : ""}>${esc(t.name)}
+                    </label>
+                    <span class="peer-eval-trigger" tabindex="0" aria-label="${esc(t.name)} Peer 선정 적정성 보기">ⓘ${peerCriteriaPopover(t)}</span>
+                  </div>`;
                 }).join("")}
               </div>
             </div>`;

@@ -86,3 +86,19 @@ def load_prices(path: Path | None = None) -> dict[str, list]:
     for bars in out.values():
         bars.sort(key=lambda b: b.day)
     return out
+
+
+def load_shares(path: Path | None = None) -> dict[str, list[tuple[date, int]]]:
+    """종목별 (날짜, 시가총액 억원) 시계열. 과거 소급이 안 돼 수집 개시일부터 쌓인다."""
+    target = path or SHARES_CSV
+    out: dict[str, list[tuple[date, int]]] = {}
+    if not target.exists():
+        return out
+    with target.open(encoding="utf-8") as fh:
+        for row in csv.DictReader(fh):
+            out.setdefault(row["code"], []).append(
+                (date.fromisoformat(row["date"]), int(row["market_cap_100m"]))
+            )
+    for rows in out.values():
+        rows.sort(key=lambda r: r[0])
+    return out

@@ -23,7 +23,8 @@ from core.scenarios import (
     sensitivity_table,
     target_price,
 )
-from core.schema import Bar, Universe
+from core.schema import Bar, Universe, load_peer_criteria
+from pipeline.ingest import load_shares
 from pipeline.qc import GAP_ERROR_DAYS, check_calendar_gaps, trading_days
 from pipeline.verify import cross_check_monthly
 
@@ -33,6 +34,7 @@ DOCS_ROOT = REPO_ROOT / "docs"
 TARGET_MARKS = (0, 40, 80, 100)
 BASE_INDEX = 100.0
 SPARK_POINTS = 40   # 표 스파크라인이 쓰는 최근 거래일 수
+LIQUIDITY_WINDOW = 20  # Peer 유동성 평가에 쓰는 최근 거래일 수
 VERSIONED_ASSETS = ("style.css", "sim.js", "app.js")  # index.html 이 ?v=해시로 참조하는 파일들
 
 
@@ -42,6 +44,72 @@ def _ticker_meta(universe: Universe) -> list[dict]:
     for group, (weight, members) in universe.groups.items():
         out += [{"code": t.code, "name": t.name, "group": group, "weight": weight}
                 for t in members]
+    return out
+
+
+def _market_cap_rating(ratio: float | None) -> str:
+    """0.5~2배는 규모가 비슷해 그룹 평균에서 한 종목이 과대표되지 않는다는
+    경험칙. 임계값은 판단이지 물리법칙이 아니므로 화면에도 이 기준을 그대로
+    표기해 근거를 숨기지 않는다."""
+    if ratio is None:
+        return "확인 불가"
+    if 0.5 <= ratio <= 2.0:
+        return "적정"
+    if 0.2 <= ratio < 0.5 or 2.0 < ratio <= 4.0:
+        return "격차 있음"
+    return "격차 큼"
+
+
+def _peer_evaluation(prices: dict[str, list[Bar]], universe: Universe) -> dict[str, dict]:
+    """Peer 선정 적정성 4개 기준을 종목별로 계산한다.
+
+    ①사업 유사도 ④독립성(이해상충)은 판단이 들어가므로 config/peer_criteria.yaml
+    에 사람이 등록한 값을 그대로 쓴다. ②시가총액 ③거래 유동성은 최신 시세로
+    매번 다시 계산해, 데이터가 갱신되면 화면도 그대로 따라온다.
+    """
+    curated = load_peer_criteria()
+    shares = load_shares()
+    subject = universe.subject.code
+
+    def latest_cap(code: str) -> int | None:
+        rows = shares.get(code)
+        return rows[-1][1] if rows else None
+
+    def avg_trading_value(code: str) -> float | None:
+        bars = prices.get(code)
+        if not bars:
+            return None
+        recent = bars[-LIQUIDITY_WINDOW:]
+        return sum(b.trading_value for b in recent) / len(recent)
+
+    subject_cap = latest_cap(subject)
+    peers = universe.peers
+    liquidity = {t.code: avg_trading_value(t.code) for t in peers}
+    ranked = sorted((c for c in liquidity if liquidity[c] is not None),
+                     key=lambda c: liquidity[c], reverse=True)
+
+    out = {}
+    for t in peers:
+        cap = latest_cap(t.code)
+        ratio = cap / subject_cap if cap and subject_cap else None
+        entry = curated.get(t.code, {})
+        out[t.code] = {
+            "business_match": entry.get("business_match"),
+            "independence": entry.get("independence"),
+            "market_cap": {
+                "value_100m": cap,
+                "ratio_to_subject": round(ratio, 3) if ratio is not None else None,
+                "rating": _market_cap_rating(ratio),
+            },
+            "liquidity": {
+                "avg_daily_trading_value": (
+                    round(liquidity[t.code]) if liquidity.get(t.code) is not None else None
+                ),
+                "window_days": LIQUIDITY_WINDOW,
+                "rank": ranked.index(t.code) + 1 if t.code in ranked else None,
+                "of": len(ranked),
+            },
+        }
     return out
 
 
@@ -238,6 +306,7 @@ def build_latest(
                             calibration.get("corporate_actions") or [])
     base_vwaps = adjusted_prices(prices, universe, rules["base_date"], specs_prov, method,
                                  calibration.get("corporate_actions") or [])
+    peer_eval = _peer_evaluation(prices, universe)
     tickers = []
     for meta in _ticker_meta(universe):
         by_day = {b.day: b for b in prices[meta["code"]]}
@@ -251,6 +320,7 @@ def build_latest(
             "change_from_base": round(vwaps[meta["code"]] / base_vwaps[meta["code"]] - 1, 6),
             # 표 안 스파크라인용. 최근 40거래일 종가 — 추세만 보이면 되므로 원값 그대로.
             "spark": [b.close for b in prices[meta["code"]][-SPARK_POINTS:]],
+            **({"peer_eval": peer_eval[meta["code"]]} if meta["code"] in peer_eval else {}),
         })
 
     # 평가 시점별 화면. 각 시점마다 잠정·최종을 모두 계산해 나란히 보여준다 —

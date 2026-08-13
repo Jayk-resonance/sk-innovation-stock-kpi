@@ -84,3 +84,17 @@ def load_calibration(path: Path | None = None) -> dict:
     if len(official) != 1:
         raise ValueError(f"official 기준선은 정확히 1개여야 한다: {official}")
     return raw
+
+
+def load_peer_criteria(path: Path | None = None) -> dict[str, dict]:
+    """Peer 선정 적정성 중 사람이 판단해야 하는 항목(사업 유사도·독립성).
+
+    시가총액·유동성처럼 매일 다시 계산되는 항목과 달리, 이 판단은 근거와 함께
+    사람이 등록해야 나중에 왜 그런지 추적할 수 있다 — pipeline/build_site.py 가
+    시가총액·유동성과 합쳐 화면에 낸다.
+    """
+    target = path or CONFIG_DIR / "peer_criteria.yaml"
+    if not target.exists():
+        return {}
+    raw = yaml.safe_load(target.read_text(encoding="utf-8")) or {}
+    return raw.get("peers") or {}

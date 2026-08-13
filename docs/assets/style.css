@@ -226,6 +226,21 @@ main{flex:1;min-width:0;display:flex;flex-direction:column}
 .peer-calc-formula b{color:var(--series-3)}
 .peer-base-line{font-size:10.5px;color:var(--muted);text-align:right}
 
+/* Peer 선정 적정성 — 체크박스(포함/제외 토글)와 hover 트리거를 분리한다.
+   같은 <label> 안에 두면 팝오버 안 텍스트를 클릭할 때도 체크박스가 토글돼
+   버린다(27년 과제 설계 탭, config/peer_criteria.yaml 참조). */
+.sim-peer-row{display:flex;align-items:center;gap:6px}
+.peer-eval-trigger{position:relative;display:inline-flex;align-items:center;justify-content:center;
+  width:15px;height:15px;border-radius:50%;background:var(--chip);color:var(--muted-2);
+  font-size:10px;line-height:1;cursor:help;outline:none;flex-shrink:0}
+.peer-eval-trigger:hover,.peer-eval-trigger:focus{background:var(--primary-tint);color:var(--primary-ink)}
+.peer-eval-trigger:hover .peer-popover,.peer-eval-trigger:focus .peer-popover,
+.peer-eval-trigger:focus-within .peer-popover{opacity:1;visibility:visible;transform:translateY(0)}
+.peer-eval-popover{width:320px;gap:7px}
+.peer-eval-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.peer-eval-label{font-size:11.5px;font-weight:var(--w-semi);color:var(--ink)}
+.peer-eval-note{margin:0;font-size:10.5px;color:var(--muted);line-height:1.5}
+
 .actual-calc{background:var(--primary-tint);border-radius:var(--r-sm);padding:12px 13px;
   display:flex;flex-direction:column;gap:8px}
 .actual-calc-row{display:grid;grid-template-columns:95px 1fr;align-items:center;gap:10px;
@@ -296,8 +311,13 @@ main{flex:1;min-width:0;display:flex;flex-direction:column}
    버튼줄)의 min-content 폭 아래로는 줄어들지 않고 넘친다. 트랙은
    minmax(0,…), 카드는 min-width:0 으로 바닥을 열어야 컨테이너 폭에 맞춰
    실제로 줄어든다 — 하나만 고치면 다른 하나에서 다시 넘친다. */
-.design-layout{display:grid;grid-template-columns:minmax(0,360px) minmax(0,1fr);gap:18px;align-items:start}
+.design-layout{display:grid;grid-template-columns:minmax(0,400px) minmax(0,1fr);gap:18px;align-items:start}
 .design-layout>*{min-width:0}
+/* 조건 패널의 버튼줄(.tabs)은 라벨이 길면(예: "여러 기간 평균주가의 산술평균")
+   360~400px 폭에 안 들어간다. 전역 .tabs 는 상단 탭처럼 한 줄 가로 스크롤이
+   맞지만, 스크롤바를 숨겨 놔서(scrollbar-width:none) 여기서는 그냥 잘린
+   것처럼 보인다. 조건 패널 안에서만 줄바꿈으로 바꿔 전부 보이게 한다. */
+.design-layout .tabs{flex-wrap:wrap;overflow-x:visible}
 .design-score-compare{margin:0 0 18px}
 .design-score-compare .mode.active{border-color:var(--brand);background:var(--brand-soft);box-shadow:0 0 0 1px var(--brand) inset}
 .control-help{margin-top:7px;color:var(--muted);font-size:11px;line-height:1.55}

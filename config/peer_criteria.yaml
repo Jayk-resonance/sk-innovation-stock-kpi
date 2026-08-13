@@ -1,0 +1,39 @@
+# Peer 선정 적정성 평가 기준
+#
+# CEO KPI 산정에 쓰이는 Peer 그룹 선정은 결과 점수에 직접 영향을 주는
+# 민감한 변수다(2026-08-13 "Peer 후보 추천" 검토 참조). 표준적인 벤치마크
+# 그룹 선정 관행을 따라 4가지 기준으로 평가한다.
+#
+#   ① 사업 유사도       — SK이노베이션 사업부(정유·화학·배터리·소재)와의 겹침 정도
+#   ② 시가총액 비교가능성 — 규모 차이가 너무 크면 그룹 평균이 한 종목에 휘둘린다
+#   ③ 거래 유동성        — 일평균 거래대금. VWAP(거래량가중평균) 신뢰도의 전제조건
+#   ④ 독립성(이해상충)    — SK그룹 계열사면 사실상 자기 자신과 비교하는 셈이 된다
+#
+# ②③은 매일 갱신되는 시세·시가총액 데이터로 자동 계산한다(pipeline/build_site.py).
+# ①④는 판단이 들어가므로 자동 산출하지 않고 사람이 여기 등록한다 — 근거 없이
+# 등급만 매기면 나중에 왜 그런지 아무도 설명 못 한다.
+peers:
+  "051910":  # LG화학
+    business_match: { rating: 매우 높음, note: "SK지오센트릭(화학)과 직접 비교되는 종합화학사. 배터리소재 사업도 겸영해 SK 포트폴리오 전반과 겹친다" }
+    independence: { rating: 적정, note: "SK그룹 계열사 아님" }
+  "010950":  # S-Oil
+    business_match: { rating: 매우 높음, note: "SK에너지(정유)와 국내 직접 경쟁사. 정유 마진 사이클을 대표하는 핵심 비교군" }
+    independence: { rating: 적정, note: "SK그룹 계열사 아님" }
+  "011170":  # 롯데케미칼
+    business_match: { rating: 높음, note: "순수 석유화학사. SK지오센트릭과 유사한 범용화학 포지션" }
+    independence: { rating: 적정, note: "SK그룹 계열사 아님" }
+  "047050":  # 포스코인터내셔널
+    business_match: { rating: 낮음, note: "본질은 상사(트레이딩)+E&P사. SK어스온(E&P)과 일부 접점은 있으나 '화학' 그룹에 넣기엔 사업 성격이 이질적" }
+    independence: { rating: 적정, note: "SK그룹 계열사 아님" }
+  "373220":  # LG에너지솔루션
+    business_match: { rating: 매우 높음, note: "SK온과 국내 배터리셀 3강 중 직접 경쟁사" }
+    independence: { rating: 적정, note: "SK그룹 계열사 아님" }
+  "006400":  # 삼성SDI
+    business_match: { rating: 매우 높음, note: "SK온과 국내 배터리셀 3강 중 직접 경쟁사" }
+    independence: { rating: 적정, note: "SK그룹 계열사 아님" }
+  "247540":  # 에코프로비엠
+    business_match: { rating: 높음, note: "양극재 밸류체인 비교에 적합. 다만 성장주 특성상 변동성이 크고, 지분증권 발행이 진행 중(calibration.yaml watchlist 등록)" }
+    independence: { rating: 적정, note: "SK그룹 계열사 아님" }
+  "003670":  # 포스코퓨처엠
+    business_match: { rating: 높음, note: "양극재·음극재를 동시 생산해 배터리소재 밸류체인 비교에 적합" }
+    independence: { rating: 적정, note: "SK그룹 계열사 아님" }
