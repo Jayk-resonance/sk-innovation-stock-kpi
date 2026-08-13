@@ -1159,11 +1159,12 @@ function bindScoreTimeseries(root) {
 }
 
 function renderCase(V) {
+  const v2 = D.latest.views.find(v => v.key === "today")?.modes?.["최종"]?.scores?.V2;
   V.innerHTML = `
     ${matrixTable()}
     ${remainingPathCard()}
     <div class="card">
-      <h3>점수 시계열 <span class="sub">연초 이후 일별 "그날 최종 평가했다면" 점수 · 2026년 수립 목표(113,109원)를 40점 기준으로 적용</span>
+      <h3>점수 시계열 <span class="sub">연초 이후 일별 "그날 최종 평가했다면" 점수 · 2025년末 최종방식(2M·1M·1W 거래량가중평균의 산술평균) 기준 가격${v2 ? `(${won(v2.anchor)}원)` : ""}을 40점 기준으로 적용</span>
         ${pngButton("timeseriesSvg", "점수시계열.png")}</h3>
       ${timeseriesChart()}
     </div>

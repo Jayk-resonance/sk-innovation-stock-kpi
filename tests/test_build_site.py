@@ -7,7 +7,14 @@ from datetime import date
 import pytest
 
 from core.evaluate import evaluate
-from pipeline.build_site import build_bars, build_history, build_latest, build_scenarios, write_site_data
+from pipeline.build_site import (
+    build_bars,
+    build_history,
+    build_latest,
+    build_scenarios,
+    sync_asset_versions,
+    write_site_data,
+)
 
 
 def test_views_match_engine(prices, universe, rules, calibration):
@@ -108,7 +115,7 @@ def test_build_scenarios_has_final_baseline_comparison_and_paths(prices, univers
         "최종", rules["vwap_primary"],
     )
     assert sc["timeseries"][-1]["value"] == pytest.approx(
-        want.scores["V3"].value, abs=0.01
+        want.scores["V2"].value, abs=0.01
     )
     assert sc["timeseries"][-1]["subject_price"] == pytest.approx(want.subject_price, abs=0.01)
     assert sc["timeseries"][-1]["peer_change"] == pytest.approx(want.peer_change, abs=0.000001)
@@ -159,3 +166,37 @@ def test_write_site_data(prices, universe, rules, calibration, tmp_path):
     }
     non_empty = {p.name for p in paths} - {"changelog.json"}  # 커밋 전이면 changelog 는 빈 배열일 수 있다
     assert all(p.stat().st_size > 500 for p in paths if p.name in non_empty)
+
+
+def test_sync_asset_versions_rewrites_stale_hash(tmp_path):
+    """app.js 내용이 바뀌었는데 index.html 의 ?v= 해시가 그대로면, 브라우저가
+    캐시된 옛 파일을 계속 쓴다 — 2026-08-13 hover 버그가 정확히 이렇게 났다.
+    빌드할 때마다 해시를 자동으로 맞춰야 이 문제가 재발하지 않는다."""
+    import hashlib
+
+    def blob_hash(text: str) -> str:
+        data = text.encode()
+        return hashlib.sha1(f"blob {len(data)}\0".encode() + data).hexdigest()[:7]
+
+    docs = tmp_path / "docs"
+    (docs / "assets").mkdir(parents=True)
+    app_js, style_css, sim_js = "console.log('v2')", "body{color:red}", "// sim"
+    (docs / "assets" / "app.js").write_text(app_js, encoding="utf-8")
+    (docs / "assets" / "style.css").write_text(style_css, encoding="utf-8")
+    (docs / "assets" / "sim.js").write_text(sim_js, encoding="utf-8")
+    (docs / "index.html").write_text(
+        '<link rel="stylesheet" href="assets/style.css?v=0000000">\n'
+        '<script src="assets/sim.js?v=1111111"></script>\n'
+        '<script src="assets/app.js?v=stale00"></script>\n',
+        encoding="utf-8",
+    )
+
+    result = sync_asset_versions(docs)
+    assert result == docs / "index.html"
+    html = result.read_text(encoding="utf-8")
+    assert f"app.js?v={blob_hash(app_js)}" in html
+    assert f"style.css?v={blob_hash(style_css)}" in html
+    assert f"sim.js?v={blob_hash(sim_js)}" in html
+
+    # 다시 돌리면(내용 변화 없음) 더 손대지 않는다 — 반복 실행이 안전해야 한다.
+    assert sync_asset_versions(docs) is None

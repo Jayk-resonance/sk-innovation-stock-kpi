@@ -5,7 +5,9 @@
 """
 from __future__ import annotations
 
+import hashlib
 import json
+import re
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
@@ -27,9 +29,11 @@ from pipeline.verify import cross_check_monthly
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 DOCS_DATA = REPO_ROOT / "docs" / "data"
+DOCS_ROOT = REPO_ROOT / "docs"
 TARGET_MARKS = (0, 40, 80, 100)
 BASE_INDEX = 100.0
 SPARK_POINTS = 40   # 표 스파크라인이 쓰는 최근 거래일 수
+VERSIONED_ASSETS = ("style.css", "sim.js", "app.js")  # index.html 이 ?v=해시로 참조하는 파일들
 
 
 def _ticker_meta(universe: Universe) -> list[dict]:
@@ -305,7 +309,7 @@ def build_scenarios(prices: dict[str, list[Bar]], universe: Universe, rules: dic
     paths = {m: remaining_path_scenarios(prices, universe, rules, calibration, as_of, m, method)
              for m in (1, 2, 3)}
     timeseries = score_timeseries(
-        prices, universe, rules, calibration, days, method, mode="최종"
+        prices, universe, rules, calibration, days, method, mode="최종", baseline_key="V2"
     )
     events = [{"label": e["label"], "date": e["date"].isoformat()}
               for e in rules["eval_dates"] if e["date"]]
@@ -351,6 +355,43 @@ def build_changelog(repo_root: Path | None = None) -> list[dict]:
     return entries
 
 
+def _blob_hash(path: Path) -> str:
+    """git 저장소의 blob SHA-1과 같은 값이 나오는 7자리 해시(`git hash-object` 와 동일)."""
+    data = path.read_bytes()
+    header = f"blob {len(data)}\0".encode()
+    return hashlib.sha1(header + data).hexdigest()[:7]
+
+
+def sync_asset_versions(docs_root: Path | None = None) -> Path | None:
+    """`docs/index.html` 의 asset `?v=` 해시를 실제 파일 내용에 맞춘다.
+
+    브라우저가 `app.js`/`style.css`/`sim.js` 를 오래 캐시하므로, 파일을 고치고
+    이 해시를 갱신하는 걸 잊으면 배포 후에도 예전 코드가 계속 실행된다 —
+    데이터는 최신인데 화면 로직만 옛날 것으로 돌아가는 버그가 된다
+    (2026-08-13 hover 죽은 영역 수정이 실제로 이렇게 묻혔다). 사람이 커밋마다
+    수동으로 맞추는 대신, 사이트를 빌드할 때마다 여기서 자동으로 맞춘다.
+    """
+    root = docs_root or DOCS_ROOT
+    index_path = root / "index.html"
+    if not index_path.exists():
+        return None
+    html = index_path.read_text(encoding="utf-8")
+    original = html
+    for name in VERSIONED_ASSETS:
+        asset_path = root / "assets" / name
+        if not asset_path.exists():
+            continue
+        new_hash = _blob_hash(asset_path)
+        # 해시값 자체는 임의 문자일 수 있으므로(오타·플레이스홀더 포함) 따옴표
+        # 앞까지 통째로 바꾼다 — 형식을 hex 로 가정하면 깨진 값을 못 고친다.
+        pattern = re.compile(rf'(assets/{re.escape(name)}\?v=)[^"\']+')
+        html = pattern.sub(rf"\g<1>{new_hash}", html)
+    if html == original:
+        return None
+    index_path.write_text(html, encoding="utf-8")
+    return index_path
+
+
 def write_site_data(
     prices: dict[str, list[Bar]],
     universe: Universe,
@@ -375,4 +416,7 @@ def write_site_data(
         path.write_text(json.dumps(payload, ensure_ascii=False, separators=(",", ":")),
                         encoding="utf-8")
         written.append(path)
+    synced_index = sync_asset_versions(root.parent)
+    if synced_index:
+        written.append(synced_index)
     return written
