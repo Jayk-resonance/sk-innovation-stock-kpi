@@ -4,6 +4,14 @@
  * 색은 여기에 하나도 박지 않는다. SVG 는 CSS 변수를 직접 못 쓰므로
  * tok() 으로 style.css 의 토큰을 읽어 쓴다. 팔레트 변경은 CSS 한 곳에서 끝난다.
  *
+ * 커서를 올리면 값을 보여주는(hover) 차트는 전부 svg에 preserveAspectRatio="none"
+ * 을 붙인다. 기본값(xMidYMid meet)은 viewBox 비율과 CSS 박스 비율이 어긋나면
+ * 콘텐츠를 축소해 레터박스로 띄우는데, hit-rect 히트테스트는 박스 전체 크기
+ * 기준으로 좌표를 계산하므로 그 여백 부분이 반응 없는 죽은 영역이 된다.
+ * (실제로 CSS 높이와 이 파일의 viewBox 높이가 어긋나 최근 날짜 구간이
+ * 죽은 영역에 들어간 적이 있다 — 2026-08-13에 발견.) "none"으로 박스에
+ * 꽉 채워 그리면 CSS 크기가 나중에 바뀌어도 이 문제가 재발하지 않는다.
+ *
  * 내비게이션 2층 구조:
  *   메인 탭(사이드바, 아이콘) — 주가 평가 / 주가 현황
  *   서브탭(상단, 주가 평가 전용) — 오늘의 점수 / 확정 평가일별 화면
@@ -327,7 +335,7 @@ function subjectPriceChart(m, name = "SK이노베이션", mode = "daily") {
   const dots = series.map(s => `<circle class="subject-chart-dot" data-chart-key="${s.key}" r="4" fill="${tok(s.color)}"/>`).join("");
   const legend = series.map(s => `<span><i style="background:${tok(s.color)}"></i>${esc(s.label)}</span>`).join("");
   return `<div class="subject-price-chart" data-subject-chart="${data}" data-subject-range="${esc(JSON.stringify({ lo, hi }))}" data-subject-mode="${mode}">
-    <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(name)} ${esc(series.map(s => s.label).join(', '))} 추이">
+    <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="${esc(name)} ${esc(series.map(s => s.label).join(', '))} 추이">
       <line x1="${P.l}" y1="${y(lo).toFixed(1)}" x2="${W - P.r}" y2="${y(lo).toFixed(1)}" stroke="${tok("--grid")}"/>
       <line x1="${P.l}" y1="${y(hi).toFixed(1)}" x2="${W - P.r}" y2="${y(hi).toFixed(1)}" stroke="${tok("--grid")}"/>
       <line x1="${x(baseIndex).toFixed(1)}" y1="${P.t}" x2="${x(baseIndex).toFixed(1)}" y2="${H - P.b}" stroke="${tok("--axis")}" stroke-dasharray="4 4"/>
@@ -881,7 +889,7 @@ function indexChart() {
     `<circle class="index-chart-dot" data-series="${i}" r="4" fill="${color}"/>`).join("");
 
   return `<div class="index-chart-wrap" data-index-chart data-y-min="${yMin}" data-y-max="${yMax}">
-    <div class="chart"><svg id="indexChartSvg" viewBox="0 0 ${W} ${HT}" role="img"
+    <div class="chart"><svg id="indexChartSvg" viewBox="0 0 ${W} ${HT}" preserveAspectRatio="none" role="img"
       aria-label="기준일 대비 주가 지수 추이 — SK이노베이션, 에/화 그룹 평균, 배/소 그룹 평균">
       ${grid}${paths}
       <g class="index-chart-hover" hidden>
@@ -1106,7 +1114,7 @@ function timeseriesChart() {
     `<text x="${X(i).toFixed(1)}" y="${HT - 7}" text-anchor="middle" font-size="10.5"
        fill="${tok("--muted")}">${esc(T[i].date.slice(2))}</text>`).join("");
   return `<div class="score-timeseries-wrap" data-score-timeseries="${esc(JSON.stringify(T))}">
-    <div class="chart"><svg id="timeseriesSvg" viewBox="0 0 ${W} ${HT}" role="img"
+    <div class="chart"><svg id="timeseriesSvg" viewBox="0 0 ${W} ${HT}" preserveAspectRatio="none" role="img"
       aria-label="일별 점수 시계열, 확정 평가일 마커 포함">${grid}${path}${markers}${ticks}
       <g class="score-timeseries-hover" hidden>
         <line class="score-timeseries-guide" y1="${PAD.t}" y2="${HT - PAD.b}" stroke="${tok("--muted")}" stroke-dasharray="3 3"/>
