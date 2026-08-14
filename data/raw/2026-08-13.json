@@ -1,0 +1,18 @@
+{
+  "collected_at": "2026-08-14T10:15:12+09:00",
+  "source": "KIS via PlayMCP koreaStock",
+  "note": "2026-08-13 종가 기준 대시보드 갱신. 공식 평가대상 9종목과 27년 과제 설계 탭 후보 2종목을 함께 수집했다.",
+  "prices": [
+    {"code": "096770", "date": "2026-08-13", "close": 121700, "volume": 582784, "trading_value": 70887153800},
+    {"code": "051910", "date": "2026-08-13", "close": 275500, "volume": 213415, "trading_value": 58946418750},
+    {"code": "010950", "date": "2026-08-13", "close": 140900, "volume": 323206, "trading_value": 45355116750},
+    {"code": "011170", "date": "2026-08-13", "close": 57400, "volume": 224920, "trading_value": 12926411350},
+    {"code": "047050", "date": "2026-08-13", "close": 54300, "volume": 873042, "trading_value": 47693108050},
+    {"code": "373220", "date": "2026-08-13", "close": 365500, "volume": 321608, "trading_value": 117457041750},
+    {"code": "006400", "date": "2026-08-13", "close": 487000, "volume": 321399, "trading_value": 156679210500},
+    {"code": "247540", "date": "2026-08-13", "close": 114500, "volume": 384619, "trading_value": 44173988950},
+    {"code": "003670", "date": "2026-08-13", "close": 165900, "volume": 375509, "trading_value": 62071598100},
+    {"code": "006650", "date": "2026-08-13", "close": 88500, "volume": 57963, "trading_value": 5168969650},
+    {"code": "004690", "date": "2026-08-13", "close": 122700, "volume": 7749, "trading_value": 938508100}
+  ]
+}

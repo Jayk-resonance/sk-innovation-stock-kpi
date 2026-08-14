@@ -43,6 +43,16 @@ def test_views_include_today_and_confirmed_evaluations(prices, universe, rules, 
     assert all(v["confirmed"] for v in payload["views"][1:])
 
 
+def test_sidebar_change_is_previous_trading_day_close_return(prices, universe, rules, calibration):
+    """좌측 평가대상 등락률은 최신 종가의 직전 거래일 종가 대비 변화다."""
+    payload = build_latest(prices, universe, rules, calibration)
+    sk = universe.subject.code
+    latest, previous = prices[sk][-1], prices[sk][-2]
+    ticker = next(t for t in payload["tickers"] if t["code"] == sk)
+    assert payload["as_of"] == latest.day.isoformat()
+    assert ticker["change_pct"] == pytest.approx(latest.close / previous.close - 1, abs=1e-6)
+
+
 def test_h1_zero_score_surfaces_with_raw(prices, universe, rules, calibration):
     """0점으로 잘린 사실과 원값이 함께 실려야 한다."""
     payload = build_latest(prices, universe, rules, calibration)

@@ -161,6 +161,7 @@ function renderSubtabs() {
 }
 
 function renderTickerList() {
+  document.getElementById("tickerChangeBasis").textContent = `전일 종가 대비 · ${koMonthDay(D.latest.as_of)} 기준`;
   document.getElementById("tickerList").innerHTML = D.latest.tickers.map(t =>
     `<div class="nav-item ${t.group === "본사" ? "subject" : ""}">
        <span class="nav-dot" style="background:${slotColor(t.group)}"></span>
