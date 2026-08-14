@@ -21,7 +21,7 @@ from pathlib import Path
 from core.calendar import window_bounds
 from core.evaluate import Result, adjusted_prices, evaluate
 from core.schema import Bar, Universe
-from core.vwap import slice_window, vwap
+from core.vwap import slice_spec_window, vwap
 from pipeline.qc import GAP_ERROR_DAYS
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
@@ -160,7 +160,11 @@ def verify_windows(
     """
     touched = set()
     for spec in specs:
-        start, end = window_bounds(eval_date, spec)
+        if spec.upper().endswith("W"):
+            subject_bars = slice_spec_window(prices[universe.subject.code], eval_date, spec)
+            start, end = subject_bars[0].day, subject_bars[-1].day
+        else:
+            start, end = window_bounds(eval_date, spec)
         cur = start
         while cur <= end:
             touched.add(cur.strftime("%Y-%m"))
@@ -201,8 +205,8 @@ def build_evidence_package(
         for ticker in universe.all_tickers:
             for spec in specs:
                 for which, anchor in (("평가일", eval_date), ("기준일", rules["base_date"])):
-                    start, end = window_bounds(anchor, spec)
-                    for bar in slice_window(prices[ticker.code], start, end):
+                    bars = slice_spec_window(prices[ticker.code], anchor, spec)
+                    for bar in bars:
                         w.writerow([ticker.code, ticker.name, f"{which}/{spec}",
                                     bar.day, bar.close, bar.volume, bar.trading_value])
 
@@ -213,8 +217,8 @@ def build_evidence_package(
         for ticker in universe.all_tickers:
             for which, anchor in (("평가일", eval_date), ("기준일", rules["base_date"])):
                 for spec in specs:
-                    start, end = window_bounds(anchor, spec)
-                    bars = slice_window(prices[ticker.code], start, end)
+                    bars = slice_spec_window(prices[ticker.code], anchor, spec)
+                    start, end = bars[0].day, bars[-1].day
                     w.writerow([ticker.code, ticker.name, which, spec, start, end,
                                 len(bars), _fmt(vwap(bars, method))])
 

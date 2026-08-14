@@ -11,6 +11,7 @@ from datetime import date, timedelta
 from .calendar import minus_months, window_bounds
 from .evaluate import adjusted_prices, compose, evaluate, price_for_points, resolve_anchor, score_of
 from .schema import Bar, Universe
+from .vwap import slice_spec_window
 
 
 def score_matrix(prices, universe: Universe, rules: dict, calibration: dict, eval_date: date) -> list[dict]:
@@ -197,13 +198,21 @@ def remaining_path_scenarios(
             "raw": round(score.raw, 2), "value": round(score.value, 2),
         })
 
-    windows = [window_bounds(horizon, spec)[0] for spec in rules["windows"]["최종"]]
-    window_start = min(windows)
+    extended_subject = _synthetic_extend(prices[subject_code], horizon, 0.0)
+    windows = []
     lock_in = []
-    for start in windows:
-        total_days = (horizon - start).days + 1
-        realized_days = max(0, min(total_days, (as_of - start).days + 1))
-        lock_in.append(realized_days / total_days)
+    for spec in rules["windows"]["최종"]:
+        if spec.upper().endswith("W"):
+            window_bars = slice_spec_window(extended_subject, horizon, spec)
+            windows.append(window_bars[0].day)
+            lock_in.append(sum(bar.day <= as_of for bar in window_bars) / len(window_bars))
+        else:
+            start = window_bounds(horizon, spec)[0]
+            windows.append(start)
+            total_days = (horizon - start).days + 1
+            realized_days = max(0, min(total_days, (as_of - start).days + 1))
+            lock_in.append(realized_days / total_days)
+    window_start = min(windows)
     return {
         "horizon": horizon.isoformat(), "horizon_months": horizon_months,
         "window_start": window_start.isoformat(),

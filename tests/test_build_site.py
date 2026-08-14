@@ -72,6 +72,18 @@ def test_score_marks_bracket_official_anchor(prices, universe, rules, calibratio
     assert by_pt[100] == pytest.approx(113109 * 1.15, abs=0.5)
 
 
+def test_today_uses_manual_final_target(prices, universe, rules, calibration):
+    """오늘의 점수는 수기 검산한 109,922원을 40점 기준으로 사용한다."""
+    payload = build_latest(prices, universe, rules, calibration)
+    score = payload["views"][0]["modes"]["최종"]["scores"]["V2"]
+    marks = payload["views"][0]["modes"]["최종"]["score_marks"]["V2"]
+    by_pt = {m["points"]: m["price"] for m in marks}
+    assert score["anchor"] == 109_922
+    assert by_pt[0] == pytest.approx(109_922 * 0.85, abs=0.5)
+    assert by_pt[40] == pytest.approx(109_922, abs=0.5)
+    assert by_pt[100] == pytest.approx(109_922 * 1.15, abs=0.5)
+
+
 def test_mode_detail_groups_have_members_and_windows(prices, universe, rules, calibration):
     payload = build_latest(prices, universe, rules, calibration)
     fin = payload["views"][0]["modes"]["최종"]

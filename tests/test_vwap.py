@@ -3,7 +3,7 @@ from datetime import date
 import pytest
 
 from core.schema import Bar
-from core.vwap import adjusted_price, apply_corporate_actions, slice_window, vwap
+from core.vwap import adjusted_price, apply_corporate_actions, slice_spec_window, slice_window, vwap
 
 SK = "096770"
 
@@ -48,6 +48,12 @@ def test_slice_window_is_inclusive():
     assert [b.day.day for b in got] == [14, 15]
 
 
+def test_one_week_uses_latest_five_trading_days():
+    bars = [_bar(d, 100 + d, 10, (100 + d) * 10) for d in (7, 8, 9, 10, 13, 14, 15)]
+    got = slice_spec_window(bars, date(2026, 7, 15), "1W")
+    assert [b.day.day for b in got] == [9, 10, 13, 14, 15]
+
+
 def test_corporate_action_scales_price_side_only():
     bars = [_bar(13, 100, 10, 1000), _bar(15, 100, 10, 1000)]
     actions = [{"code": SK, "effective_date": date(2026, 7, 14), "factor": 0.5}]
@@ -77,3 +83,8 @@ def test_real_data_base_window_vwap(prices):
     base = date(2025, 12, 30)
     assert adjusted_price(prices[SK], base, ["2M"], "A") == pytest.approx(116_905, abs=1)
     assert adjusted_price(prices[SK], base, ["2M"], "B") == pytest.approx(116_576, abs=1)
+
+
+def test_real_data_base_week_uses_manual_five_day_value(prices):
+    base = date(2025, 12, 30)
+    assert adjusted_price(prices[SK], base, ["1W"], "B") == pytest.approx(103_511, abs=1)

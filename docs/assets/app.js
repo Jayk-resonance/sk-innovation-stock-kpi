@@ -279,6 +279,10 @@ function coverageNotice() {
 }
 
 /** SK이노베이션 거래량 보정 주가 — 종가에서 시작해 윈도우별 VWAP, 증감율까지. */
+function windowSpecLabel(spec) {
+  return spec === "1W" ? "1W (최근 5거래일)" : spec;
+}
+
 function subjectTable(m, weighted = true, friendlyDates = false) {
   const unit = weighted ? "거래량가중평균" : "종가평균";
   const dailyLabel = m.method === "B"
@@ -289,7 +293,7 @@ function subjectTable(m, weighted = true, friendlyDates = false) {
   const rows = m.windows_now.map((w, i) => {
     const base = m.windows_base[i];
     const chg = w.vwap / base.vwap - 1;
-    return `<tr><td>${esc(w.spec)} ${unit}</td>
+    return `<tr><td>${esc(windowSpecLabel(w.spec))} ${unit}</td>
       <td class="num">${won(w.vwap)}원</td>
       <td class="num">${won(base.vwap)}원</td>
       <td class="num ${dirClass(chg)}">${signed(chg)}</td></tr>`;
@@ -321,7 +325,7 @@ function subjectPriceChart(m, name = "SK이노베이션", mode = "daily") {
   const series = mode === "evaluation" ? [
     { key: "close", label: "단순 종가", color: "--series-1", width: 2.1 },
     { key: "vwap_2m", label: "2개월 거래량가중평균 주가", color: "--series-2", width: 2.3 },
-    { key: "vwap_final", label: "2개월·1개월·1주 거래량가중평균 주가의 산술평균", color: "--series-3", width: 2.8 },
+    { key: "vwap_final", label: "2개월·1개월·최근 5거래일 거래량가중평균 주가의 산술평균", color: "--series-3", width: 2.8 },
   ] : [
     { key: "close", label: "단순 종가", color: "--series-1", width: 2.2 },
     { key: "daily_weighted_price", label: m.method === "B" ? "1일 거래량가중평균 주가 (종가와 동일)" : "1일 거래량가중평균 주가", color: "--series-3", width: 2.7 },
@@ -476,7 +480,7 @@ function peerPopover(mem, m) {
     ${miniCloseChart(mem.code, mem.name, true, m.eval_date)}
     <div class="peer-calc-title">거래량가중평균의 산술평균</div>
     <div class="peer-window-values">
-      ${mem.windows_now.map(w => `<span><small>${esc(w.spec)}</small><b>${won(w.vwap)}원</b></span>`).join("")}
+      ${mem.windows_now.map(w => `<span><small>${esc(windowSpecLabel(w.spec))}</small><b>${won(w.vwap)}원</b></span>`).join("")}
     </div>
     <div class="peer-calc-formula">(${values.join(" + ")}) ÷ ${values.length} = <b>${won(mem.price)}원</b></div>
     <div class="peer-base-line">${String(D.latest.base_date).slice(0,4)}년末 ${won(mem.base_price)}원 대비
@@ -681,7 +685,7 @@ function historicalStep(step, title, sub, provisionalBody, finalBody) {
     </div>
     <div class="history-compare-grid">
       ${historicalPanel("provisional", "잠정 방식", "2개월 거래량가중평균", provisionalBody)}
-      ${historicalPanel("final", "최종 방식", "2개월·1개월·1주 산술평균", finalBody)}
+      ${historicalPanel("final", "최종 방식", "2개월·1개월·최근 5거래일 산술평균", finalBody)}
     </div>
   </section>`;
 }
@@ -745,7 +749,7 @@ function renderHistoricalScore(V, view) {
         <div class="mode"><span class="t">잠정 방식 · 2개월 거래량가중평균</span>
           <span class="v">${pts(prov.scores[baseline].value)}점</span>
           <span class="d">${appliedScoreNote(prov.scores[baseline])} · 평가주가 ${won(prov.eval_price)}원</span></div>
-        <div class="mode"><span class="t">최종 방식 · 2개월·1개월·1주 산술평균</span>
+        <div class="mode"><span class="t">최종 방식 · 2개월·1개월·최근 5거래일 산술평균</span>
           <span class="v">${pts(fin.scores[baseline].value)}점</span>
           <span class="d">${appliedScoreNote(fin.scores[baseline])} · 평가주가 ${won(fin.eval_price)}원</span></div>
       </div>
@@ -824,6 +828,7 @@ function renderScore(V) {
         <span class="raw">평가 주가 ${won(result.eval_price)}원</span>
       </div>
       ${scoreGauge(marks, score.value)}
+      <div class="hero-note">40점 기준가격 <b>${won(score.anchor)}원</b>은 수기 검산으로 확정한 목표값입니다. 증감률 계산에 쓰는 ${baseYear}년末 평가주가는 아래와 같은 기간 규칙으로 별도 계산합니다.</div>
       <div class="indexed-formula">
         <div class="formula-kicker">평가주가 산식</div>
         ${indexedScoreFormula(0, true)}
@@ -840,7 +845,7 @@ function renderScore(V) {
             <div><b>SK이노베이션 거래량가중평균 주가</b><span>산식의 분자</span></div>
           </div>
           ${indexedScoreFormula(1)}
-          <p class="step-copy">각 기간은 (종가 × 거래량) 합계 ÷ 거래량 합계로 계산하고, 2개월·1개월·1주 값을 산술평균합니다.</p>
+          <p class="step-copy">각 기간은 (종가 × 거래량) 합계 ÷ 거래량 합계로 계산하고, 2개월·1개월·최근 5거래일 값을 산술평균합니다.</p>
           ${subjectTable(result, true, true)}
           <div class="step-result">① 산식에 사용되는 값 <b>${won(result.subject_price)}원</b></div>
           <div class="chart-caption">SK이노베이션 주가 추이 · 단순 종가·2개월 거래량가중평균 주가·최종 산술평균 · ${baseYear}년末 기준 2개월 전부터 ${koMonthDay(result.eval_date)}까지</div>
@@ -1060,7 +1065,7 @@ function renderPrices(V) {
     </div>
 
     <div class="card">
-      <h3>점수 시계열 <span class="sub">연초 이후 일별 "그날 최종 평가했다면" 점수 · 2025년末 최종방식(2M·1M·1W 거래량가중평균의 산술평균) 기준 가격${v2 ? `(${won(v2.anchor)}원)` : ""}을 40점 기준으로 적용</span>
+      <h3>점수 시계열 <span class="sub">연초 이후 일별 "그날 최종 평가했다면" 점수 · 2개월·1개월·최근 5거래일 거래량가중평균의 산술평균과 Peer 보정 · 수기 확정 가격${v2 ? `(${won(v2.anchor)}원)` : ""}을 40점 기준으로 적용</span>
         ${pngButton("timeseriesSvg", "점수시계열.png")}</h3>
       ${timeseriesChart()}
     </div>
@@ -1083,9 +1088,9 @@ function matrixTable() {
   const baselines = [
     {
       key: "V2",
-      name: "최종 방식 기준가격",
+      name: "수기 확정 목표가격",
       badge: "현재 적용",
-      note: "2025년末 2개월·1개월·1주 거래량가중평균의 산술평균을 40점 기준으로 사용",
+      note: "수기로 검산한 2개월·1개월·1주(5거래일) 산술평균 109,922원을 40점 기준으로 사용",
     },
     {
       key: "V3",
@@ -1114,13 +1119,13 @@ function matrixTable() {
     </tr>`;
   }).join("");
   return `<div class="card">
-    <h3>최종 방식 기준선별 점수 <span class="sub">종가 × 거래량 기준 · 2개월·1개월·1주의 거래량가중평균 산술평균과 Peer 보정 적용 · ${esc(D.scenarios.as_of)} 기준</span>
+    <h3>최종 방식 기준선별 점수 <span class="sub">종가 × 거래량 기준 · 2개월·1개월·최근 5거래일의 거래량가중평균 산술평균과 Peer 보정 적용 · ${esc(D.scenarios.as_of)} 기준</span>
       ${csvButton("matrixTbl", "최종방식_기준선별점수.csv")}</h3>
     <div class="tbl-wrap"><table id="matrixTbl">
       <thead><tr><th>점수 기준</th><th>40점 기준가격</th><th>현재 점수</th><th>설명</th></tr></thead>
       <tbody>${rows}</tbody></table></div>
     <div class="hero-note">세 행 모두 같은 최종 평가 방식으로 계산했으며, 40점의 기준이 되는 가격만 다릅니다.
-      대시보드의 오늘의 점수는 <b>최종 방식 기준가격</b>을 적용합니다.</div>
+      대시보드의 오늘의 점수는 <b>수기 확정 목표가격</b>을 적용합니다.</div>
   </div>`;
 }
 
@@ -1143,7 +1148,7 @@ function remainingPathCard() {
       <span class="range-fill" style="width:${(p.lock_in_pct * 100).toFixed(1)}%;opacity:.6"></span>
     </div></div>
     <div class="hero-note">평가 구간 확정도 <b>${(p.lock_in_pct * 100).toFixed(0)}%</b> —
-      2개월·1개월·1주 평가 구간에서 이미 지나간 기간의 평균 비중입니다. 가장 긴 2개월 구간 시작일은
+      2개월·1개월·최근 5거래일 평가 구간에서 이미 지나간 기간의 평균 비중입니다. 가장 긴 2개월 구간 시작일은
       ${esc(p.window_start)}이며, 100%에 가까울수록 남은 기간의 주가가 점수에 미치는 영향이 작습니다.</div>
   </div>`;
 }
@@ -1258,7 +1263,7 @@ function simMethodLabel(method) {
 }
 
 function simWindowLabel(spec) {
-  return ({ "1D": "최근 1일", "1W": "최근 1주", "1M": "최근 1개월", "2M": "최근 2개월", "3M": "최근 3개월", "6M": "최근 6개월" })[spec] || spec;
+  return ({ "1D": "최근 1일", "1W": "최근 5거래일", "1M": "최근 1개월", "2M": "최근 2개월", "3M": "최근 3개월", "6M": "최근 6개월" })[spec] || spec;
 }
 
 function simFormulaLabel(formula) {
@@ -1272,9 +1277,23 @@ function simPeriodSummary(params) {
     : `${periods} 거래량가중평균 주가의 산술평균`;
 }
 
+function usesManualFinalTarget(params) {
+  const windows = [...params.windows].sort().join(",");
+  return params.weighted !== false
+    && params.method === D.latest.method_primary
+    && windows === ["2M", "1M", "1W"].sort().join(",");
+}
+
 function simAnchor(params, baseDate) {
+  if (usesManualFinalTarget(params)) {
+    return D.latest.views.find(v => v.key === "today").modes["최종"].scores.V2.anchor;
+  }
   const subject = D.latest.tickers.find(t => t.group === "본사");
   return adjustedPriceJS(D.bars[subject.code], baseDate, params.windows, params.method, params.weighted);
+}
+
+function simAnchorDescription(params) {
+  return usesManualFinalTarget(params) ? "수기 확정 목표가격" : "선택한 평가 방식으로 재계산한 기준가격";
 }
 
 function designScorePrices(result) {
@@ -1284,7 +1303,7 @@ function designScorePrices(result) {
     <div class="design-scale-grid">
       ${marks.map(mark => `<div><span>${mark.points}점</span><b>${won(mark.price)}원</b></div>`).join("")}
     </div>
-    <div class="control-help">평균주가 계산 기준·산정기간·점수 범위를 바꾸면 세 가격이 함께 다시 계산됩니다.</div>
+    <div class="control-help">기본 최종 방식은 수기 확정 목표가격 109,922원을 사용합니다. 평균주가 계산 기준이나 산정기간을 바꾸면 선택한 방식의 2025년末 가격으로 다시 계산합니다.</div>
   </div>`;
 }
 
@@ -1499,7 +1518,7 @@ function renderDesign(V) {
       ${controlsPanel()}
       ${error ? `<div class="empty"><span class="ico">⚠️</span>계산할 수 없습니다 — ${esc(error)}</div>` : `
       <div class="card">
-        <h3>산출 결과 <span class="sub">${String(D.latest.base_date).slice(0, 4)}년末 선택한 평가 방식의 40점 기준가격 ${won(anchor)}원 적용</span></h3>
+        <h3>산출 결과 <span class="sub">${simAnchorDescription(SIM)} ${won(anchor)}원을 40점 기준으로 적용</span></h3>
         ${SIM.weighted ? `<div class="mode-grid design-score-compare">
           ${methodScores.map(({ method, result: compared }) => `<div class="mode ${SIM.method === method ? "active" : ""}">
             <span class="t">${simMethodLabel(method)}${SIM.method === method ? " · 현재 선택" : ""}</span>

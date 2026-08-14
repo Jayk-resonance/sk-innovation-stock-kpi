@@ -43,6 +43,21 @@ function sliceWindowJS(barsObj, start, end) {
   return idx;
 }
 
+function sliceSpecWindowJS(barsObj, end, spec) {
+  const m = /^(\d+)([DWM])$/i.exec(spec);
+  if (!m) throw new Error(`알 수 없는 윈도우: ${spec}`);
+  if (m[2].toUpperCase() === "W") {
+    const endISO = toISOJS(end), count = parseInt(m[1], 10) * 5;
+    const eligible = [];
+    for (let i = 0; i < barsObj.dates.length; i++) {
+      if (barsObj.dates[i] <= endISO) eligible.push(i);
+    }
+    return eligible.slice(-count);
+  }
+  const [start, e] = windowBoundsJS(end, spec);
+  return sliceWindowJS(barsObj, start, e);
+}
+
 function vwapJS(barsObj, idx, method) {
   let vol = 0, val = 0, cv = 0;
   idx.forEach(i => { vol += barsObj.volume[i]; val += barsObj.trading_value[i]; cv += barsObj.close[i] * barsObj.volume[i]; });
@@ -59,8 +74,7 @@ function simpleAvgJS(barsObj, idx) {
 
 function adjustedPriceJS(barsObj, end, specs, method, weighted) {
   const vals = specs.map(s => {
-    const [start, e] = windowBoundsJS(end, s);
-    const idx = sliceWindowJS(barsObj, start, e);
+    const idx = sliceSpecWindowJS(barsObj, end, s);
     return weighted === false ? simpleAvgJS(barsObj, idx) : vwapJS(barsObj, idx, method);
   });
   return vals.reduce((a, b) => a + b, 0) / vals.length;

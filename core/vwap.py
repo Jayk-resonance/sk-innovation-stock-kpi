@@ -20,6 +20,19 @@ def slice_window(bars: list[Bar], start: date, end: date) -> list[Bar]:
     return [b for b in bars if start <= b.day <= end]
 
 
+def slice_spec_window(bars: list[Bar], end: date, spec: str) -> list[Bar]:
+    """평가 스펙에 해당하는 봉.
+
+    주 단위는 달력 7일이 아니라 주당 최근 5거래일을 사용한다. 월·일 단위는
+    기존 달력 역산 경계를 그대로 유지한다.
+    """
+    normalized = spec.upper()
+    if normalized.endswith("W") and normalized[:-1].isdigit():
+        count = int(normalized[:-1]) * 5
+        return [bar for bar in bars if bar.day <= end][-count:]
+    return slice_window(bars, *window_bounds(end, normalized))
+
+
 def vwap(bars: list[Bar], method: str) -> float:
     """윈도우 내 거래량가중평균주가."""
     if method not in METHODS:
@@ -68,7 +81,8 @@ def adjusted_price(bars: list[Bar], end: date, specs: list[str], method: str) ->
     """거래량 보정 주가.
 
     specs 가 1개면 그 윈도우의 VWAP, 여러 개면 각 VWAP 의 산술평균이다.
-    (잠정 = ["2M"], 최종 = ["2M", "1M", "1W"])
+    (잠정 = ["2M"], 최종 = ["2M", "1M", "1W"]). 주 단위는 최근
+    5거래일, 월 단위는 기존 달력 역산 경계를 사용한다.
     """
-    values = [vwap(slice_window(bars, *window_bounds(end, s)), method) for s in specs]
+    values = [vwap(slice_spec_window(bars, end, s), method) for s in specs]
     return sum(values) / len(values)

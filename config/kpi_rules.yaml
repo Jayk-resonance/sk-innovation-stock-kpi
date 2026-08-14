@@ -14,14 +14,15 @@ eval_dates:
   # - { label: "2026 3분기", date: null, mode: 잠정 }   # 안내 수신 후 기입
   # - { label: "2026 최종",  date: null, mode: 최종 }   # 안내 수신 후 기입
 
-# 윈도우 경계: (가) 평가일 포함, 달력 역산  → PLAN.md §7.2 확정
+# 윈도우 경계: 평가일 포함
 #   2M: 평가일 -2개월 +1일 ~ 평가일
-#   1W: 평가일 -7일 +1일 ~ 평가일 (달력 7일. 거래일 수는 휴장에 따라 4~5일)
-window_boundary: inclusive_calendar
+#   1M: 평가일 -1개월 +1일 ~ 평가일
+#   1W: 평가일 이전의 최근 5거래일 (평가일이 거래일이면 평가일 포함)
+window_boundary: calendar_months_and_trading_weeks
 
 windows:
   잠정: ["2M"]                 # 2개월 VWAP
-  최종: ["2M", "1M", "1W"]     # 세 윈도우 VWAP의 산술평균
+  최종: ["2M", "1M", "1W"]     # 2개월·1개월·최근 5거래일 VWAP의 산술평균
 
 # VWAP 산식. 둘 다 산출하며 primary 는 표기 우선순위일 뿐이다.
 #   A: Σ거래대금 / Σ거래량            (체결 기준)

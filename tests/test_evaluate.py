@@ -54,11 +54,17 @@ def test_base_date_identity(prices, universe, rules, calibration):
         assert r.eval_price == pytest.approx(r.subject_price)
 
 
-def test_self_consistent_baseline_scores_exactly_40(prices, universe, rules, calibration):
-    """앵커와 평가일 주가의 출처가 같으면 기준일 점수는 정확히 40점이다."""
-    for mode, key in (("잠정", "V1"), ("최종", "V2")):
-        r = evaluate(prices, universe, rules, calibration, rules["base_date"], mode, "B")
-        assert r.scores[key].value == pytest.approx(40.0)
+def test_computed_baseline_scores_exactly_40(prices, universe, rules, calibration):
+    """자체 산출 V1은 앵커와 평가주가의 출처가 같아 기준일에 정확히 40점이다."""
+    r = evaluate(prices, universe, rules, calibration, rules["base_date"], "잠정", "B")
+    assert r.scores["V1"].value == pytest.approx(40.0)
+
+
+def test_manual_final_target_is_fixed(prices, universe, rules, calibration):
+    """최종 방식 목표는 수기 검산값이며, 증감률용 기준일 평가주가와 별도다."""
+    r = evaluate(prices, universe, rules, calibration, rules["base_date"], "최종", "B")
+    assert r.scores["V2"].anchor == 109_922
+    assert r.scores["V2"].value > 40
 
 
 def test_official_baseline_is_biased_at_base_date(prices, universe, rules, calibration):
@@ -71,7 +77,7 @@ def test_official_baseline_is_biased_at_base_date(prices, universe, rules, calib
     provisional = evaluate(prices, universe, rules, calibration, rules["base_date"], "잠정", "B")
     final = evaluate(prices, universe, rules, calibration, rules["base_date"], "최종", "B")
     assert provisional.scores["V3"].value == pytest.approx(52.26, abs=0.05)  # +12.3점
-    assert final.scores["V3"].value == pytest.approx(32.66, abs=0.05)  # −7.3점
+    assert final.scores["V3"].value == pytest.approx(33.10, abs=0.05)  # −6.9점
 
 
 # ── 기준 일치 원칙 ───────────────────────────────────────────────────────
