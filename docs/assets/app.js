@@ -837,7 +837,6 @@ function renderScore(V) {
         <span class="raw">평가 주가 ${won(result.eval_price)}원</span>
       </div>
       ${scoreGauge(marks, score.value)}
-      <div class="hero-note">40점 기준가격 <b>${won(score.anchor)}원</b>은 수기 검산으로 확정한 목표값입니다. 증감률 계산에 쓰는 ${baseYear}년末 평가주가는 아래와 같은 기간 규칙으로 별도 계산합니다.</div>
       <div class="indexed-formula">
         <div class="formula-kicker">평가주가 산식</div>
         ${indexedScoreFormula(0, true)}
