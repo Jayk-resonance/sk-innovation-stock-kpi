@@ -546,7 +546,7 @@ function peerSection(m, interactive = false) {
           </div>`
         : `<div class="m"><span>${esc(mem.name)}</span><span class="${dirClass(mem.change)}">${signed(mem.change)}</span></div>`
       ).join("")}
-      <div class="m"><b>그룹 평균</b><b class="${dirClass(g.average)}">${signed(g.average)}</b></div>
+      <div class="m peer-group-average"><b>그룹 평균</b><b class="${dirClass(g.average)}">${signed(g.average)}</b></div>
     </div>`;
   };
   return `<div class="group-sec">
