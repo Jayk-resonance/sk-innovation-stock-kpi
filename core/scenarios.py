@@ -183,13 +183,17 @@ def remaining_path_scenarios(
     horizon = minus_months(as_of, -horizon_months)
     labels = {0.20: "상승 시나리오 (연 +20%)", 0.0: "보합", -0.20: "하락 시나리오 (연 −20%)"}
     subject_code = universe.subject.code
+    realized = {
+        code: [bar for bar in bars if bar.day <= as_of]
+        for code, bars in prices.items()
+    }
     scenarios = []
     for annual in annual_rates:
         daily_rate = (1 + annual) ** (1 / 252) - 1
-        ext = dict(prices)
-        ext[subject_code] = _synthetic_extend(prices[subject_code], horizon, daily_rate)
+        ext = dict(realized)
+        ext[subject_code] = _synthetic_extend(realized[subject_code], horizon, daily_rate)
         for peer in universe.peers:
-            ext[peer.code] = _synthetic_extend(prices[peer.code], horizon, 0.0)
+            ext[peer.code] = _synthetic_extend(realized[peer.code], horizon, 0.0)
         result = evaluate(ext, universe, rules, calibration, horizon, "최종", method)
         score = result.scores[baseline_key]
         scenarios.append({
@@ -198,7 +202,7 @@ def remaining_path_scenarios(
             "raw": round(score.raw, 2), "value": round(score.value, 2),
         })
 
-    extended_subject = _synthetic_extend(prices[subject_code], horizon, 0.0)
+    extended_subject = _synthetic_extend(realized[subject_code], horizon, 0.0)
     windows = []
     lock_in = []
     for spec in rules["windows"]["최종"]:

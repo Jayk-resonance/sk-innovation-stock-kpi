@@ -19,10 +19,27 @@ directly only after every check passes.
 6. Query monthly history for all nine tickers from January 1 through the latest
    trading date. Replace only the latest month in
    `data/reference/monthly.csv`; require its `last_trading_day` to match.
-7. Run:
+7. Run the update once without correction overrides:
 
    ```powershell
    .\.venv\Scripts\python.exe -m pipeline.update_daily --expected-date YYYY-MM-DD
+   ```
+
+   If the command reports an existing-data correction, do not approve it
+   automatically. Query PlayMCP twice for every reported ticker/date and require
+   both daily responses to match the proposed corrected close, volume, and
+   trading value. Also require the official monthly history through the latest
+   trading day to reconcile with the corrected daily value. Only after all of
+   those checks pass, rerun:
+
+   ```powershell
+   .\.venv\Scripts\python.exe -m pipeline.update_daily --expected-date YYYY-MM-DD --allow-corrections
+   ```
+
+   Never use `--allow-corrections` when either daily confirmation differs or the
+   monthly total does not reconcile. After a successful update, run:
+
+   ```powershell
    .\.venv\Scripts\python.exe -m pytest -q
    ```
 
