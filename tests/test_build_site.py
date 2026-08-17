@@ -50,6 +50,7 @@ def test_sidebar_change_is_previous_trading_day_close_return(prices, universe, r
     latest, previous = prices[sk][-1], prices[sk][-2]
     ticker = next(t for t in payload["tickers"] if t["code"] == sk)
     assert payload["as_of"] == latest.day.isoformat()
+    assert ticker["previous_close"] == previous.close
     assert ticker["change_pct"] == pytest.approx(latest.close / previous.close - 1, abs=1e-6)
 
 

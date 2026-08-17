@@ -92,6 +92,10 @@ aside{width:232px;flex-shrink:0;position:sticky;top:0;height:100vh;background:va
 .nav-item.subject{background:var(--primary-tint);font-weight:var(--w-bold);color:var(--primary-ink)}
 .nav-dot{width:8px;height:8px;border-radius:var(--r-xs);flex-shrink:0}
 .nav-lbl{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nav-stock{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;line-height:1.2}
+.nav-stock-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nav-stock small{font-size:9px;font-weight:var(--w-reg);color:var(--muted-2);white-space:nowrap}
+.nav-item.subject .nav-stock small{color:var(--primary-ink);opacity:.65}
 .nav-chg{font-size:11.5px;font-weight:var(--w-bold)}
 
 main{flex:1;min-width:0;display:flex;flex-direction:column}

@@ -359,6 +359,7 @@ def build_latest(
         tickers.append({
             **meta,
             "close": cur.close if cur else None,
+            "previous_close": before.close if before else None,
             "volume": cur.volume if cur else None,
             "change_pct": round(cur.close / before.close - 1, 6) if cur and before else None,
             "vwap_2m": round(vwaps[meta["code"]], 2),
