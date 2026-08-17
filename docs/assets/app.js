@@ -280,8 +280,16 @@ function coverageNotice() {
 }
 
 /** SK이노베이션 거래량 보정 주가 — 종가에서 시작해 윈도우별 VWAP, 증감율까지. */
-function windowSpecLabel(spec) {
-  return spec === "1W" ? "1W (최근 5거래일)" : spec;
+function compactDate(iso) {
+  if (!iso) return "";
+  const [, month, day] = String(iso).split("-");
+  return `${Number(month)}/${Number(day)}`;
+}
+
+function windowSpecLabel(window) {
+  const spec = typeof window === "string" ? window : window.spec;
+  if (typeof window === "string" || !window.start_date || !window.end_date) return spec;
+  return `${spec} (${compactDate(window.start_date)}-${compactDate(window.end_date)})`;
 }
 
 function subjectTable(m, weighted = true, friendlyDates = false) {
@@ -294,7 +302,7 @@ function subjectTable(m, weighted = true, friendlyDates = false) {
   const rows = m.windows_now.map((w, i) => {
     const base = m.windows_base[i];
     const chg = w.vwap / base.vwap - 1;
-    return `<tr><td>${esc(windowSpecLabel(w.spec))} ${unit}</td>
+    return `<tr><td>${esc(windowSpecLabel(w))} ${unit}</td>
       <td class="num">${won(w.vwap)}원</td>
       <td class="num">${won(base.vwap)}원</td>
       <td class="num ${dirClass(chg)}">${signed(chg)}</td></tr>`;
@@ -481,7 +489,7 @@ function peerPopover(mem, m) {
     ${miniCloseChart(mem.code, mem.name, true, m.eval_date)}
     <div class="peer-calc-title">거래량가중평균의 산술평균</div>
     <div class="peer-window-values">
-      ${mem.windows_now.map(w => `<span><small>${esc(windowSpecLabel(w.spec))}</small><b>${won(w.vwap)}원</b></span>`).join("")}
+      ${mem.windows_now.map(w => `<span><small>${esc(windowSpecLabel(w))}</small><b>${won(w.vwap)}원</b></span>`).join("")}
     </div>
     <div class="peer-calc-formula">(${values.join(" + ")}) ÷ ${values.length} = <b>${won(mem.price)}원</b></div>
     <div class="peer-base-line">${String(D.latest.base_date).slice(0,4)}년末 ${won(mem.base_price)}원 대비

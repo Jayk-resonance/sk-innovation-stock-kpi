@@ -98,6 +98,16 @@ def test_mode_detail_groups_have_members_and_windows(prices, universe, rules, ca
     payload = build_latest(prices, universe, rules, calibration)
     fin = payload["views"][0]["modes"]["최종"]
     assert {w["spec"] for w in fin["windows_now"]} == {"2M", "1M", "1W"}
+    windows = {w["spec"]: w for w in fin["windows_now"]}
+    assert (windows["2M"]["start_date"], windows["2M"]["end_date"]) == (
+        "2026-06-15", "2026-08-14"
+    )
+    assert (windows["1M"]["start_date"], windows["1M"]["end_date"]) == (
+        "2026-07-15", "2026-08-14"
+    )
+    assert (windows["1W"]["start_date"], windows["1W"]["end_date"]) == (
+        "2026-08-10", "2026-08-14"
+    )
     assert len(fin["groups"]["에화"]["members"]) == 4
     assert len(fin["groups"]["배소"]["members"]) == 4
     assert fin["groups"]["에화"]["weight"] == pytest.approx(0.6)

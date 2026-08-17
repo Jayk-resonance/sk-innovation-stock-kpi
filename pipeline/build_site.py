@@ -215,7 +215,7 @@ def _mode_detail(prices, universe, rules, calibration, eval_date, mode, method) 
     잠정과 최종을 나란히 놓고 어디서 갈라지는지 보려면 윈도우별 VWAP 까지
     필요하다. 화면에서 다시 계산하지 않도록 여기서 전부 펼쳐 넘긴다.
     """
-    from core.vwap import adjusted_price, apply_corporate_actions, vwap
+    from core.vwap import adjusted_price, apply_corporate_actions, slice_spec_window, vwap
 
     specs = rules["windows"][mode]
     actions = calibration.get("corporate_actions") or []
@@ -224,8 +224,16 @@ def _mode_detail(prices, universe, rules, calibration, eval_date, mode, method) 
 
     def windows(code, anchor_date):
         bars = apply_corporate_actions(prices[code], code, actions)
-        return [{"spec": s, "vwap": round(adjusted_price(bars, anchor_date, [s], method), 2)}
-                for s in specs]
+        rows = []
+        for spec in specs:
+            window_bars = slice_spec_window(bars, anchor_date, spec)
+            rows.append({
+                "spec": spec,
+                "start_date": window_bars[0].day.isoformat(),
+                "end_date": window_bars[-1].day.isoformat(),
+                "vwap": round(adjusted_price(bars, anchor_date, [spec], method), 2),
+            })
+        return rows
 
     subject_bars = apply_corporate_actions(prices[subject], subject, actions)
     subject_by_day = {bar.day: bar for bar in subject_bars}
