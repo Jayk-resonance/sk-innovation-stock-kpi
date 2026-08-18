@@ -167,7 +167,7 @@ function renderTickerList() {
        <span class="nav-dot" style="background:${slotColor(t.group)}"></span>
        <span class="nav-stock">
          <span class="nav-stock-name">${esc(t.name)}</span>
-         <small>전일 종가 ${t.previous_close == null ? "-" : `${won(t.previous_close)}원`}</small>
+         <small>금일 종가 ${t.close == null ? "-" : `${won(t.close)}원`}</small>
        </span>
        <span class="nav-chg ${dirClass(t.change_pct)}">${signed(t.change_pct, 1)}</span>
      </div>`).join("");
