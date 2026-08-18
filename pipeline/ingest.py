@@ -38,29 +38,35 @@ def _write_csv(path: Path, fields: tuple[str, ...], rows: dict[tuple[str, str], 
 def merge_raw(raw_files: list[Path] | None = None) -> tuple[int, list[str]]:
     """원자료를 정규화본에 병합한다. (반영 건수, 정정 경고) 를 반환한다.
 
-    같은 (종목, 날짜) 가 다른 값으로 다시 들어오면 **덮어쓰되 경고한다.**
-    데이터 정정은 실제로 일어나므로 막지는 않되, 조용히 넘기지도 않는다.
+    같은 (종목, 날짜) 가 여러 원자료에 있으면 파일 순서상 마지막 값을 최종값으로
+    확정한다. 과거 원본 뒤에 정정 파일이 이어지는 정상적인 이력을 충돌로 오인하지
+    않도록, 정규화본과 원자료의 **최종값**이 다를 때만 경고한다.
     """
     files = sorted(raw_files if raw_files is not None else RAW_DIR.glob("*.json"))
     prices, shares = _read_csv(PRICES_CSV), _read_csv(SHARES_CSV)
+    resolved_prices, resolved_shares = {}, {}
     changed, warnings = 0, []
 
     for path in files:
         payload = json.loads(path.read_text(encoding="utf-8"))
         for row in payload.get("prices", []):
             key = (row["code"], row["date"])
-            new = {f: str(row[f]) for f in PRICE_FIELDS}
-            old = prices.get(key)
-            if old and any(old[f] != new[f] for f in PRICE_FIELDS):
-                warnings.append(
-                    f"{key[0]} {key[1]} 값 변경: "
-                    f"종가 {old['close']}→{new['close']}, 거래량 {old['volume']}→{new['volume']}"
-                )
-            if old != new:
-                prices[key] = new
-                changed += 1
+            resolved_prices[key] = {f: str(row[f]) for f in PRICE_FIELDS}
         for row in payload.get("shares", []):
-            shares[(row["code"], row["date"])] = {f: str(row[f]) for f in SHARE_FIELDS}
+            key = (row["code"], row["date"])
+            resolved_shares[key] = {f: str(row[f]) for f in SHARE_FIELDS}
+
+    for key, new in resolved_prices.items():
+        old = prices.get(key)
+        if old and any(old[f] != new[f] for f in PRICE_FIELDS):
+            warnings.append(
+                f"{key[0]} {key[1]} 값 변경: "
+                f"종가 {old['close']}→{new['close']}, 거래량 {old['volume']}→{new['volume']}"
+            )
+        if old != new:
+            prices[key] = new
+            changed += 1
+    shares.update(resolved_shares)
 
     _write_csv(PRICES_CSV, PRICE_FIELDS, prices)
     if shares:
