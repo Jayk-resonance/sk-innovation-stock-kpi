@@ -109,6 +109,19 @@ def test_mode_detail_groups_have_members_and_windows(prices, universe, rules, ca
     assert (windows["1W"]["start_date"], windows["1W"]["end_date"]) == (
         "2026-08-10", "2026-08-14"
     )
+    base_windows = {w["spec"]: w for w in fin["windows_base"]}
+    assert (base_windows["2M"]["start_date"], base_windows["2M"]["end_date"]) == (
+        "2025-11-03", "2025-12-30"
+    )
+    assert (base_windows["1M"]["start_date"], base_windows["1M"]["end_date"]) == (
+        "2025-12-01", "2025-12-30"
+    )
+    assert (base_windows["1W"]["start_date"], base_windows["1W"]["end_date"]) == (
+        "2025-12-23", "2025-12-30"
+    )
+    assert fin["subject_base_price"] == pytest.approx(109_922, abs=1)
+    samsung = next(m for m in fin["groups"]["배소"]["members"] if m["name"] == "삼성SDI")
+    assert samsung["base_price"] == pytest.approx(292_042, abs=1)
     assert len(fin["groups"]["에화"]["members"]) == 4
     assert len(fin["groups"]["배소"]["members"]) == 4
     assert fin["groups"]["에화"]["weight"] == pytest.approx(0.6)

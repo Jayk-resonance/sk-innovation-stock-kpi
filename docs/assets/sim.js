@@ -72,9 +72,12 @@ function simpleAvgJS(barsObj, idx) {
   return idx.reduce((a, i) => a + barsObj.close[i], 0) / idx.length;
 }
 
-function adjustedPriceJS(barsObj, end, specs, method, weighted) {
+function adjustedPriceJS(barsObj, end, specs, method, weighted, windowRanges = null) {
   const vals = specs.map(s => {
-    const idx = sliceSpecWindowJS(barsObj, end, s);
+    const range = windowRanges && windowRanges[s];
+    const idx = range
+      ? sliceWindowJS(barsObj, parseISOJS(range.start), parseISOJS(range.end))
+      : sliceSpecWindowJS(barsObj, end, s);
     return weighted === false ? simpleAvgJS(barsObj, idx) : vwapJS(barsObj, idx, method);
   });
   return vals.reduce((a, b) => a + b, 0) / vals.length;
@@ -109,7 +112,7 @@ function priceForPointsJS(scale, anchor, points) {
 /** tickers: D.latest.tickers 형태 [{code,name,group,weight}, ...] (그룹 "본사"/"에화"/"배소").
  *  params: {method, windows:[spec,...], weight(에화 비중), excluded:Set(code), scaleWidth, formula,
  *           weighted(거래량가중 적용 여부 — false 면 종목 무관 단순 종가평균)} */
-function computeSim(bars, tickers, params, baseDate, evalDate, anchor, baseScale) {
+function computeSim(bars, tickers, params, baseDate, evalDate, anchor, baseScale, baseWindowRanges = null) {
   const subject = tickers.find(t => t.group === "본사");
   const groupOrder = [];
   const membersByGroup = {};
@@ -121,9 +124,13 @@ function computeSim(bars, tickers, params, baseDate, evalDate, anchor, baseScale
   const groupWeight = { [groupOrder[0]]: params.weight, [groupOrder[1]]: 1 - params.weight };
 
   const specs = params.windows, method = params.method, weighted = params.weighted !== false;
+  const usesConfirmedBaseWindows = specs.length === 3 && ["2M", "1M", "1W"].every(s => specs.includes(s));
+  const confirmedBaseRanges = usesConfirmedBaseWindows ? baseWindowRanges : null;
   const now = {}, base = {};
   now[subject.code] = adjustedPriceJS(bars[subject.code], evalDate, specs, method, weighted);
-  base[subject.code] = adjustedPriceJS(bars[subject.code], baseDate, specs, method, weighted);
+  base[subject.code] = adjustedPriceJS(
+    bars[subject.code], baseDate, specs, method, weighted, confirmedBaseRanges
+  );
   const subjectChange = now[subject.code] / base[subject.code] - 1;
 
   const groups = {};
@@ -131,7 +138,9 @@ function computeSim(bars, tickers, params, baseDate, evalDate, anchor, baseScale
     const included = membersByGroup[name].filter(m => !params.excluded.has(m.code));
     const memberRows = included.map(m => {
       now[m.code] = adjustedPriceJS(bars[m.code], evalDate, specs, method, weighted);
-      base[m.code] = adjustedPriceJS(bars[m.code], baseDate, specs, method, weighted);
+      base[m.code] = adjustedPriceJS(
+        bars[m.code], baseDate, specs, method, weighted, confirmedBaseRanges
+      );
       const change = now[m.code] / base[m.code] - 1;
       return { name: m.name, change };
     });
@@ -145,14 +154,14 @@ function computeSim(bars, tickers, params, baseDate, evalDate, anchor, baseScale
 
   const scale = { ...baseScale, lower_bound_pct: -params.scaleWidth, upper_bound_pct: params.scaleWidth };
   const s = scoreOfJS(evalPrice, anchor, scale);
-  const windowsFor = end => specs.map(sp => ({
-    spec: sp, vwap: adjustedPriceJS(bars[subject.code], end, [sp], method, weighted),
+  const windowsFor = (end, ranges = null) => specs.map(sp => ({
+    spec: sp, vwap: adjustedPriceJS(bars[subject.code], end, [sp], method, weighted, ranges),
   }));
 
   return {
     specs, method,
     subject_close: closeAtJS(bars[subject.code], toISOJS(evalDate)),
-    windows_now: windowsFor(evalDate), windows_base: windowsFor(baseDate),
+    windows_now: windowsFor(evalDate), windows_base: windowsFor(baseDate, confirmedBaseRanges),
     subject_price: subjectPrice, subject_base_price: base[subject.code], subject_change: subjectChange,
     groups, peer_change: peerChange, relative_change: relative,
     multiplier: 1 / (1 - relative), eval_price: evalPrice,

@@ -14,7 +14,7 @@ from pathlib import Path
 import subprocess
 
 from core.calendar import minus_months
-from core.evaluate import adjusted_prices, evaluate, price_for_points
+from core.evaluate import adjusted_prices, base_adjusted_prices, evaluate, price_for_points
 from core.scenarios import (
     peer_waterfall,
     remaining_path_scenarios,
@@ -215,23 +215,28 @@ def _mode_detail(prices, universe, rules, calibration, eval_date, mode, method) 
     잠정과 최종을 나란히 놓고 어디서 갈라지는지 보려면 윈도우별 VWAP 까지
     필요하다. 화면에서 다시 계산하지 않도록 여기서 전부 펼쳐 넘긴다.
     """
-    from core.vwap import adjusted_price, apply_corporate_actions, slice_spec_window, vwap
+    from core.vwap import adjusted_price, apply_corporate_actions, slice_spec_window, slice_window, vwap
 
     specs = rules["windows"][mode]
+    base_ranges = (rules.get("base_window_ranges") or {}).get(mode)
     actions = calibration.get("corporate_actions") or []
     result = evaluate(prices, universe, rules, calibration, eval_date, mode, method)
     subject = universe.subject.code
 
-    def windows(code, anchor_date):
+    def windows(code, anchor_date, window_ranges=None):
         bars = apply_corporate_actions(prices[code], code, actions)
         rows = []
         for spec in specs:
-            window_bars = slice_spec_window(bars, anchor_date, spec)
+            window_bars = (
+                slice_window(bars, *window_ranges[spec])
+                if window_ranges and spec in window_ranges
+                else slice_spec_window(bars, anchor_date, spec)
+            )
             rows.append({
                 "spec": spec,
                 "start_date": window_bars[0].day.isoformat(),
                 "end_date": window_bars[-1].day.isoformat(),
-                "vwap": round(adjusted_price(bars, anchor_date, [spec], method), 2),
+                "vwap": round(adjusted_price(bars, anchor_date, [spec], method, window_ranges), 2),
             })
         return rows
 
@@ -249,19 +254,24 @@ def _mode_detail(prices, universe, rules, calibration, eval_date, mode, method) 
         for bar in subject_bars:
             if not start <= bar.day <= eval_date:
                 continue
+            chart_ranges = base_ranges if bar.day == rules["base_date"] else None
             rows.append({
                 "date": bar.day.isoformat(),
                 "close": bar.close,
                 "daily_weighted_price": daily_weighted_price(bar),
-                "vwap_2m": round(adjusted_price(subject_bars, bar.day, ["2M"], method), 2),
+                "vwap_2m": round(
+                    adjusted_price(subject_bars, bar.day, ["2M"], method, chart_ranges), 2
+                ),
                 "vwap_final": round(
-                    adjusted_price(subject_bars, bar.day, ["2M", "1M", "1W"], method), 2
+                    adjusted_price(
+                        subject_bars, bar.day, ["2M", "1M", "1W"], method, chart_ranges
+                    ), 2
                 ),
             })
         return rows
 
     now = adjusted_prices(prices, universe, eval_date, specs, method, actions)
-    base = adjusted_prices(prices, universe, rules["base_date"], specs, method, actions)
+    base = base_adjusted_prices(prices, universe, rules, mode, method, actions)
 
     groups = {}
     for name, (weight, members) in universe.groups.items():
@@ -275,7 +285,7 @@ def _mode_detail(prices, universe, rules, calibration, eval_date, mode, method) 
                 "price": round(now[t.code], 2),
                 "base_price": round(base[t.code], 2),
                 "windows_now": windows(t.code, eval_date),
-                "windows_base": windows(t.code, rules["base_date"]),
+                "windows_base": windows(t.code, rules["base_date"], base_ranges),
             } for t in members],
         }
 
@@ -290,7 +300,7 @@ def _mode_detail(prices, universe, rules, calibration, eval_date, mode, method) 
         ),
         "subject_chart": subject_chart(),
         "windows_now": windows(subject, eval_date),
-        "windows_base": windows(subject, rules["base_date"]),
+        "windows_base": windows(subject, rules["base_date"], base_ranges),
         "subject_base_price": round(base[subject], 2),
         "groups": groups,
         "score_marks": {k: _score_marks(rules["score_scale"], s["anchor"])
@@ -399,6 +409,13 @@ def build_latest(
         "method_primary": method,
         "methods": rules["vwap_methods"],
         "score_scale": rules["score_scale"],
+        "base_window_ranges": {
+            mode: {
+                spec: {"start": start.isoformat(), "end": end.isoformat()}
+                for spec, (start, end) in ranges.items()
+            }
+            for mode, ranges in rules["base_window_ranges"].items()
+        },
         "baselines": {k: {"label": v["label"], "official": bool(v.get("official"))}
                       for k, v in calibration["baselines"].items()},
         "tickers": tickers,

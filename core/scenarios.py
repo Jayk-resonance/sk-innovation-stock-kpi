@@ -9,7 +9,15 @@ from __future__ import annotations
 from datetime import date, timedelta
 
 from .calendar import minus_months, window_bounds
-from .evaluate import adjusted_prices, compose, evaluate, price_for_points, resolve_anchor, score_of
+from .evaluate import (
+    adjusted_prices,
+    base_adjusted_prices,
+    compose,
+    evaluate,
+    price_for_points,
+    resolve_anchor,
+    score_of,
+)
 from .schema import Bar, Universe
 from .vwap import slice_spec_window
 
@@ -38,7 +46,7 @@ def _base_inputs(prices, universe, rules, calibration, eval_date, mode, method):
     actions = calibration.get("corporate_actions") or []
     factor = float(calibration.get("calibration_factor", 1.0))
     now = adjusted_prices(prices, universe, eval_date, specs, method, actions)
-    base = adjusted_prices(prices, universe, rules["base_date"], specs, method, actions)
+    base = base_adjusted_prices(prices, universe, rules, mode, method, actions)
     change = {code: now[code] / base[code] - 1 for code in now}
     return now, base, change, factor
 

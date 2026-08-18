@@ -93,6 +93,13 @@ def load_rules(path: Path | None = None) -> dict:
     unknown = set(raw["windows"]) - {"잠정", "최종"}
     if unknown:
         raise ValueError(f"알 수 없는 평가 모드: {unknown}")
+    for mode, ranges in (raw.get("base_window_ranges") or {}).items():
+        if mode not in raw["windows"]:
+            raise ValueError(f"알 수 없는 기준기간 평가 모드: {mode}")
+        for spec, bounds in ranges.items():
+            if spec not in raw["windows"][mode]:
+                raise ValueError(f"{mode} 기준기간에 없는 윈도우: {spec}")
+            ranges[spec] = (_to_date(bounds["start"]), _to_date(bounds["end"]))
     return raw
 
 

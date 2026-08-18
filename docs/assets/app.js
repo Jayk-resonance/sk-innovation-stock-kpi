@@ -487,6 +487,7 @@ function miniCloseChart(code, name, compact = false, endDate = D.latest.as_of) {
 function peerPopover(mem, m) {
   if (!mem.windows_now?.length || !mem.code) return "";
   const values = mem.windows_now.map(w => won(w.vwap));
+  const baseRanges = mem.windows_base.map(w => windowSpecLabel(w)).join(" · ");
   return `<div class="peer-popover" role="tooltip">
     <div class="peer-pop-head"><b>${esc(mem.name)}</b><span>${koMonthDay(m.eval_date)} 기준 · 종가 추이</span></div>
     ${miniCloseChart(mem.code, mem.name, true, m.eval_date)}
@@ -495,8 +496,10 @@ function peerPopover(mem, m) {
       ${mem.windows_now.map(w => `<span><small>${esc(windowSpecLabel(w))}</small><b>${won(w.vwap)}원</b></span>`).join("")}
     </div>
     <div class="peer-calc-formula">(${values.join(" + ")}) ÷ ${values.length} = <b>${won(mem.price)}원</b></div>
-    <div class="peer-base-line">${String(D.latest.base_date).slice(0,4)}년末 ${won(mem.base_price)}원 대비
-      <b class="${dirClass(mem.change)}">${signed(mem.change)}</b></div>
+    <div class="peer-base-line">
+      <span>${String(D.latest.base_date).slice(0,4)}년末 기준 · ${esc(baseRanges)} 거래량가중평균의 산술평균</span>
+      <span><b>${won(mem.base_price)}원</b> 대비 <b class="${dirClass(mem.change)}">${signed(mem.change)}</b></span>
+    </div>
   </div>`;
 }
 
@@ -1327,7 +1330,10 @@ function verifyDefaultsMatchToday() {
     const params = simDefaults();
     const baseDate = parseISOJS(D.latest.base_date), evalDate = parseISOJS(D.latest.as_of);
     const anchor = simAnchor(params, baseDate);
-    const result = computeSim(D.bars, D.latest.tickers, params, baseDate, evalDate, anchor, D.latest.score_scale);
+    const result = computeSim(
+      D.bars, D.latest.tickers, params, baseDate, evalDate, anchor, D.latest.score_scale,
+      D.latest.base_window_ranges?.["최종"]
+    );
     const diff = Math.abs(result.scores.V3.value - today.scores.V2.value);
     const anchorDiff = Math.abs(anchor - today.scores.V2.anchor);
     if (diff > 0.05 || anchorDiff > 0.05) {
@@ -1506,14 +1512,20 @@ function renderDesign(V) {
   let result, methodScores = [], error = null;
   try {
     const activeTickers = simActiveTickers();
-    result = computeSim(D.bars, activeTickers, SIM, baseDate, evalDate, anchor, D.latest.score_scale);
+    result = computeSim(
+      D.bars, activeTickers, SIM, baseDate, evalDate, anchor, D.latest.score_scale,
+      D.latest.base_window_ranges?.["최종"]
+    );
     if (SIM.weighted) {
       methodScores = ["A", "B"].map(method => {
         const params = { ...SIM, method };
         const comparedAnchor = simAnchor(params, baseDate);
         return {
           method,
-          result: computeSim(D.bars, activeTickers, params, baseDate, evalDate, comparedAnchor, D.latest.score_scale),
+          result: computeSim(
+            D.bars, activeTickers, params, baseDate, evalDate, comparedAnchor, D.latest.score_scale,
+            D.latest.base_window_ranges?.["최종"]
+          ),
         };
       });
     }

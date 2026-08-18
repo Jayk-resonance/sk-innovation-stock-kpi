@@ -77,12 +77,22 @@ def apply_corporate_actions(bars: list[Bar], code: str, actions: list[dict]) -> 
     return adjusted
 
 
-def adjusted_price(bars: list[Bar], end: date, specs: list[str], method: str) -> float:
+def adjusted_price(
+    bars: list[Bar],
+    end: date,
+    specs: list[str],
+    method: str,
+    window_ranges: dict[str, tuple[date, date]] | None = None,
+) -> float:
     """거래량 보정 주가.
 
     specs 가 1개면 그 윈도우의 VWAP, 여러 개면 각 VWAP 의 산술평균이다.
     (잠정 = ["2M"], 최종 = ["2M", "1M", "1W"]). 주 단위는 최근
     5거래일, 월 단위는 기존 달력 역산 경계를 사용한다.
     """
-    values = [vwap(slice_spec_window(bars, end, s), method) for s in specs]
+    ranges = window_ranges or {}
+    values = [
+        vwap(slice_window(bars, *ranges[s]) if s in ranges else slice_spec_window(bars, end, s), method)
+        for s in specs
+    ]
     return sum(values) / len(values)

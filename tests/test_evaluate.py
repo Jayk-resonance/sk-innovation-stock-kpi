@@ -60,11 +60,12 @@ def test_computed_baseline_scores_exactly_40(prices, universe, rules, calibratio
     assert r.scores["V1"].value == pytest.approx(40.0)
 
 
-def test_manual_final_target_is_fixed(prices, universe, rules, calibration):
-    """최종 방식 목표는 수기 검산값이며, 증감률용 기준일 평가주가와 별도다."""
+def test_final_target_matches_base_windows(prices, universe, rules, calibration):
+    """최종 방식의 SK·Peer 기준기간은 109,922원 산출기간과 같아야 한다."""
     r = evaluate(prices, universe, rules, calibration, rules["base_date"], "최종", "B")
     assert r.scores["V2"].anchor == 109_922
-    assert r.scores["V2"].value > 40
+    assert r.subject_price == pytest.approx(109_922, abs=1)
+    assert r.scores["V2"].value == pytest.approx(40, abs=0.01)
 
 
 def test_official_baseline_is_biased_at_base_date(prices, universe, rules, calibration):
@@ -77,7 +78,7 @@ def test_official_baseline_is_biased_at_base_date(prices, universe, rules, calib
     provisional = evaluate(prices, universe, rules, calibration, rules["base_date"], "잠정", "B")
     final = evaluate(prices, universe, rules, calibration, rules["base_date"], "최종", "B")
     assert provisional.scores["V3"].value == pytest.approx(52.26, abs=0.05)  # +12.3점
-    assert final.scores["V3"].value == pytest.approx(33.10, abs=0.05)  # −6.9점
+    assert final.scores["V3"].value == pytest.approx(32.49, abs=0.05)  # −7.5점
 
 
 # ── 기준 일치 원칙 ───────────────────────────────────────────────────────

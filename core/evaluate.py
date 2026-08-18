@@ -48,6 +48,7 @@ def adjusted_prices(
     specs: list[str],
     method: str,
     corporate_actions: list[dict] | None = None,
+    window_ranges: dict[str, tuple[date, date]] | None = None,
 ) -> dict[str, float]:
     """전 종목의 거래량 보정 주가를 동일 조건으로 한 번에 계산한다."""
     actions = corporate_actions or []
@@ -57,9 +58,29 @@ def adjusted_prices(
         if not bars:
             raise ValueError(f"{ticker.name}({ticker.code}) 시세 데이터가 없다")
         out[ticker.code] = adjusted_price(
-            apply_corporate_actions(bars, ticker.code, actions), end, specs, method
+            apply_corporate_actions(bars, ticker.code, actions), end, specs, method, window_ranges
         )
     return out
+
+
+def base_adjusted_prices(
+    prices: dict[str, list[Bar]],
+    universe: Universe,
+    rules: dict,
+    mode: str,
+    method: str,
+    corporate_actions: list[dict] | None = None,
+) -> dict[str, float]:
+    """SK과 Peer에 같은 2025년말 기준 윈도우를 적용한 거래량 보정 주가."""
+    return adjusted_prices(
+        prices,
+        universe,
+        rules["base_date"],
+        rules["windows"][mode],
+        method,
+        corporate_actions,
+        (rules.get("base_window_ranges") or {}).get(mode),
+    )
 
 
 def score_of(eval_price: float, anchor: float, scale: dict) -> tuple[float, float, bool]:
@@ -122,12 +143,9 @@ def resolve_anchor(
     if spec["source"] == "fixed":
         return float(spec["value"])
     actions = calibration.get("corporate_actions") or []
-    return (
-        adjusted_prices(
-            prices, universe, rules["base_date"], rules["windows"][spec["mode"]], method, actions,
-        )[universe.subject.code]
-        * factor
-    )
+    return base_adjusted_prices(
+        prices, universe, rules, spec["mode"], method, actions
+    )[universe.subject.code] * factor
 
 
 def evaluate(
@@ -143,8 +161,12 @@ def evaluate(
     actions = calibration.get("corporate_actions") or []
     factor = float(calibration.get("calibration_factor", 1.0))
 
-    now = adjusted_prices(prices, universe, eval_date, specs, method, actions)
-    base = adjusted_prices(prices, universe, rules["base_date"], specs, method, actions)
+    base = base_adjusted_prices(prices, universe, rules, mode, method, actions)
+    now = (
+        base
+        if eval_date == rules["base_date"]
+        else adjusted_prices(prices, universe, eval_date, specs, method, actions)
+    )
     change = {code: now[code] / base[code] - 1 for code in now}
 
     subject = universe.subject.code
