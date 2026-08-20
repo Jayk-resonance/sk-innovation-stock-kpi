@@ -1,0 +1,18 @@
+{
+  "collected_at": "2026-08-21T00:12:09+09:00",
+  "source": "KIS via PlayMCP koreaStock",
+  "note": "Official 9 tickers plus 2027 simulation candidates; all observations are for the 2026-08-19 KOSPI trading day.",
+  "prices": [
+    {"code": "096770", "date": "2026-08-19", "close": 128900, "volume": 451215, "trading_value": 58363548650},
+    {"code": "051910", "date": "2026-08-19", "close": 266000, "volume": 118663, "trading_value": 31213545500},
+    {"code": "010950", "date": "2026-08-19", "close": 151600, "volume": 345770, "trading_value": 52802366400},
+    {"code": "011170", "date": "2026-08-19", "close": 53700, "volume": 119675, "trading_value": 6409253600},
+    {"code": "047050", "date": "2026-08-19", "close": 50700, "volume": 528156, "trading_value": 26691291300},
+    {"code": "373220", "date": "2026-08-19", "close": 357500, "volume": 270199, "trading_value": 95595164250},
+    {"code": "006400", "date": "2026-08-19", "close": 487000, "volume": 394552, "trading_value": 192529658250},
+    {"code": "247540", "date": "2026-08-19", "close": 109800, "volume": 276389, "trading_value": 30168782850},
+    {"code": "003670", "date": "2026-08-19", "close": 160300, "volume": 189626, "trading_value": 30111215000},
+    {"code": "006650", "date": "2026-08-19", "close": 82000, "volume": 21794, "trading_value": 1799339050},
+    {"code": "004690", "date": "2026-08-19", "close": 130100, "volume": 30369, "trading_value": 3844853350}
+  ]
+}
