@@ -1048,7 +1048,7 @@ function renderPrices(V) {
       ${statPair(["종가", `${won(sk.close)}<span style="font-size:13px">원</span>`],
                  ["전일 대비", `<span class="${dirClass(sk.change_pct)}">${signed(sk.change_pct)}</span>`])}
       ${statPair(["2개월 거래량 보정 주가", `${won(sk.vwap_2m)}<span style="font-size:13px">원</span>`],
-                 ["기준일 대비", `<span class="${dirClass(sk.change_from_base)}">${signed(sk.change_from_base)}</span>`])}
+                 ["25년 12월말 대비", `<span class="${dirClass(sk.change_from_base)}">${signed(sk.change_from_base)}</span>`])}
     </div>
 
     <div class="card">
@@ -1061,7 +1061,7 @@ function renderPrices(V) {
       <h3>종목별 현황 <span class="sub">2개월 거래량가중평균 주가 · (종가 × 거래량) 합계 ÷ 거래량 합계</span>
         ${csvButton("tickerTbl", "종목별현황.csv")}</h3>
       <div class="tbl-wrap"><table id="tickerTbl">
-        <thead><tr><th>종목</th><th>그룹</th><th>최근 추세</th><th>종가</th><th>전일 대비</th><th>2M 보정주가</th><th>기준일 대비</th></tr></thead>
+        <thead><tr><th>종목</th><th>그룹</th><th>최근 추세</th><th>종가</th><th>전일 대비</th><th>2M 보정주가</th><th>25년 12월말 대비</th></tr></thead>
         <tbody>${L.tickers.map(t => `<tr${t.group === "본사" ? ' class="subject"' : ""}>
           <td><span class="dot" style="background:${slotColor(t.group)};margin-right:7px"></span>${esc(t.name)}</td>
           <td><span class="badge grp">${esc(t.group)}${t.weight ? ` ${t.weight * 100}%` : ""}</span></td>
