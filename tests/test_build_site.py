@@ -54,6 +54,23 @@ def test_sidebar_change_is_previous_trading_day_close_return(prices, universe, r
     assert ticker["change_pct"] == pytest.approx(latest.close / previous.close - 1, abs=1e-6)
 
 
+def test_price_status_uses_same_final_method_as_today_score(prices, universe, rules, calibration):
+    """주가현황의 평가 주가와 연말 대비 증감률은 오늘의 점수 최종 방식과 같아야 한다."""
+    payload = build_latest(prices, universe, rules, calibration)
+    final = payload["views"][0]["modes"]["최종"]
+    tickers = {ticker["code"]: ticker for ticker in payload["tickers"]}
+
+    subject = tickers[universe.subject.code]
+    assert subject["evaluation_price"] == pytest.approx(final["subject_price"], abs=0.01)
+    assert subject["change_from_base"] == pytest.approx(final["subject_change"], abs=1e-6)
+
+    for group in final["groups"].values():
+        for member in group["members"]:
+            ticker = tickers[member["code"]]
+            assert ticker["evaluation_price"] == pytest.approx(member["price"], abs=0.01)
+            assert ticker["change_from_base"] == pytest.approx(member["change"], abs=1e-6)
+
+
 def test_h1_zero_score_surfaces_with_raw(prices, universe, rules, calibration):
     """0점으로 잘린 사실과 원값이 함께 실려야 한다."""
     payload = build_latest(prices, universe, rules, calibration)

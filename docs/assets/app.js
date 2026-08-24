@@ -1044,10 +1044,10 @@ function renderPrices(V) {
   const v2 = D.latest.views.find(v => v.key === "today")?.modes?.["최종"]?.scores?.V2;
   V.innerHTML = `
     <div class="card">
-      <h3>SK이노베이션 <span class="sub">${esc(L.as_of)} 종가 기준</span></h3>
+      <h3>SK이노베이션 <span class="sub">${esc(L.as_of)} 기준</span></h3>
       ${statPair(["종가", `${won(sk.close)}<span style="font-size:13px">원</span>`],
                  ["전일 대비", `<span class="${dirClass(sk.change_pct)}">${signed(sk.change_pct)}</span>`])}
-      ${statPair(["2개월 거래량 보정 주가", `${won(sk.vwap_2m)}<span style="font-size:13px">원</span>`],
+      ${statPair(["거래량가중평균 주가의 산술평균", `${won(sk.evaluation_price)}<span style="font-size:13px">원</span>`],
                  ["25년 12월말 대비", `<span class="${dirClass(sk.change_from_base)}">${signed(sk.change_from_base)}</span>`])}
     </div>
 
@@ -1058,23 +1058,23 @@ function renderPrices(V) {
     </div>
 
     <div class="card">
-      <h3>종목별 현황 <span class="sub">2개월 거래량가중평균 주가 · (종가 × 거래량) 합계 ÷ 거래량 합계</span>
+      <h3>종목별 현황 <span class="sub">2개월·1개월·1주 거래량가중평균 주가의 산술평균</span>
         ${csvButton("tickerTbl", "종목별현황.csv")}</h3>
       <div class="tbl-wrap"><table id="tickerTbl">
-        <thead><tr><th>종목</th><th>그룹</th><th>최근 추세</th><th>종가</th><th>전일 대비</th><th>2M 보정주가</th><th>25년 12월말 대비</th></tr></thead>
+        <thead><tr><th>종목</th><th>그룹</th><th>최근 추세</th><th>종가</th><th>전일 대비</th><th>거래량가중평균 주가의 산술평균</th><th>25년 12월말 대비</th></tr></thead>
         <tbody>${L.tickers.map(t => `<tr${t.group === "본사" ? ' class="subject"' : ""}>
           <td><span class="dot" style="background:${slotColor(t.group)};margin-right:7px"></span>${esc(t.name)}</td>
           <td><span class="badge grp">${esc(t.group)}${t.weight ? ` ${t.weight * 100}%` : ""}</span></td>
           <td style="text-align:center">${sparkline(t.spark)}</td>
           <td class="num">${won(t.close)}</td>
           <td class="num ${dirClass(t.change_pct)}">${signed(t.change_pct)}</td>
-          <td class="num">${won(t.vwap_2m)}</td>
+          <td class="num">${won(t.evaluation_price)}</td>
           <td class="num ${dirClass(t.change_from_base)}">${signed(t.change_from_base)}</td>
         </tr>`).join("")}</tbody></table></div>
     </div>
 
     <div class="card">
-      <h3>기준일 대비 거래량 보정 주가 증감율 <span class="sub">이 값들이 Peer 증감율을 만든다</span></h3>
+      <h3>25년 12월말 대비 거래량가중평균 주가의 산술평균 증감률 <span class="sub">주가평가 탭의 Peer 보정에 사용하는 값</span></h3>
       <div style="display:flex;flex-direction:column;gap:10px">${groupBars()}</div>
     </div>
 

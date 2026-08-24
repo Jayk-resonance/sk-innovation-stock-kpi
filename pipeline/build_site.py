@@ -353,14 +353,16 @@ def build_latest(
     days = trading_days(prices)
     as_of = days[-1]
     prev = days[-2] if len(days) > 1 else None
-    specs_prov = rules["windows"]["잠정"]
+    specs_final = rules["windows"]["최종"]
     method = rules["vwap_primary"]
 
     # 종목 현황
-    vwaps = adjusted_prices(prices, universe, as_of, specs_prov, method,
-                            calibration.get("corporate_actions") or [])
-    base_vwaps = adjusted_prices(prices, universe, rules["base_date"], specs_prov, method,
-                                 calibration.get("corporate_actions") or [])
+    evaluation_prices = adjusted_prices(prices, universe, as_of, specs_final, method,
+                                        calibration.get("corporate_actions") or [])
+    base_evaluation_prices = base_adjusted_prices(
+        prices, universe, rules, "최종", method,
+        calibration.get("corporate_actions") or [],
+    )
     peer_eval = _peer_evaluation(prices, universe)
     tickers = []
     for meta in _ticker_meta(universe):
@@ -372,8 +374,10 @@ def build_latest(
             "previous_close": before.close if before else None,
             "volume": cur.volume if cur else None,
             "change_pct": round(cur.close / before.close - 1, 6) if cur and before else None,
-            "vwap_2m": round(vwaps[meta["code"]], 2),
-            "change_from_base": round(vwaps[meta["code"]] / base_vwaps[meta["code"]] - 1, 6),
+            "evaluation_price": round(evaluation_prices[meta["code"]], 2),
+            "change_from_base": round(
+                evaluation_prices[meta["code"]] / base_evaluation_prices[meta["code"]] - 1, 6
+            ),
             # 표 안 스파크라인용. 최근 40거래일 종가 — 추세만 보이면 되므로 원값 그대로.
             "spark": [b.close for b in prices[meta["code"]][-SPARK_POINTS:]],
             **({"peer_eval": peer_eval[meta["code"]]} if meta["code"] in peer_eval else {}),
