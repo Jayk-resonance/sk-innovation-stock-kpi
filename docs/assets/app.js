@@ -827,6 +827,82 @@ function indexedScoreFormula(active = 0, showPeer = false) {
     </div>` : ""}`;
 }
 
+function scoreContributionCard(result) {
+  const c = result.contribution;
+  if (!c) return "";
+
+  const deltaWon = value => `${value >= 0 ? "+" : "−"}${won(Math.abs(value))}원`;
+  const skShare = c.sk_contribution.share * 100;
+  const peerShare = c.peer_contribution.share * 100;
+  const rangeValues = [c.base_price, c.target_100.price, c.eval_price];
+  const rawMin = Math.min(...rangeValues), rawMax = Math.max(...rangeValues);
+  const padding = Math.max((rawMax - rawMin) * 0.08, 1);
+  const rangeMin = rawMin - padding, rangeMax = rawMax + padding;
+  const position = value => (value - rangeMin) / (rangeMax - rangeMin) * 100;
+  const basePos = position(c.base_price), targetPos = position(c.target_100.price);
+  const evalPos = position(c.eval_price);
+  const liftLeft = Math.min(basePos, evalPos), liftWidth = Math.abs(evalPos - basePos);
+  const excessWord = c.target_100.excess_amount >= 0 ? "초과" : "미달";
+  const clippedNote = c.clipped
+    ? `산출점수 <b>${pts(c.raw_score)}점</b> → 상한 적용 <strong>${pts(c.display_score)}점</strong>`
+    : `산출점수와 적용점수 모두 <strong>${pts(c.display_score)}점</strong>`;
+
+  return `<div class="card score-contribution-card">
+    <h3>평가주가 기여 분석 <span class="sub">평가주가 상승분을 SK 자체 상승과 Peer 상대성과로 분해</span></h3>
+    <div class="contribution-flow" role="list" aria-label="평가주가 기여 단계">
+      <div class="contribution-node base" role="listitem">
+        <span class="contribution-kicker">출발점</span><b>2025년末 기준가격</b>
+        <strong>${won(c.base_price)}원</strong>
+      </div>
+      <span class="contribution-op" aria-hidden="true">+</span>
+      <div class="contribution-node sk" role="listitem">
+        <span class="contribution-kicker">SK 자체 상승 ${signed(c.sk_change, 2)}</span><b>SK이노베이션 기여</b>
+        <strong>${deltaWon(c.sk_contribution.amount)}</strong>
+        <small>변동 영향 비중 ${skShare.toFixed(1)}%</small>
+      </div>
+      <span class="contribution-op" aria-hidden="true">+</span>
+      <div class="contribution-node peer" role="listitem">
+        <span class="contribution-kicker">Peer 대비 ${signed(c.relative_change, 2)}p</span><b>Peer 상대성과 보정</b>
+        <strong>${deltaWon(c.peer_contribution.amount)}</strong>
+        <small>분모 보정효과 ${signed(c.peer_multiplier_effect, 2)} · 영향 비중 ${peerShare.toFixed(1)}%</small>
+      </div>
+      <span class="contribution-op" aria-hidden="true">=</span>
+      <div class="contribution-node final" role="listitem">
+        <span class="contribution-kicker">2025년末 대비 ${signed(c.total_lift.change, 2)}</span><b>최종 평가주가</b>
+        <strong>${won(c.eval_price)}원</strong>
+        <small>총 ${deltaWon(c.total_lift.amount)}</small>
+      </div>
+    </div>
+
+    <div class="contribution-impact">
+      <div class="contribution-impact-head"><b>평가주가 변동 영향 비중</b><span>총 변동 ${deltaWon(c.total_lift.amount)} 기준</span></div>
+      <div class="contribution-sharebar" aria-label="SK ${skShare.toFixed(1)}%, Peer 보정 ${peerShare.toFixed(1)}%">
+        <span class="sk" style="width:${skShare}%"></span><span class="peer" style="width:${peerShare}%"></span>
+      </div>
+      <div class="contribution-legend">
+        <span><i class="sk"></i>SK 자체 상승 <b>${skShare.toFixed(1)}%</b></span>
+        <span><i class="peer"></i>Peer 상대성과 보정 <b>${peerShare.toFixed(1)}%</b></span>
+      </div>
+    </div>
+
+    <div class="target-comparison">
+      <div class="target-comparison-head">
+        <b>100점 기준 ${won(c.target_100.price)}원</b>
+        <strong>${deltaWon(c.target_100.excess_amount)} ${excessWord} · ${signed(c.target_100.excess_pct_points, 2)}p</strong>
+      </div>
+      <div class="target-track" role="img" aria-label="100점 기준과 최종 평가주가 비교">
+        <span class="target-lift" style="left:${liftLeft}%;width:${liftWidth}%"></span>
+        <i class="base" style="left:${basePos}%"><small>기준가격</small></i>
+        <i class="target" style="left:${targetPos}%"><small>100점</small></i>
+        <i class="evaluation" style="left:${evalPos}%"><small>평가주가</small></i>
+      </div>
+      <div class="score-cap-note">${clippedNote}</div>
+    </div>
+
+    <p class="contribution-explainer">SK이노베이션은 ${signed(c.sk_change, 2)} 상승했고 Peer는 ${signed(c.peer_change, 2)} 변동해, 상대성과는 ${signed(c.relative_change, 2)}p입니다. 이 상대성과를 산식의 분모에 반영하면 평가주가에 ${signed(c.peer_multiplier_effect, 2)}의 추가 효과가 발생합니다.</p>
+  </div>`;
+}
+
 function renderScore(V) {
   const view = currentView();
   if (view.key !== "today") return renderHistoricalScore(V, view);
@@ -910,7 +986,9 @@ function renderScore(V) {
         <span class="k">평가 주가</span><span class="v r">${won(result.eval_price)}원</span>
         <span class="k">현재 점수</span><span class="v r">${pts(score.value)}점</span>
       </div>
-    </div>`;
+    </div>
+
+    ${scoreContributionCard(result)}`;
   bindSubjectPriceCharts(V);
 }
 

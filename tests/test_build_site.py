@@ -112,6 +112,31 @@ def test_today_uses_manual_final_target(prices, universe, rules, calibration):
     assert by_pt[100] == pytest.approx(109_922 * 1.15, abs=0.5)
 
 
+def test_today_contribution_reconciles_to_evaluation_price(prices, universe, rules, calibration):
+    """SK 자체 상승과 Peer 보정 기여액의 합은 최종 평가주가 상승분과 같아야 한다."""
+    payload = build_latest(prices, universe, rules, calibration)
+    final = payload["views"][0]["modes"]["최종"]
+    contribution = final["contribution"]
+
+    assert contribution["sk_contribution"]["amount"] == pytest.approx(
+        final["subject_price"] - contribution["base_price"], abs=0.01
+    )
+    assert contribution["peer_contribution"]["amount"] == pytest.approx(
+        final["eval_price"] - final["subject_price"], abs=0.01
+    )
+    assert (
+        contribution["sk_contribution"]["amount"]
+        + contribution["peer_contribution"]["amount"]
+    ) == pytest.approx(contribution["total_lift"]["amount"], abs=0.01)
+    assert (
+        contribution["sk_contribution"]["share"]
+        + contribution["peer_contribution"]["share"]
+    ) == pytest.approx(1, abs=1e-6)
+    assert contribution["target_100"]["price"] == pytest.approx(
+        contribution["base_price"] * 1.15, abs=0.5
+    )
+
+
 def test_mode_detail_groups_have_members_and_windows(prices, universe, rules, calibration):
     payload = build_latest(prices, universe, rules, calibration)
     fin = payload["views"][0]["modes"]["최종"]

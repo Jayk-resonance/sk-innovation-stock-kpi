@@ -344,6 +344,50 @@ def _coverage(prices: dict[str, list[Bar]]) -> dict:
             "unverified_months": unverified, "mismatched_months": mismatched}
 
 
+def _score_contribution(detail: dict) -> dict:
+    """오늘의 최종 평가주가 상승분을 SK 자체 상승과 Peer 보정 효과로 분해한다."""
+    score = detail["scores"]["V2"]
+    base_price = score["anchor"]
+    subject_price = detail["subject_price"]
+    eval_price = detail["eval_price"]
+    sk_amount = subject_price - base_price
+    peer_amount = eval_price - subject_price
+    impact_total = abs(sk_amount) + abs(peer_amount)
+    target_100 = next(
+        mark["price"] for mark in detail["score_marks"]["V2"] if mark["points"] == 100
+    )
+
+    return {
+        "base_price": round(base_price, 2),
+        "subject_price": round(subject_price, 2),
+        "eval_price": round(eval_price, 2),
+        "sk_change": detail["subject_change"],
+        "peer_change": detail["peer_change"],
+        "relative_change": detail["relative_change"],
+        "peer_multiplier_effect": round(detail["multiplier"] - 1, 6),
+        "sk_contribution": {
+            "amount": round(sk_amount, 2),
+            "share": round(abs(sk_amount) / impact_total, 6) if impact_total else 0,
+        },
+        "peer_contribution": {
+            "amount": round(peer_amount, 2),
+            "share": round(abs(peer_amount) / impact_total, 6) if impact_total else 0,
+        },
+        "total_lift": {
+            "amount": round(eval_price - base_price, 2),
+            "change": round(eval_price / base_price - 1, 6),
+        },
+        "target_100": {
+            "price": round(target_100, 2),
+            "excess_amount": round(eval_price - target_100, 2),
+            "excess_pct_points": round((eval_price - target_100) / base_price, 6),
+        },
+        "raw_score": score["raw"],
+        "display_score": score["value"],
+        "clipped": score["clipped"],
+    }
+
+
 def build_latest(
     prices: dict[str, list[Bar]],
     universe: Universe,
@@ -391,6 +435,9 @@ def build_latest(
         "modes": {m: _mode_detail(prices, universe, rules, calibration, as_of, m, method)
                   for m in ("잠정", "최종")},
     }]
+    views[0]["modes"]["최종"]["contribution"] = _score_contribution(
+        views[0]["modes"]["최종"]
+    )
     for entry in reversed([e for e in rules["eval_dates"] if e["date"]]):
         views.append({
             "key": entry["label"].replace(" ", "-"), "label": entry["label"],
