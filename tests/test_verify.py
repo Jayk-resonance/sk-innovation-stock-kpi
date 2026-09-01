@@ -39,7 +39,7 @@ def test_full_month_matches_reference(prices):
 def test_every_month_is_fully_verified(prices):
     """백필 완료 후: 보유한 모든 달이 원 단위로 일치한다."""
     checks = cross_check_monthly(prices)
-    assert len(checks) == 99  # 11개월 × 9종목
+    assert len(checks) == 108  # 12개월 × 9종목
     assert all(c.covered and c.exact for c in checks)
 
 
