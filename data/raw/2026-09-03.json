@@ -1,0 +1,98 @@
+{
+  "collected_at": "2026-09-03T20:34:49+09:00",
+  "source": "KIS via PlayMCP koreaStock",
+  "prices": [
+    {
+      "code": "096770",
+      "date": "2026-09-03",
+      "close": 130800,
+      "volume": 1012027,
+      "trading_value": 133513825000
+    },
+    {
+      "code": "051910",
+      "date": "2026-09-03",
+      "close": 287000,
+      "volume": 304270,
+      "trading_value": 86908245250
+    },
+    {
+      "code": "010950",
+      "date": "2026-09-03",
+      "close": 147900,
+      "volume": 387370,
+      "trading_value": 57763706950
+    },
+    {
+      "code": "011170",
+      "date": "2026-09-03",
+      "close": 61000,
+      "volume": 292702,
+      "trading_value": 17843094450
+    },
+    {
+      "code": "047050",
+      "date": "2026-09-03",
+      "close": 55500,
+      "volume": 37090860,
+      "trading_value": 2054807219150
+    },
+    {
+      "code": "373220",
+      "date": "2026-09-03",
+      "close": 365500,
+      "volume": 426976,
+      "trading_value": 154951735750
+    },
+    {
+      "code": "006400",
+      "date": "2026-09-03",
+      "close": 539000,
+      "volume": 437603,
+      "trading_value": 237749818000
+    },
+    {
+      "code": "247540",
+      "date": "2026-09-03",
+      "close": 106500,
+      "volume": 348467,
+      "trading_value": 36994692450
+    },
+    {
+      "code": "003670",
+      "date": "2026-09-03",
+      "close": 183800,
+      "volume": 407968,
+      "trading_value": 74191757050
+    },
+    {
+      "code": "006650",
+      "date": "2026-09-03",
+      "close": 96400,
+      "volume": 75765,
+      "trading_value": 7514264800
+    },
+    {
+      "code": "004690",
+      "date": "2026-09-03",
+      "close": 136500,
+      "volume": 7136,
+      "trading_value": 967978900
+    },
+    {
+      "code": "247540",
+      "date": "2026-09-01",
+      "close": 114370,
+      "volume": 457126,
+      "trading_value": 52793466450
+    },
+    {
+      "code": "247540",
+      "date": "2026-09-02",
+      "close": 106299,
+      "volume": 590585,
+      "trading_value": 64438285350
+    }
+  ],
+  "shares": []
+}
