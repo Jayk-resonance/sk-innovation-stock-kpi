@@ -8,7 +8,7 @@
 <title>KPI Dashboard — SK이노베이션 CEO KPI</title>
 <link rel="preconnect" href="https://cdn.jsdelivr.net">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
-  <link rel="stylesheet" href="assets/style.css?v=6083767">
+  <link rel="stylesheet" href="assets/style.css?v=cf5159e">
 </head>
 <body>
 <div class="layout">
@@ -26,6 +26,11 @@
       <div class="nav-h">평가 대상<small id="tickerChangeBasis"></small></div>
       <div id="tickerList"></div>
     </div>
+    <button class="creator-credit" id="creatorCredit" type="button" aria-haspopup="dialog"
+      aria-controls="creatorDialog">
+      <span>기획·제작 김제우</span>
+      <small>사내 업무용 · 자세히 보기</small>
+    </button>
   </aside>
   <button class="mobile-nav-scrim" id="mobileNavScrim" type="button" aria-label="메뉴 닫기" tabindex="-1"></button>
   <main>
@@ -51,7 +56,20 @@
     </div>
   </main>
 </div>
+<dialog class="creator-dialog" id="creatorDialog" aria-labelledby="creatorDialogTitle">
+  <div class="creator-dialog-head">
+    <div>
+      <span>ABOUT THIS DASHBOARD</span>
+      <h2 id="creatorDialogTitle">SK이노베이션 KPI Dashboard</h2>
+    </div>
+    <button class="creator-dialog-close" id="creatorDialogClose" type="button" aria-label="안내 닫기">×</button>
+  </div>
+  <div class="creator-dialog-body">
+    <p><span>기획·설계·개발</span><strong>김제우</strong></p>
+    <small>본 대시보드는 사내 업무용으로 제작되었습니다.</small>
+  </div>
+</dialog>
   <script src="assets/sim.js?v=7803f6f"></script>
-  <script src="assets/app.js?v=0643c66"></script>
+  <script src="assets/app.js?v=ed08899"></script>
 </body>
 </html>

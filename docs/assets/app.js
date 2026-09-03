@@ -96,7 +96,7 @@ async function init() {
     if (visibleMainTabs().some(t => t.key === hTab)) S.tab = hTab;
     if (hSub && visibleViews().some(v => v.key === hSub)) S.evalKey = hSub;
     document.getElementById("todayStr").textContent = koDate(D.latest.as_of) + " 기준";
-    wireMobileNav(); renderMainNav(); renderTickerList(); renderSubtabs(); render();
+    wireMobileNav(); wireCreatorCredit(); renderMainNav(); renderTickerList(); renderSubtabs(); render();
   } catch (e) {
     document.getElementById("view").innerHTML =
       `<div class="empty"><span class="ico">⚠️</span><b style="color:var(--ink)">데이터를 불러오지 못했습니다</b><br><small>${esc(e.message)}</small></div>`;
@@ -131,6 +131,20 @@ function wireMobileNav() {
   });
   MOBILE_NAV_MEDIA.addEventListener("change", () => setMobileNavOpen(false));
   setMobileNavOpen(false);
+}
+
+function wireCreatorCredit() {
+  const dialog = document.getElementById("creatorDialog");
+  const openButton = document.getElementById("creatorCredit");
+  const closeButton = document.getElementById("creatorDialogClose");
+  openButton.addEventListener("click", () => {
+    setMobileNavOpen(false);
+    dialog.showModal();
+  });
+  closeButton.addEventListener("click", () => dialog.close());
+  dialog.addEventListener("click", event => {
+    if (event.target === dialog) dialog.close();
+  });
 }
 
 function renderMainNav() {
