@@ -560,10 +560,15 @@ function peerSection(m, interactive = false) {
       <div class="peer-grp-h"><span>${esc(name)} 그룹</span><span class="w">가중치 ${(g.weight * 100).toFixed(0)}%</span></div>
       ${g.members.map(mem => interactive
         ? `<div class="m peer-member" tabindex="0" aria-label="${esc(mem.name)} 상세 보기">
-            <span class="peer-name">${esc(mem.name)}<small>그래프 보기</small></span>
-            <span class="${dirClass(mem.change)}">${signed(mem.change)}</span>
-            ${peerPopover(mem, m)}
-          </div>`
+             <span class="peer-name">${esc(mem.name)}<small>그래프 보기</small></span>
+             <span class="peer-price-compare">
+               <span><small>${String(D.latest.base_date).slice(0,4)}년末 평가주가</small><b>${won(mem.base_price)}원</b></span>
+               <i aria-hidden="true">→</i>
+               <span><small>${koMonthDay(m.eval_date)} 평가주가</small><b>${won(mem.price)}원</b></span>
+             </span>
+             <span class="${dirClass(mem.change)}">${signed(mem.change)}</span>
+             ${peerPopover(mem, m)}
+           </div>`
         : `<div class="m"><span>${esc(mem.name)}</span><span class="${dirClass(mem.change)}">${signed(mem.change)}</span></div>`
       ).join("")}
       <div class="m peer-group-average"><b>그룹 평균</b><b class="${dirClass(g.average)}">${signed(g.average)}</b></div>
@@ -989,16 +994,6 @@ function renderScore(V) {
           <p class="step-copy">①을 분자로 사용하고, ②에서 ③을 뺀 값을 분모에 반영해 평가주가를 계산합니다.</p>
           ${finalCalculation(result)}
         </section>
-      </div>
-    </div>
-
-    <div class="card">
-      <h3>점수 기준 <span class="sub">기준 가격을 40점으로 환산</span></h3>
-      <div class="hero-note"><b>⑤ 점수 환산</b> · 기준 가격의 85%는 0점, 기준 가격은 40점, 기준 가격의 115%는 100점입니다. 범위 밖 값은 0~100점으로 제한합니다.</div>
-      <div class="statpair">
-        <span class="k">기준 가격</span><span class="v r">${won(score.anchor)}원</span>
-        <span class="k">평가 주가</span><span class="v r">${won(result.eval_price)}원</span>
-        <span class="k">현재 점수</span><span class="v r">${pts(score.value)}점</span>
       </div>
     </div>
 
