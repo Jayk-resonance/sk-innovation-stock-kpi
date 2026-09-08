@@ -1097,9 +1097,12 @@ function bindIndexChart(root) {
         dot.removeAttribute("visibility");
       }
     });
-    tooltip.innerHTML = `<b>${koDate(H.dates[index])}</b>${series.map(([name, values, color]) => {
+    tooltip.innerHTML = `<b>${koDate(H.dates[index])}</b>${series.map(([name, values, color], seriesIndex) => {
       const value = values[index];
-      return `<span><i style="background:${color}"></i><em>${esc(name)}</em><strong>${value == null ? "—" : value.toFixed(2)}</strong><small>${value == null ? "" : signed(value / 100 - 1)}</small></span>`;
+      const indexRow = `<span><i style="background:${color}"></i><em>${esc(name)}</em><strong>${value == null ? "—" : value.toFixed(2)}</strong><small>${value == null ? "" : signed(value / 100 - 1)}</small></span>`;
+      if (seriesIndex !== 0) return indexRow;
+      const close = H.close[H.subject]?.[index];
+      return `${indexRow}<span class="index-close-row"><em>단순 종가</em><strong>${close == null ? "—" : `${won(close)}원`}</strong></span>`;
     }).join("")}`;
     tooltip.hidden = false;
     const wrapRect = wrap.getBoundingClientRect();
