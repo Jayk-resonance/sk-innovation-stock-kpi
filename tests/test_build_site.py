@@ -71,6 +71,52 @@ def test_price_status_uses_same_final_method_as_today_score(prices, universe, ru
             assert ticker["change_from_base"] == pytest.approx(member["change"], abs=1e-6)
 
 
+def test_price_status_close_returns_use_year_end_closes(prices, universe, rules, calibration):
+    """주가현황의 연말 대비 값은 평가주가가 아닌 실제 종가로 계산한다."""
+    payload = build_latest(prices, universe, rules, calibration)
+    tickers = {ticker["code"]: ticker for ticker in payload["tickers"]}
+
+    for code, bars in prices.items():
+        by_day = {bar.day: bar for bar in bars}
+        if code not in tickers:
+            continue
+        base_close = by_day[rules["base_date"]].close
+        current_close = by_day[date.fromisoformat(payload["as_of"])].close
+        assert tickers[code]["base_close"] == base_close
+        assert tickers[code]["close_change_from_base"] == pytest.approx(
+            current_close / base_close - 1, abs=1e-6
+        )
+
+
+def test_price_status_peer_close_averages_are_grouped_and_weighted(
+    prices, universe, rules, calibration
+):
+    payload = build_latest(prices, universe, rules, calibration)
+    tickers = {ticker["code"]: ticker for ticker in payload["tickers"]}
+
+    expected_peer = 0
+    for group_name, (weight, members) in universe.groups.items():
+        expected_group = sum(
+            tickers[member.code]["close_change_from_base"] for member in members
+        ) / len(members)
+        assert payload["close_group_changes"][group_name] == pytest.approx(
+            expected_group, abs=1e-6
+        )
+        expected_peer += weight * expected_group
+    assert payload["close_peer_change"] == pytest.approx(expected_peer, abs=1e-6)
+
+
+def test_september_provisional_snapshot_is_fixed_to_requested_date(
+    prices, universe, rules, calibration
+):
+    payload = build_latest(prices, universe, rules, calibration)
+    snapshot = next(view for view in payload["views"] if view["label"] == "9월 잠정평가")
+    assert snapshot["date"] == "2026-09-08"
+    assert snapshot["official_mode"] == "최종"
+    assert snapshot["snapshot"] is True
+    assert "contribution" in snapshot["modes"]["최종"]
+
+
 def test_h1_zero_score_surfaces_with_raw(prices, universe, rules, calibration):
     """0점으로 잘린 사실과 원값이 함께 실려야 한다."""
     payload = build_latest(prices, universe, rules, calibration)

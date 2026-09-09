@@ -433,6 +433,16 @@ tbody tr:last-child td{border-bottom:none}
 tr.subject td{font-weight:var(--w-bold);background:var(--primary-tint)}
 tr.subject td:first-child{border-top-left-radius:var(--r-sm);border-bottom-left-radius:var(--r-sm)}
 tr.subject td:last-child{border-top-right-radius:var(--r-sm);border-bottom-right-radius:var(--r-sm)}
+.price-group-heading td{padding-top:17px;padding-bottom:7px;border-bottom:1px solid var(--line);text-align:left;
+  color:var(--ink);background:var(--canvas)}
+.price-group-heading .dot{margin-right:7px}
+.price-group-heading small{margin-left:8px;color:var(--muted-2);font-size:10.5px;font-weight:var(--w-med)}
+.price-group-summary td{background:var(--canvas);font-weight:var(--w-semi);border-top:1px solid var(--line)}
+.price-group-summary td:first-child{text-align:right;color:var(--muted)}
+.price-peer-summary td{background:var(--primary-tint);font-weight:var(--w-bold);border-top:2px solid var(--primary)}
+.price-peer-summary td:first-child{text-align:right;color:var(--primary-ink)}
+.snapshot-badge{display:inline-flex;margin-left:7px;padding:3px 7px;border-radius:var(--r-pill);
+  background:rgba(255,255,255,.72);color:var(--primary-ink);font-size:10px;font-weight:var(--w-bold);vertical-align:middle}
 .tbl-wrap{overflow-x:auto}
 .up{color:var(--up)}
 .down{color:var(--down)}

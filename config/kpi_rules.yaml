@@ -11,6 +11,8 @@ base_date: "2025-12-30"
 eval_dates:
   - { label: "2026 1분기", date: "2026-04-16", mode: 잠정 }
   - { label: "2026 상반기", date: "2026-07-15", mode: 잠정 }
+  # SK Inc. 요청일의 최종 방식 평가값을 고정 표시한다. 이후 일일 갱신일을 따라가지 않는다.
+  - { label: "9월 잠정평가", date: "2026-09-08", mode: 최종, snapshot: true }
   # - { label: "2026 3분기", date: null, mode: 잠정 }   # 안내 수신 후 기입
   # - { label: "2026 최종",  date: null, mode: 최종 }   # 안내 수신 후 기입
 

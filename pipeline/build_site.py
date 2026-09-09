@@ -412,12 +412,16 @@ def build_latest(
     for meta in _ticker_meta(universe):
         by_day = {b.day: b for b in prices[meta["code"]]}
         cur, before = by_day.get(as_of), by_day.get(prev) if prev else None
+        base_close = by_day.get(rules["base_date"])
         tickers.append({
             **meta,
             "close": cur.close if cur else None,
             "previous_close": before.close if before else None,
+            "base_close": base_close.close if base_close else None,
             "volume": cur.volume if cur else None,
             "change_pct": round(cur.close / before.close - 1, 6) if cur and before else None,
+            "close_change_from_base": round(cur.close / base_close.close - 1, 6)
+            if cur and base_close else None,
             "evaluation_price": round(evaluation_prices[meta["code"]], 2),
             "change_from_base": round(
                 evaluation_prices[meta["code"]] / base_evaluation_prices[meta["code"]] - 1, 6
@@ -426,6 +430,17 @@ def build_latest(
             "spark": [b.close for b in prices[meta["code"]][-SPARK_POINTS:]],
             **({"peer_eval": peer_eval[meta["code"]]} if meta["code"] in peer_eval else {}),
         })
+
+    close_group_changes = {}
+    for group_name, (_, members) in universe.groups.items():
+        member_codes = {member.code for member in members}
+        changes = [ticker["close_change_from_base"] for ticker in tickers
+                   if ticker["code"] in member_codes]
+        close_group_changes[group_name] = round(sum(changes) / len(changes), 6)
+    close_peer_change = round(sum(
+        weight * close_group_changes[group_name]
+        for group_name, (weight, _) in universe.groups.items()
+    ), 6)
 
     # 평가 시점별 화면. 각 시점마다 잠정·최종을 모두 계산해 나란히 보여준다 —
     # 두 방식의 점수 차이가 어디서 벌어지는지가 이 KPI 의 핵심 논점이다.
@@ -439,13 +454,19 @@ def build_latest(
         views[0]["modes"]["최종"]
     )
     for entry in reversed([e for e in rules["eval_dates"] if e["date"]]):
-        views.append({
+        view = {
             "key": entry["label"].replace(" ", "-"), "label": entry["label"],
             "date": entry["date"].isoformat(), "official_mode": entry["mode"], "confirmed": True,
+            "snapshot": bool(entry.get("snapshot")),
             "modes": {m: _mode_detail(prices, universe, rules, calibration,
-                                      entry["date"], m, method)
+                                       entry["date"], m, method)
                       for m in ("잠정", "최종")},
-        })
+        }
+        if view["snapshot"]:
+            view["modes"]["최종"]["contribution"] = _score_contribution(
+                view["modes"]["최종"]
+            )
+        views.append(view)
 
     # 산식 A/B 대조는 공식 방식에서만 필요하다
     method_compare = {m: _result_json(evaluate(prices, universe, rules, calibration,
@@ -470,6 +491,8 @@ def build_latest(
         "baselines": {k: {"label": v["label"], "official": bool(v.get("official"))}
                       for k, v in calibration["baselines"].items()},
         "tickers": tickers,
+        "close_group_changes": close_group_changes,
+        "close_peer_change": close_peer_change,
         "views": views,
         "method_compare": method_compare,
         "next_eval": ({"label": upcoming[0]["label"], "date": upcoming[0]["date"].isoformat(),
