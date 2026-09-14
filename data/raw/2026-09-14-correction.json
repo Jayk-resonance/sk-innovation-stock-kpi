@@ -1,0 +1,21 @@
+{
+  "collected_at": "2026-09-15T08:45:44+09:00",
+  "source": "KIS via PlayMCP koreaStock (historical correction confirmation)",
+  "prices": [
+    {
+      "code": "247540",
+      "date": "2026-09-01",
+      "close": 114370,
+      "volume": 457126,
+      "trading_value": 52793466450
+    },
+    {
+      "code": "247540",
+      "date": "2026-09-02",
+      "close": 106299,
+      "volume": 590585,
+      "trading_value": 64438285350
+    }
+  ],
+  "shares": []
+}

@@ -1,0 +1,28 @@
+{
+  "collected_at": "2026-09-15T08:45:44+09:00",
+  "source": "KIS via PlayMCP koreaStock",
+  "prices": [
+    {"code": "096770", "date": "2026-09-11", "close": 144800, "volume": 1131910, "trading_value": 164747573150},
+    {"code": "096770", "date": "2026-09-14", "close": 136700, "volume": 934659, "trading_value": 128595861100},
+    {"code": "051910", "date": "2026-09-11", "close": 273000, "volume": 195475, "trading_value": 53119294750},
+    {"code": "051910", "date": "2026-09-14", "close": 268000, "volume": 160289, "trading_value": 43036924750},
+    {"code": "010950", "date": "2026-09-11", "close": 150000, "volume": 508873, "trading_value": 77137508150},
+    {"code": "010950", "date": "2026-09-14", "close": 148600, "volume": 290855, "trading_value": 42954890750},
+    {"code": "011170", "date": "2026-09-11", "close": 65500, "volume": 198113, "trading_value": 12882160450},
+    {"code": "011170", "date": "2026-09-14", "close": 65400, "volume": 167305, "trading_value": 10980956800},
+    {"code": "047050", "date": "2026-09-11", "close": 57700, "volume": 549821, "trading_value": 31843422150},
+    {"code": "047050", "date": "2026-09-14", "close": 56600, "volume": 417055, "trading_value": 23542319750},
+    {"code": "373220", "date": "2026-09-11", "close": 360000, "volume": 303187, "trading_value": 108528482000},
+    {"code": "373220", "date": "2026-09-14", "close": 351500, "volume": 192751, "trading_value": 67989803250},
+    {"code": "006400", "date": "2026-09-11", "close": 545000, "volume": 300655, "trading_value": 164444128500},
+    {"code": "006400", "date": "2026-09-14", "close": 532000, "volume": 332982, "trading_value": 178242648000},
+    {"code": "247540", "date": "2026-09-11", "close": 110300, "volume": 586437, "trading_value": 65203808300},
+    {"code": "247540", "date": "2026-09-14", "close": 103900, "volume": 378726, "trading_value": 39647960850},
+    {"code": "003670", "date": "2026-09-11", "close": 185300, "volume": 206653, "trading_value": 38632695650},
+    {"code": "003670", "date": "2026-09-14", "close": 178900, "volume": 197334, "trading_value": 35622243400},
+    {"code": "006650", "date": "2026-09-11", "close": 102200, "volume": 64615, "trading_value": 6538736000},
+    {"code": "006650", "date": "2026-09-14", "close": 105000, "volume": 60035, "trading_value": 6276438350},
+    {"code": "004690", "date": "2026-09-11", "close": 136900, "volume": 12344, "trading_value": 1688180300},
+    {"code": "004690", "date": "2026-09-14", "close": 135500, "volume": 4559, "trading_value": 618296550}
+  ]
+}
