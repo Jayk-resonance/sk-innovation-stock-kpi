@@ -8,12 +8,21 @@ directly only after every check passes.
 2. Read `docs/data/latest.json`, query recent KOSPI index history to determine
    the latest market trading date, and confirm it with SK Innovation (`096770`)
    daily history for the most recent seven calendar days.
+   The dashboard price basis is the finalized **KRX regular-session close**.
+   Never use an NXT or unified-market last price. Require `adjusted=false` and
+   `is_adjusted: false`, and cross-check the close with
+   `stock_get_quote(market_div_code="J")`.
 3. If the market's latest trading date is not newer than `latest.json`'s
    `as_of`, treat it as a holiday/weekend or an already completed run and exit
    successfully without changing files.
-4. Query daily history for all nine tickers from the day after `as_of` through
-   the latest trading date. Require the same trading dates for every ticker and
-   positive close, volume, and trading value.
+4. Derive the universe from `config/universe.yaml`. Query daily history for all
+   nine KPI tickers plus all configured candidates (currently two) from the day
+   after `as_of` through the latest trading date. Require the same trading dates
+   for every ticker and positive close, volume, and trading value. Reconcile
+   monthly history for the nine KPI tickers only.
+   Do not commit a same-evening daily-history snapshot: KIS can continue to
+   change the row during KRX after-hours trading. Only the next-morning,
+   pre-open finalized row is eligible for publication.
 5. Save the response as a new immutable `data/raw/*.json` file using the schema
    in `pipeline/COLLECT.md`.
 6. Query monthly history for all nine tickers from January 1 through the latest

@@ -1,0 +1,20 @@
+{
+  "collected_at": "2026-09-16T07:40:30+09:00",
+  "source": "KIS via PlayMCP koreaStock (KRX finalized unadjusted correction; confirmed twice)",
+  "prices": [
+    {"code": "247540", "date": "2026-09-01", "close": 116200, "volume": 449931, "trading_value": 52793466450},
+    {"code": "247540", "date": "2026-09-02", "close": 108000, "volume": 581289, "trading_value": 64438285350},
+    {"code": "096770", "date": "2026-09-15", "close": 141700, "volume": 963255, "trading_value": 136621020900},
+    {"code": "051910", "date": "2026-09-15", "close": 271500, "volume": 180447, "trading_value": 49031186250},
+    {"code": "010950", "date": "2026-09-15", "close": 148700, "volume": 346265, "trading_value": 51425832200},
+    {"code": "011170", "date": "2026-09-15", "close": 64400, "volume": 162285, "trading_value": 10501722750},
+    {"code": "047050", "date": "2026-09-15", "close": 54900, "volume": 470718, "trading_value": 25873344550},
+    {"code": "373220", "date": "2026-09-15", "close": 365500, "volume": 337242, "trading_value": 122412326000},
+    {"code": "006400", "date": "2026-09-15", "close": 547000, "volume": 404777, "trading_value": 221775322000},
+    {"code": "247540", "date": "2026-09-15", "close": 107000, "volume": 235071, "trading_value": 24953851000},
+    {"code": "003670", "date": "2026-09-15", "close": 189300, "volume": 411846, "trading_value": 77340890050},
+    {"code": "006650", "date": "2026-09-15", "close": 100100, "volume": 52585, "trading_value": 5278023750},
+    {"code": "004690", "date": "2026-09-15", "close": 132800, "volume": 5792, "trading_value": 774094700}
+  ],
+  "shares": []
+}
