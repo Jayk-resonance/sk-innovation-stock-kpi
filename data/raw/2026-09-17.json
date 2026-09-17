@@ -1,0 +1,85 @@
+{
+  "collected_at": "2026-09-18T07:00:30+09:00",
+  "source": "KIS via PlayMCP koreaStock (next-morning finalized unadjusted KRX close; SK Innovation close cross-checked with KIS J quote and official IR)",
+  "prices": [
+    {
+      "code": "096770",
+      "date": "2026-09-17",
+      "close": 139400,
+      "volume": 534485,
+      "trading_value": 74381933200
+    },
+    {
+      "code": "051910",
+      "date": "2026-09-17",
+      "close": 268000,
+      "volume": 132003,
+      "trading_value": 35397100750
+    },
+    {
+      "code": "010950",
+      "date": "2026-09-17",
+      "close": 152200,
+      "volume": 324327,
+      "trading_value": 49023536400
+    },
+    {
+      "code": "011170",
+      "date": "2026-09-17",
+      "close": 62100,
+      "volume": 174199,
+      "trading_value": 10855205200
+    },
+    {
+      "code": "047050",
+      "date": "2026-09-17",
+      "close": 57800,
+      "volume": 971867,
+      "trading_value": 56445494650
+    },
+    {
+      "code": "373220",
+      "date": "2026-09-17",
+      "close": 365000,
+      "volume": 172767,
+      "trading_value": 63001829000
+    },
+    {
+      "code": "006400",
+      "date": "2026-09-17",
+      "close": 539000,
+      "volume": 189730,
+      "trading_value": 102512813500
+    },
+    {
+      "code": "247540",
+      "date": "2026-09-17",
+      "close": 102700,
+      "volume": 269664,
+      "trading_value": 27847292200
+    },
+    {
+      "code": "003670",
+      "date": "2026-09-17",
+      "close": 182200,
+      "volume": 208999,
+      "trading_value": 38390072150
+    },
+    {
+      "code": "006650",
+      "date": "2026-09-17",
+      "close": 96300,
+      "volume": 45149,
+      "trading_value": 4393800250
+    },
+    {
+      "code": "004690",
+      "date": "2026-09-17",
+      "close": 131900,
+      "volume": 3747,
+      "trading_value": 492817100
+    }
+  ],
+  "shares": []
+}
+
