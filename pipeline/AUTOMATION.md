@@ -8,10 +8,12 @@ directly only after every check passes.
 2. Read `docs/data/latest.json`, query recent KOSPI index history to determine
    the latest market trading date, and confirm it with SK Innovation (`096770`)
    daily history for the most recent seven calendar days.
-   The dashboard price basis is the finalized **KRX regular-session close**.
-   Never use an NXT or unified-market last price. Require `adjusted=false` and
-   `is_adjusted: false`, and cross-check the close with
-   `stock_get_quote(market_div_code="J")`.
+   The dashboard price basis is the previous trading day's finalized,
+   **unadjusted KIS daily history** (close, volume, and trading value together).
+   KIS daily history may reflect trading after the 15:30 KRX regular close;
+   do not describe it as regular-session-only data. Require `adjusted=false`
+   and `is_adjusted: false` for every returned row. A pre-open current quote
+   can contain zero volume, so it is not a substitute for the dated history.
 3. If the market's latest trading date is not newer than `latest.json`'s
    `as_of`, treat it as a holiday/weekend or an already completed run and exit
    successfully without changing files.
@@ -21,11 +23,12 @@ directly only after every check passes.
    for every ticker and positive close, volume, and trading value. Reconcile
    monthly history for the nine KPI tickers only.
    Do not commit a same-evening daily-history snapshot: KIS can continue to
-   change the row during KRX after-hours trading. Only the next-morning,
-   pre-open finalized row is eligible for publication.
+   change the row after 15:30. Only the next-morning, pre-open dated row is
+   eligible for publication; compare recent stored days to detect later KIS
+   revisions before appending anything.
 5. Save the response as a new immutable `data/raw/*.json` file using the schema
    in `pipeline/COLLECT.md`.
-6. Query monthly history for all nine tickers from January 1 through the latest
+6. Query KIS monthly history for all nine tickers from January 1 through the latest
    trading date. Replace only the latest month in
    `data/reference/monthly.csv`; require its `last_trading_day` to match.
 7. Run the update once without correction overrides:
@@ -59,5 +62,4 @@ directly only after every check passes.
 9. Review the diff, commit only the collected data, generated dashboard data,
    and directly related pipeline changes, then push `main`.
 10. Verify the public GitHub Pages site shows the new date and has no console
-    errors. On failure, do not push and send the failure details to
-    `kjwgv1442@gmail.com`. Do not send a success email.
+    errors. Report deployment problems to the requester.
