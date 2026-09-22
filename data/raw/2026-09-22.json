@@ -1,0 +1,84 @@
+{
+  "collected_at": "2026-09-23T07:02:48+09:00",
+  "source": "KIS via PlayMCP koreaStock (unadjusted previous-day final daily bar; KIS daily-session aggregation may include trading after 15:30)",
+  "prices": [
+    {
+      "code": "096770",
+      "date": "2026-09-22",
+      "close": 141000,
+      "volume": 702566,
+      "trading_value": 98407732200
+    },
+    {
+      "code": "051910",
+      "date": "2026-09-22",
+      "close": 254000,
+      "volume": 191258,
+      "trading_value": 48935106750
+    },
+    {
+      "code": "010950",
+      "date": "2026-09-22",
+      "close": 154300,
+      "volume": 437500,
+      "trading_value": 66405174100
+    },
+    {
+      "code": "011170",
+      "date": "2026-09-22",
+      "close": 62500,
+      "volume": 153366,
+      "trading_value": 9684896000
+    },
+    {
+      "code": "047050",
+      "date": "2026-09-22",
+      "close": 56700,
+      "volume": 492112,
+      "trading_value": 28035755500
+    },
+    {
+      "code": "373220",
+      "date": "2026-09-22",
+      "close": 350500,
+      "volume": 259262,
+      "trading_value": 91002534500
+    },
+    {
+      "code": "006400",
+      "date": "2026-09-22",
+      "close": 529000,
+      "volume": 209039,
+      "trading_value": 111168604500
+    },
+    {
+      "code": "247540",
+      "date": "2026-09-22",
+      "close": 104300,
+      "volume": 274754,
+      "trading_value": 28736578500
+    },
+    {
+      "code": "003670",
+      "date": "2026-09-22",
+      "close": 184200,
+      "volume": 365081,
+      "trading_value": 67103021600
+    },
+    {
+      "code": "006650",
+      "date": "2026-09-22",
+      "close": 96800,
+      "volume": 47784,
+      "trading_value": 4576300750
+    },
+    {
+      "code": "004690",
+      "date": "2026-09-22",
+      "close": 130500,
+      "volume": 2958,
+      "trading_value": 384868500
+    }
+  ],
+  "shares": []
+}
