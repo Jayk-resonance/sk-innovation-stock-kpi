@@ -1,0 +1,19 @@
+{
+  "collected_at": "2026-09-28T20:35:54+09:00",
+  "source": "Daum Finance KRX unadjusted regular-session daily candles; changed closes cross-checked with Naver Finance",
+  "basis": "KRX regular session (15:30 close, regular-session volume and trading value)",
+  "prices": [
+    {"code": "096770", "date": "2026-09-28", "close": 158900, "volume": 1143952, "trading_value": 180502020750},
+    {"code": "051910", "date": "2026-09-28", "close": 262000, "volume": 188519, "trading_value": 49084280000},
+    {"code": "010950", "date": "2026-09-28", "close": 164000, "volume": 407940, "trading_value": 66214111200},
+    {"code": "011170", "date": "2026-09-28", "close": 62400, "volume": 181960, "trading_value": 11177931050},
+    {"code": "047050", "date": "2026-09-28", "close": 56900, "volume": 478436, "trading_value": 27253561950},
+    {"code": "373220", "date": "2026-09-28", "close": 360500, "volume": 321255, "trading_value": 116515231000},
+    {"code": "006400", "date": "2026-09-28", "close": 528000, "volume": 324329, "trading_value": 172818759000},
+    {"code": "247540", "date": "2026-09-28", "close": 110500, "volume": 580631, "trading_value": 63880258100},
+    {"code": "003670", "date": "2026-09-28", "close": 182600, "volume": 356856, "trading_value": 65319708850},
+    {"code": "006650", "date": "2026-09-28", "close": 91800, "volume": 26905, "trading_value": 2476280550},
+    {"code": "004690", "date": "2026-09-28", "close": 131400, "volume": 3983, "trading_value": 521172600}
+  ],
+  "shares": []
+}
