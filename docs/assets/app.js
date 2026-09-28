@@ -99,7 +99,7 @@ async function init() {
     try { hSub = hSubRaw ? decodeURIComponent(hSubRaw) : hSubRaw; } catch (e) { /* 잘못된 인코딩은 무시 */ }
     if (visibleMainTabs().some(t => t.key === hTab)) S.tab = hTab;
     if (hSub && visibleViews().some(v => v.key === hSub)) S.evalKey = hSub;
-    document.getElementById("todayStr").textContent = koDate(D.latest.as_of) + " 기준 · KIS 전일 일봉";
+    document.getElementById("todayStr").textContent = koDate(D.latest.as_of) + " 기준 · KRX 정규장 전일 일봉";
     wireMobileNav(); wireCreatorCredit(); renderMainNav(); renderTickerList(); renderSubtabs(); render();
   } catch (e) {
     document.getElementById("view").innerHTML =
@@ -179,13 +179,13 @@ function renderSubtabs() {
 }
 
 function renderTickerList() {
-  document.getElementById("tickerChangeBasis").textContent = `전일 종가 대비 · ${koMonthDay(D.latest.as_of)} KIS 일봉 기준`;
+  document.getElementById("tickerChangeBasis").textContent = `전일 종가 대비 · ${koMonthDay(D.latest.as_of)} KRX 정규장 기준`;
   document.getElementById("tickerList").innerHTML = D.latest.tickers.map(t =>
     `<div class="nav-item ${t.group === "본사" ? "subject" : ""}">
        <span class="nav-dot" style="background:${slotColor(t.group)}"></span>
        <span class="nav-stock">
          <span class="nav-stock-name">${esc(t.name)}</span>
-         <small>금일 종가 ${t.close == null ? "-" : `${won(t.close)}원`}</small>
+         <small>기준일 종가 ${t.close == null ? "-" : `${won(t.close)}원`}</small>
        </span>
        <span class="nav-chg ${dirClass(t.change_pct)}">${signed(t.change_pct, 1)}</span>
      </div>`).join("");

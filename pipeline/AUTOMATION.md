@@ -5,15 +5,17 @@ directly only after every check passes.
 
 1. Fast-forward the local `main` branch from `origin/main` and require a clean
    working tree.
-2. Read `docs/data/latest.json`, query recent KOSPI index history to determine
-   the latest market trading date, and confirm it with SK Innovation (`096770`)
-   daily history for the most recent seven calendar days.
-   The dashboard price basis is the previous trading day's finalized,
-   **unadjusted KIS daily history** (close, volume, and trading value together).
-   KIS daily history may reflect trading after the 15:30 KRX regular close;
-   do not describe it as regular-session-only data. Require `adjusted=false`
-   and `is_adjusted: false` for every returned row. A pre-open current quote
-   can contain zero volume, so it is not a substitute for the dated history.
+2. Read `docs/data/latest.json` and determine the latest fully completed Korean
+   trading date. The dashboard basis is the previous trading day's **unadjusted
+   KRX regular-session daily candle**: 15:30 close, regular-session volume, and
+   regular-session trading value from one dated response. Exclude NXT,
+   unified-market, and after-hours trades. Never substitute a current quote for
+   a dated daily candle.
+   Use a source that explicitly identifies the dated candle as KRX regular
+   session. The current PlayMCP history tool has no market-division argument, so
+   its generic KIS history is not eligible. Until a dated KIS history endpoint
+   with `market_div_code="J"` is exposed, use Daum Finance's unadjusted KRX
+   daily candle and cross-check every changed/new close with Naver Finance.
 3. If the market's latest trading date is not newer than `latest.json`'s
    `as_of`, treat it as a holiday/weekend or an already completed run and exit
    successfully without changing files.
@@ -21,16 +23,18 @@ directly only after every check passes.
    nine KPI tickers plus all configured candidates (currently two) from the day
    after `as_of` through the latest trading date. Require the same trading dates
    for every ticker and positive close, volume, and trading value. Reconcile
-   monthly history for the nine KPI tickers only.
-   Do not commit a same-evening daily-history snapshot: KIS can continue to
-   change the row after 15:30. Only the next-morning, pre-open dated row is
-   eligible for publication; compare recent stored days to detect later KIS
-   revisions before appending anything.
+   month-to-date totals for the nine KPI tickers only.
+   Publish only on the next calendar morning. Compare recent stored days to the
+   KRX source before appending anything; a same-day candle is never eligible.
 5. Save the response as a new immutable `data/raw/*.json` file using the schema
    in `pipeline/COLLECT.md`.
-6. Query KIS monthly history for all nine tickers from January 1 through the latest
-   trading date. Replace only the latest month in
-   `data/reference/monthly.csv`; require its `last_trading_day` to match.
+6. Replace only the latest month in `data/reference/monthly.csv` with the KRX
+   regular-session month-to-date totals for the nine KPI tickers and require its
+   `last_trading_day` to match. If an independently aggregated regular-session
+   monthly endpoint is available for the same cutoff, require exact equality;
+   otherwise record the daily sums and rely on close cross-check plus coverage
+   and positivity checks. Never compare KRX-only daily totals to a KIS generic
+   monthly bar that can include after-hours trading.
 7. Run the update once without correction overrides:
 
    ```powershell
@@ -38,11 +42,10 @@ directly only after every check passes.
    ```
 
    If the command reports an existing-data correction, do not approve it
-   automatically. Query PlayMCP twice for every reported ticker/date and require
-   both daily responses to match the proposed corrected close, volume, and
-   trading value. Also require the official monthly history through the latest
-   trading day to reconcile with the corrected daily value. Only after all of
-   those checks pass, rerun:
+   automatically. Query the KRX regular-session source twice for every reported
+   ticker/date and require both daily responses to match the proposed corrected
+   close, volume, and trading value. Require a second source to match each
+   corrected close. Only after all checks pass, rerun:
 
    ```powershell
    .\.venv\Scripts\python.exe -m pipeline.update_daily --expected-date YYYY-MM-DD --allow-corrections

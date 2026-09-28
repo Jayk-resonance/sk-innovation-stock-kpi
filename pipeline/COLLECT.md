@@ -3,8 +3,9 @@
 MCP 커넥터는 Claude 세션에서만 호출된다. 이 문서는 그 호출 규격을 고정한다.
 **수집 외의 판단은 하지 않는다.** 계산·검증·배포는 다른 에이전트의 몫이다.
 
-대시보드 가격 기준은 **전 거래일의 KIS 미조정 확정 일봉**이다. 종가·거래량·거래대금은
-동일한 KIS 일봉에서 가져온다. 15:30 KRX 정규장만의 통계라고 표기하지 않는다.
+대시보드 가격 기준은 **전 거래일의 KRX 정규장 미조정 일봉**이다. 종가·거래량·
+거래대금은 동일한 날짜·출처의 정규장 일봉에서 가져온다. 종가는 15:30 종가이며
+시간외·NXT·통합시장 체결은 포함하지 않는다.
 
 ## 1. 대상
 
@@ -13,26 +14,26 @@ MCP 커넥터는 Claude 세션에서만 호출된다. 이 문서는 그 호출 �
 월봉 대조는 공식 KPI 9종목에만 적용한다. 종목코드를 문서에 하드코딩하지 말고
 항상 현재 설정에서 읽는다.
 
-## 2. 호출
+## 2. 호출 및 출처
 
 ```
-koreaStock-stock_get_price_history(
-    stock_code = <6자리 코드>,
-    start_date = YYYYMMDD,
-    end_date   = YYYYMMDD,
-    period     = "D",
-)
+1. 날짜가 붙은 KIS 정규장 일봉 호출에 `market_div_code="J"`를 지정할 수 있고
+   응답도 KRX임을 명시하면 그것을 우선한다.
+2. 현재 PlayMCP의 `stock_get_price_history`에는 시장구분 인자가 없으므로 범용 KIS
+   일봉은 사용하지 않는다. 이 제약이 유지되는 동안 Daum Finance의
+   `adjusted=false` KRX 일봉을 사용한다.
+3. 새로 추가하거나 종가를 바꾸는 모든 행의 종가는 Naver Finance KRX 일봉과
+   일치해야 한다. 불일치하면 수집 실패다.
 ```
 
 - **1회 최대 100건.** 100거래일을 넘는 구간은 반드시 분할 호출한다.
-- `adjusted=false` 를 명시하고 각 행의 `is_adjusted` 가 반드시 `false` 인지
-  확인한다. `true` 이거나 필드가 없으면 수집 실패다.
+- `adjusted=false`를 명시한다. KIS를 사용할 때는 각 행의 `is_adjusted=false`도
+  확인한다. 조정 여부가 불명확하면 수집 실패다.
   → 권리락 보정은 `config/calibration.yaml` 의 `corporate_actions` 로만 처리한다.
-- 당일 일봉은 15:30 이후에도 바뀔 수 있다.
-  **다음 거래일 개장 전 재조회한 해당 날짜의 일봉**만 원본으로 채택한다.
-  이후 정정도 가능하므로 최근 저장값을 매번 다시 대조한다.
-- 개장 전 `stock_get_quote`는 거래량이 0인 현재가를 반환할 수 있으므로
-  해당 날짜의 일봉을 대체하거나 `J` 시세로 정규장 전용을 추정하지 않는다.
+- **다음 날 오전 7시(KST)**에 전일까지의 날짜가 붙은 정규장 일봉만 채택한다.
+  당일 일봉은 사용하지 않는다. 이후 정정도 가능하므로 최근 저장값을 매번 대조한다.
+- `stock_get_quote(market_div_code="J")`는 현재 시점 조회이므로 과거 날짜의 종가·
+  거래량·거래대금을 대신할 수 없다.
 
 일일 수집은 당일 1건만 필요하나, 누락 복구를 위해 **직전 5거래일**을 함께 받아
 기존 값과 대조한다. 값이 달라지면 데이터 정정이 발생한 것이므로 경고한다.
@@ -40,7 +41,7 @@ koreaStock-stock_get_price_history(
 
 ### 백필은 반드시 달 단위로 끊는다
 
-교차검증(`pipeline/verify.py`)은 **KIS 월봉의 서버측 집계**와 일봉 합계를 대조한다.
+교차검증(`pipeline/verify.py`)은 **KRX 정규장 월간 참조값**과 일봉 합계를 대조한다.
 월봉은 그 달 **전체**의 집계이므로, 달의 일부만 수집하면 정상적인 부분 수집인지
 진짜 결측인지 구분할 수 없어 **그 달은 검증 자체가 불가능**해진다.
 
@@ -51,12 +52,12 @@ koreaStock-stock_get_price_history(
 ### 월봉 참조 데이터
 
 ```
-koreaStock-stock_get_price_history(stock_code=..., period="M",
-                                   start_date=..., end_date=...)
+KRX 정규장 일봉을 월초부터 기준일까지 합산한다. 같은 기준일까지 독립 집계된
+정규장 월봉이 제공되면 그 값과도 원 단위로 대조한다.
 ```
 
-응답의 `volume` / `trading_value` 를 `data/reference/monthly.csv` 에 저장한다.
-한 번 호출로 여러 달이 오므로 종목당 1회면 충분하다.
+정규장 `volume` / `trading_value` 합계를 `data/reference/monthly.csv`에 저장한다.
+KIS 범용 월봉은 시간외 거래를 포함할 수 있으므로 섞지 않는다.
 
 ## 3. 상장주식수 (발행주식수 변동 감지용)
 
@@ -82,7 +83,8 @@ koreaStock-stock_get_quote(stock_code = <6자리 코드>)
 ```json
 {
   "collected_at": "2026-07-27T16:05:00+09:00",
-  "source": "KIS via PlayMCP koreaStock",
+  "source": "Daum Finance KRX unadjusted regular-session daily candles; changed closes cross-checked with Naver Finance",
+  "basis": "KRX regular session (15:30 close, regular-session volume and trading value)",
   "prices": [
     {"code": "096770", "date": "2026-07-27", "close": 116700,
      "volume": 845081, "trading_value": 101028877750}
@@ -99,7 +101,7 @@ koreaStock-stock_get_quote(stock_code = <6자리 코드>)
 여기까지가 collector 의 책임이다. 실패 시 **중단하고 알린다.**
 `docs/data` 를 갱신하지 않는 편이 깨진 데이터를 올리는 것보다 안전하다.
 
-- 9종목 전부 수신했는가
+- 설정에 있는 KPI 9종목과 후보 2종목을 전부 수신했는가
 - 요청한 날짜가 응답에 있는가 (휴장일이면 빈 응답이 정상)
 - `volume`, `trading_value` 가 0 또는 음수가 아닌가
 

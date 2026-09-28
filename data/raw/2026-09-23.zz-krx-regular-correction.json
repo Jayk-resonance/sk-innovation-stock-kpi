@@ -1,0 +1,1317 @@
+{
+  "collected_at": "2026-09-28T10:40:04+09:00",
+  "source": "Daum Finance KRX unadjusted regular-session daily candles; changed closes cross-checked with Naver Finance",
+  "basis": "KRX regular session (15:30 close, regular-session volume and trading value)",
+  "prices": [
+    {
+      "code": "096770",
+      "date": "2026-09-01",
+      "close": 135300,
+      "volume": 2364441,
+      "trading_value": 319015194050
+    },
+    {
+      "code": "051910",
+      "date": "2026-09-01",
+      "close": 282000,
+      "volume": 223993,
+      "trading_value": 64904752250
+    },
+    {
+      "code": "010950",
+      "date": "2026-09-01",
+      "close": 151700,
+      "volume": 420904,
+      "trading_value": 64918694100
+    },
+    {
+      "code": "011170",
+      "date": "2026-09-01",
+      "close": 60000,
+      "volume": 160310,
+      "trading_value": 9686062600
+    },
+    {
+      "code": "047050",
+      "date": "2026-09-01",
+      "close": 55300,
+      "volume": 1020967,
+      "trading_value": 56980716900
+    },
+    {
+      "code": "373220",
+      "date": "2026-09-01",
+      "close": 367000,
+      "volume": 330949,
+      "trading_value": 124251701000
+    },
+    {
+      "code": "006400",
+      "date": "2026-09-01",
+      "close": 569000,
+      "volume": 572525,
+      "trading_value": 333181609500
+    },
+    {
+      "code": "247540",
+      "date": "2026-09-01",
+      "close": 116200,
+      "volume": 449928,
+      "trading_value": 52793117850
+    },
+    {
+      "code": "003670",
+      "date": "2026-09-01",
+      "close": 191300,
+      "volume": 424766,
+      "trading_value": 82139580700
+    },
+    {
+      "code": "006650",
+      "date": "2026-09-01",
+      "close": 98600,
+      "volume": 67786,
+      "trading_value": 6703128200
+    },
+    {
+      "code": "004690",
+      "date": "2026-09-01",
+      "close": 134500,
+      "volume": 5635,
+      "trading_value": 757189150
+    },
+    {
+      "code": "096770",
+      "date": "2026-09-02",
+      "close": 131500,
+      "volume": 1160158,
+      "trading_value": 155513861700
+    },
+    {
+      "code": "051910",
+      "date": "2026-09-02",
+      "close": 269000,
+      "volume": 204494,
+      "trading_value": 56240672500
+    },
+    {
+      "code": "010950",
+      "date": "2026-09-02",
+      "close": 150900,
+      "volume": 480640,
+      "trading_value": 73437992950
+    },
+    {
+      "code": "011170",
+      "date": "2026-09-02",
+      "close": 57300,
+      "volume": 122042,
+      "trading_value": 7083027300
+    },
+    {
+      "code": "047050",
+      "date": "2026-09-02",
+      "close": 53200,
+      "volume": 446583,
+      "trading_value": 23902345500
+    },
+    {
+      "code": "373220",
+      "date": "2026-09-02",
+      "close": 347500,
+      "volume": 423630,
+      "trading_value": 148759365000
+    },
+    {
+      "code": "006400",
+      "date": "2026-09-02",
+      "close": 538000,
+      "volume": 461853,
+      "trading_value": 253257326500
+    },
+    {
+      "code": "247540",
+      "date": "2026-09-02",
+      "close": 108000,
+      "volume": 581254,
+      "trading_value": 64434505350
+    },
+    {
+      "code": "003670",
+      "date": "2026-09-02",
+      "close": 176000,
+      "volume": 317025,
+      "trading_value": 57065701850
+    },
+    {
+      "code": "006650",
+      "date": "2026-09-02",
+      "close": 92000,
+      "volume": 39272,
+      "trading_value": 3673744750
+    },
+    {
+      "code": "004690",
+      "date": "2026-09-02",
+      "close": 135700,
+      "volume": 7787,
+      "trading_value": 1045012600
+    },
+    {
+      "code": "096770",
+      "date": "2026-09-03",
+      "close": 130800,
+      "volume": 1011078,
+      "trading_value": 133389669900
+    },
+    {
+      "code": "051910",
+      "date": "2026-09-03",
+      "close": 287000,
+      "volume": 304265,
+      "trading_value": 86906810250
+    },
+    {
+      "code": "010950",
+      "date": "2026-09-03",
+      "close": 147900,
+      "volume": 387370,
+      "trading_value": 57763706950
+    },
+    {
+      "code": "011170",
+      "date": "2026-09-03",
+      "close": 61000,
+      "volume": 292695,
+      "trading_value": 17842667450
+    },
+    {
+      "code": "047050",
+      "date": "2026-09-03",
+      "close": 55500,
+      "volume": 655825,
+      "trading_value": 36306272950
+    },
+    {
+      "code": "373220",
+      "date": "2026-09-03",
+      "close": 365500,
+      "volume": 426889,
+      "trading_value": 154919937250
+    },
+    {
+      "code": "006400",
+      "date": "2026-09-03",
+      "close": 539000,
+      "volume": 436850,
+      "trading_value": 237343951000
+    },
+    {
+      "code": "247540",
+      "date": "2026-09-03",
+      "close": 106500,
+      "volume": 348455,
+      "trading_value": 36993414450
+    },
+    {
+      "code": "003670",
+      "date": "2026-09-03",
+      "close": 183800,
+      "volume": 407955,
+      "trading_value": 74189367650
+    },
+    {
+      "code": "006650",
+      "date": "2026-09-03",
+      "close": 96400,
+      "volume": 75762,
+      "trading_value": 7513975600
+    },
+    {
+      "code": "004690",
+      "date": "2026-09-03",
+      "close": 136500,
+      "volume": 7135,
+      "trading_value": 967843200
+    },
+    {
+      "code": "096770",
+      "date": "2026-09-04",
+      "close": 138300,
+      "volume": 1280732,
+      "trading_value": 176342472550
+    },
+    {
+      "code": "051910",
+      "date": "2026-09-04",
+      "close": 282000,
+      "volume": 181644,
+      "trading_value": 51092942250
+    },
+    {
+      "code": "010950",
+      "date": "2026-09-04",
+      "close": 157300,
+      "volume": 918696,
+      "trading_value": 147265732700
+    },
+    {
+      "code": "011170",
+      "date": "2026-09-04",
+      "close": 60000,
+      "volume": 212068,
+      "trading_value": 12808427450
+    },
+    {
+      "code": "047050",
+      "date": "2026-09-04",
+      "close": 54700,
+      "volume": 535419,
+      "trading_value": 29538347350
+    },
+    {
+      "code": "373220",
+      "date": "2026-09-04",
+      "close": 358500,
+      "volume": 288444,
+      "trading_value": 104645241750
+    },
+    {
+      "code": "006400",
+      "date": "2026-09-04",
+      "close": 548000,
+      "volume": 258901,
+      "trading_value": 142011505000
+    },
+    {
+      "code": "247540",
+      "date": "2026-09-04",
+      "close": 106000,
+      "volume": 268819,
+      "trading_value": 28681807400
+    },
+    {
+      "code": "003670",
+      "date": "2026-09-04",
+      "close": 183600,
+      "volume": 248864,
+      "trading_value": 46131831950
+    },
+    {
+      "code": "006650",
+      "date": "2026-09-04",
+      "close": 96700,
+      "volume": 32437,
+      "trading_value": 3124944550
+    },
+    {
+      "code": "004690",
+      "date": "2026-09-04",
+      "close": 136700,
+      "volume": 9261,
+      "trading_value": 1261101600
+    },
+    {
+      "code": "096770",
+      "date": "2026-09-07",
+      "close": 137900,
+      "volume": 551979,
+      "trading_value": 75981886500
+    },
+    {
+      "code": "051910",
+      "date": "2026-09-07",
+      "close": 279500,
+      "volume": 128621,
+      "trading_value": 35966912500
+    },
+    {
+      "code": "010950",
+      "date": "2026-09-07",
+      "close": 157600,
+      "volume": 199074,
+      "trading_value": 31305259150
+    },
+    {
+      "code": "011170",
+      "date": "2026-09-07",
+      "close": 58800,
+      "volume": 139919,
+      "trading_value": 8218548450
+    },
+    {
+      "code": "047050",
+      "date": "2026-09-07",
+      "close": 54700,
+      "volume": 336748,
+      "trading_value": 18499750750
+    },
+    {
+      "code": "373220",
+      "date": "2026-09-07",
+      "close": 362500,
+      "volume": 177344,
+      "trading_value": 64087818250
+    },
+    {
+      "code": "006400",
+      "date": "2026-09-07",
+      "close": 541000,
+      "volume": 361993,
+      "trading_value": 196734012500
+    },
+    {
+      "code": "247540",
+      "date": "2026-09-07",
+      "close": 106700,
+      "volume": 152906,
+      "trading_value": 16331822050
+    },
+    {
+      "code": "003670",
+      "date": "2026-09-07",
+      "close": 182600,
+      "volume": 174554,
+      "trading_value": 31978365550
+    },
+    {
+      "code": "006650",
+      "date": "2026-09-07",
+      "close": 97500,
+      "volume": 31032,
+      "trading_value": 3038845750
+    },
+    {
+      "code": "004690",
+      "date": "2026-09-07",
+      "close": 133400,
+      "volume": 5260,
+      "trading_value": 706178200
+    },
+    {
+      "code": "096770",
+      "date": "2026-09-08",
+      "close": 138000,
+      "volume": 830291,
+      "trading_value": 115723208350
+    },
+    {
+      "code": "051910",
+      "date": "2026-09-08",
+      "close": 270000,
+      "volume": 144226,
+      "trading_value": 39722733000
+    },
+    {
+      "code": "010950",
+      "date": "2026-09-08",
+      "close": 159400,
+      "volume": 276090,
+      "trading_value": 43728243250
+    },
+    {
+      "code": "011170",
+      "date": "2026-09-08",
+      "close": 57400,
+      "volume": 151355,
+      "trading_value": 8757934750
+    },
+    {
+      "code": "047050",
+      "date": "2026-09-08",
+      "close": 54300,
+      "volume": 403924,
+      "trading_value": 22115080400
+    },
+    {
+      "code": "373220",
+      "date": "2026-09-08",
+      "close": 348500,
+      "volume": 388955,
+      "trading_value": 138228140000
+    },
+    {
+      "code": "006400",
+      "date": "2026-09-08",
+      "close": 530000,
+      "volume": 340701,
+      "trading_value": 183096648000
+    },
+    {
+      "code": "247540",
+      "date": "2026-09-08",
+      "close": 104800,
+      "volume": 250654,
+      "trading_value": 26859530400
+    },
+    {
+      "code": "003670",
+      "date": "2026-09-08",
+      "close": 180600,
+      "volume": 279889,
+      "trading_value": 51932299350
+    },
+    {
+      "code": "006650",
+      "date": "2026-09-08",
+      "close": 97100,
+      "volume": 32581,
+      "trading_value": 3181906500
+    },
+    {
+      "code": "004690",
+      "date": "2026-09-08",
+      "close": 132500,
+      "volume": 5801,
+      "trading_value": 768267100
+    },
+    {
+      "code": "096770",
+      "date": "2026-09-09",
+      "close": 153500,
+      "volume": 1924134,
+      "trading_value": 284176281300
+    },
+    {
+      "code": "051910",
+      "date": "2026-09-09",
+      "close": 285000,
+      "volume": 320905,
+      "trading_value": 89404033250
+    },
+    {
+      "code": "010950",
+      "date": "2026-09-09",
+      "close": 165900,
+      "volume": 562092,
+      "trading_value": 92063424050
+    },
+    {
+      "code": "011170",
+      "date": "2026-09-09",
+      "close": 67800,
+      "volume": 674092,
+      "trading_value": 43484976050
+    },
+    {
+      "code": "047050",
+      "date": "2026-09-09",
+      "close": 58000,
+      "volume": 973019,
+      "trading_value": 55552371400
+    },
+    {
+      "code": "373220",
+      "date": "2026-09-09",
+      "close": 371000,
+      "volume": 438918,
+      "trading_value": 159073184500
+    },
+    {
+      "code": "006400",
+      "date": "2026-09-09",
+      "close": 574000,
+      "volume": 634284,
+      "trading_value": 352345964000
+    },
+    {
+      "code": "247540",
+      "date": "2026-09-09",
+      "close": 114900,
+      "volume": 457052,
+      "trading_value": 50883290350
+    },
+    {
+      "code": "003670",
+      "date": "2026-09-09",
+      "close": 192100,
+      "volume": 300252,
+      "trading_value": 56228662050
+    },
+    {
+      "code": "006650",
+      "date": "2026-09-09",
+      "close": 110300,
+      "volume": 120211,
+      "trading_value": 12834257250
+    },
+    {
+      "code": "004690",
+      "date": "2026-09-09",
+      "close": 134500,
+      "volume": 4310,
+      "trading_value": 573165200
+    },
+    {
+      "code": "096770",
+      "date": "2026-09-10",
+      "close": 153100,
+      "volume": 2884310,
+      "trading_value": 451422590600
+    },
+    {
+      "code": "051910",
+      "date": "2026-09-10",
+      "close": 280500,
+      "volume": 432139,
+      "trading_value": 122911057250
+    },
+    {
+      "code": "010950",
+      "date": "2026-09-10",
+      "close": 154900,
+      "volume": 1055733,
+      "trading_value": 165303009500
+    },
+    {
+      "code": "011170",
+      "date": "2026-09-10",
+      "close": 65700,
+      "volume": 388846,
+      "trading_value": 26144705950
+    },
+    {
+      "code": "047050",
+      "date": "2026-09-10",
+      "close": 57300,
+      "volume": 602379,
+      "trading_value": 34621781750
+    },
+    {
+      "code": "373220",
+      "date": "2026-09-10",
+      "close": 365000,
+      "volume": 404578,
+      "trading_value": 147572933250
+    },
+    {
+      "code": "006400",
+      "date": "2026-09-10",
+      "close": 561000,
+      "volume": 503218,
+      "trading_value": 283012223500
+    },
+    {
+      "code": "247540",
+      "date": "2026-09-10",
+      "close": 118700,
+      "volume": 521753,
+      "trading_value": 59940701100
+    },
+    {
+      "code": "003670",
+      "date": "2026-09-10",
+      "close": 193000,
+      "volume": 429055,
+      "trading_value": 82292100350
+    },
+    {
+      "code": "006650",
+      "date": "2026-09-10",
+      "close": 106300,
+      "volume": 97743,
+      "trading_value": 10475661750
+    },
+    {
+      "code": "004690",
+      "date": "2026-09-10",
+      "close": 138000,
+      "volume": 8319,
+      "trading_value": 1131967100
+    },
+    {
+      "code": "096770",
+      "date": "2026-09-11",
+      "close": 144800,
+      "volume": 1131796,
+      "trading_value": 164731065950
+    },
+    {
+      "code": "051910",
+      "date": "2026-09-11",
+      "close": 273000,
+      "volume": 195466,
+      "trading_value": 53116837750
+    },
+    {
+      "code": "010950",
+      "date": "2026-09-11",
+      "close": 150000,
+      "volume": 508868,
+      "trading_value": 77136758150
+    },
+    {
+      "code": "011170",
+      "date": "2026-09-11",
+      "close": 65500,
+      "volume": 198013,
+      "trading_value": 12875590450
+    },
+    {
+      "code": "047050",
+      "date": "2026-09-11",
+      "close": 57700,
+      "volume": 549694,
+      "trading_value": 31836094250
+    },
+    {
+      "code": "373220",
+      "date": "2026-09-11",
+      "close": 360000,
+      "volume": 302426,
+      "trading_value": 108254522000
+    },
+    {
+      "code": "006400",
+      "date": "2026-09-11",
+      "close": 545000,
+      "volume": 300534,
+      "trading_value": 164378151500
+    },
+    {
+      "code": "247540",
+      "date": "2026-09-11",
+      "close": 110300,
+      "volume": 586370,
+      "trading_value": 65196418200
+    },
+    {
+      "code": "003670",
+      "date": "2026-09-11",
+      "close": 185300,
+      "volume": 206597,
+      "trading_value": 38622318850
+    },
+    {
+      "code": "006650",
+      "date": "2026-09-11",
+      "close": 102200,
+      "volume": 64614,
+      "trading_value": 6538633800
+    },
+    {
+      "code": "004690",
+      "date": "2026-09-11",
+      "close": 136900,
+      "volume": 12344,
+      "trading_value": 1688180300
+    },
+    {
+      "code": "096770",
+      "date": "2026-09-14",
+      "close": 133900,
+      "volume": 929740,
+      "trading_value": 127925825550
+    },
+    {
+      "code": "051910",
+      "date": "2026-09-14",
+      "close": 267500,
+      "volume": 160288,
+      "trading_value": 43036656750
+    },
+    {
+      "code": "010950",
+      "date": "2026-09-14",
+      "close": 145500,
+      "volume": 290786,
+      "trading_value": 42944637350
+    },
+    {
+      "code": "011170",
+      "date": "2026-09-14",
+      "close": 65000,
+      "volume": 167255,
+      "trading_value": 10977686800
+    },
+    {
+      "code": "047050",
+      "date": "2026-09-14",
+      "close": 55600,
+      "volume": 416980,
+      "trading_value": 23538074750
+    },
+    {
+      "code": "373220",
+      "date": "2026-09-14",
+      "close": 351000,
+      "volume": 192745,
+      "trading_value": 67987694250
+    },
+    {
+      "code": "006400",
+      "date": "2026-09-14",
+      "close": 531000,
+      "volume": 332889,
+      "trading_value": 178193133000
+    },
+    {
+      "code": "247540",
+      "date": "2026-09-14",
+      "close": 103500,
+      "volume": 378718,
+      "trading_value": 39647123250
+    },
+    {
+      "code": "003670",
+      "date": "2026-09-14",
+      "close": 176900,
+      "volume": 197317,
+      "trading_value": 35619195700
+    },
+    {
+      "code": "006650",
+      "date": "2026-09-14",
+      "close": 103500,
+      "volume": 60034,
+      "trading_value": 6276333350
+    },
+    {
+      "code": "004690",
+      "date": "2026-09-14",
+      "close": 134700,
+      "volume": 4559,
+      "trading_value": 618296550
+    },
+    {
+      "code": "096770",
+      "date": "2026-09-15",
+      "close": 142000,
+      "volume": 963210,
+      "trading_value": 136614644400
+    },
+    {
+      "code": "051910",
+      "date": "2026-09-15",
+      "close": 270500,
+      "volume": 180425,
+      "trading_value": 49025213250
+    },
+    {
+      "code": "010950",
+      "date": "2026-09-15",
+      "close": 147300,
+      "volume": 346263,
+      "trading_value": 51425534800
+    },
+    {
+      "code": "011170",
+      "date": "2026-09-15",
+      "close": 64900,
+      "volume": 162285,
+      "trading_value": 10501722750
+    },
+    {
+      "code": "047050",
+      "date": "2026-09-15",
+      "close": 55100,
+      "volume": 470685,
+      "trading_value": 25871532850
+    },
+    {
+      "code": "373220",
+      "date": "2026-09-15",
+      "close": 363500,
+      "volume": 337239,
+      "trading_value": 122411229500
+    },
+    {
+      "code": "006400",
+      "date": "2026-09-15",
+      "close": 551000,
+      "volume": 404746,
+      "trading_value": 221758365000
+    },
+    {
+      "code": "247540",
+      "date": "2026-09-15",
+      "close": 107000,
+      "volume": 235037,
+      "trading_value": 24950213000
+    },
+    {
+      "code": "003670",
+      "date": "2026-09-15",
+      "close": 189700,
+      "volume": 411843,
+      "trading_value": 77340322150
+    },
+    {
+      "code": "006650",
+      "date": "2026-09-15",
+      "close": 100900,
+      "volume": 52585,
+      "trading_value": 5278023750
+    },
+    {
+      "code": "004690",
+      "date": "2026-09-15",
+      "close": 133000,
+      "volume": 5792,
+      "trading_value": 774094700
+    },
+    {
+      "code": "096770",
+      "date": "2026-09-16",
+      "close": 136900,
+      "volume": 512124,
+      "trading_value": 70883143750
+    },
+    {
+      "code": "051910",
+      "date": "2026-09-16",
+      "close": 272000,
+      "volume": 170893,
+      "trading_value": 46678445500
+    },
+    {
+      "code": "010950",
+      "date": "2026-09-16",
+      "close": 143600,
+      "volume": 268442,
+      "trading_value": 39160026150
+    },
+    {
+      "code": "011170",
+      "date": "2026-09-16",
+      "close": 64700,
+      "volume": 345958,
+      "trading_value": 22844990450
+    },
+    {
+      "code": "047050",
+      "date": "2026-09-16",
+      "close": 55100,
+      "volume": 710579,
+      "trading_value": 40132326650
+    },
+    {
+      "code": "373220",
+      "date": "2026-09-16",
+      "close": 366500,
+      "volume": 300265,
+      "trading_value": 110848593750
+    },
+    {
+      "code": "006400",
+      "date": "2026-09-16",
+      "close": 546000,
+      "volume": 303346,
+      "trading_value": 165375651000
+    },
+    {
+      "code": "247540",
+      "date": "2026-09-16",
+      "close": 104700,
+      "volume": 259643,
+      "trading_value": 27065632300
+    },
+    {
+      "code": "003670",
+      "date": "2026-09-16",
+      "close": 188600,
+      "volume": 294190,
+      "trading_value": 55614603600
+    },
+    {
+      "code": "006650",
+      "date": "2026-09-16",
+      "close": 99900,
+      "volume": 60189,
+      "trading_value": 6224754950
+    },
+    {
+      "code": "004690",
+      "date": "2026-09-16",
+      "close": 131900,
+      "volume": 2963,
+      "trading_value": 390786600
+    },
+    {
+      "code": "096770",
+      "date": "2026-09-17",
+      "close": 139000,
+      "volume": 534465,
+      "trading_value": 74379145200
+    },
+    {
+      "code": "051910",
+      "date": "2026-09-17",
+      "close": 270000,
+      "volume": 132000,
+      "trading_value": 35396296750
+    },
+    {
+      "code": "010950",
+      "date": "2026-09-17",
+      "close": 152800,
+      "volume": 324327,
+      "trading_value": 49023536400
+    },
+    {
+      "code": "011170",
+      "date": "2026-09-17",
+      "close": 63000,
+      "volume": 174198,
+      "trading_value": 10855143100
+    },
+    {
+      "code": "047050",
+      "date": "2026-09-17",
+      "close": 58100,
+      "volume": 971814,
+      "trading_value": 56442431250
+    },
+    {
+      "code": "373220",
+      "date": "2026-09-17",
+      "close": 367000,
+      "volume": 172765,
+      "trading_value": 63001099000
+    },
+    {
+      "code": "006400",
+      "date": "2026-09-17",
+      "close": 545000,
+      "volume": 189726,
+      "trading_value": 102510657500
+    },
+    {
+      "code": "247540",
+      "date": "2026-09-17",
+      "close": 103900,
+      "volume": 269604,
+      "trading_value": 27841130200
+    },
+    {
+      "code": "003670",
+      "date": "2026-09-17",
+      "close": 184900,
+      "volume": 208997,
+      "trading_value": 38389707750
+    },
+    {
+      "code": "006650",
+      "date": "2026-09-17",
+      "close": 97500,
+      "volume": 45149,
+      "trading_value": 4393800250
+    },
+    {
+      "code": "004690",
+      "date": "2026-09-17",
+      "close": 132000,
+      "volume": 3747,
+      "trading_value": 492817100
+    },
+    {
+      "code": "096770",
+      "date": "2026-09-18",
+      "close": 137000,
+      "volume": 620027,
+      "trading_value": 84857795100
+    },
+    {
+      "code": "051910",
+      "date": "2026-09-18",
+      "close": 268000,
+      "volume": 161749,
+      "trading_value": 43268413500
+    },
+    {
+      "code": "010950",
+      "date": "2026-09-18",
+      "close": 149700,
+      "volume": 311697,
+      "trading_value": 47000025800
+    },
+    {
+      "code": "011170",
+      "date": "2026-09-18",
+      "close": 63600,
+      "volume": 197982,
+      "trading_value": 12617889650
+    },
+    {
+      "code": "047050",
+      "date": "2026-09-18",
+      "close": 57100,
+      "volume": 456512,
+      "trading_value": 25983089100
+    },
+    {
+      "code": "373220",
+      "date": "2026-09-18",
+      "close": 363500,
+      "volume": 224284,
+      "trading_value": 81748238750
+    },
+    {
+      "code": "006400",
+      "date": "2026-09-18",
+      "close": 542000,
+      "volume": 309966,
+      "trading_value": 167928231500
+    },
+    {
+      "code": "247540",
+      "date": "2026-09-18",
+      "close": 105300,
+      "volume": 341464,
+      "trading_value": 35802351000
+    },
+    {
+      "code": "003670",
+      "date": "2026-09-18",
+      "close": 183300,
+      "volume": 196614,
+      "trading_value": 36053988850
+    },
+    {
+      "code": "006650",
+      "date": "2026-09-18",
+      "close": 98500,
+      "volume": 68103,
+      "trading_value": 6698950100
+    },
+    {
+      "code": "004690",
+      "date": "2026-09-18",
+      "close": 131600,
+      "volume": 11413,
+      "trading_value": 1498604950
+    },
+    {
+      "code": "096770",
+      "date": "2026-09-21",
+      "close": 140200,
+      "volume": 573860,
+      "trading_value": 80458898500
+    },
+    {
+      "code": "051910",
+      "date": "2026-09-21",
+      "close": 261500,
+      "volume": 175819,
+      "trading_value": 45764760500
+    },
+    {
+      "code": "010950",
+      "date": "2026-09-21",
+      "close": 153900,
+      "volume": 336265,
+      "trading_value": 51626974100
+    },
+    {
+      "code": "011170",
+      "date": "2026-09-21",
+      "close": 64000,
+      "volume": 134069,
+      "trading_value": 8565621400
+    },
+    {
+      "code": "047050",
+      "date": "2026-09-21",
+      "close": 58300,
+      "volume": 585643,
+      "trading_value": 33821963700
+    },
+    {
+      "code": "373220",
+      "date": "2026-09-21",
+      "close": 355500,
+      "volume": 314679,
+      "trading_value": 111235316750
+    },
+    {
+      "code": "006400",
+      "date": "2026-09-21",
+      "close": 536000,
+      "volume": 290029,
+      "trading_value": 154594785500
+    },
+    {
+      "code": "247540",
+      "date": "2026-09-21",
+      "close": 103900,
+      "volume": 205224,
+      "trading_value": 21178516050
+    },
+    {
+      "code": "003670",
+      "date": "2026-09-21",
+      "close": 179400,
+      "volume": 225032,
+      "trading_value": 40171385650
+    },
+    {
+      "code": "006650",
+      "date": "2026-09-21",
+      "close": 97600,
+      "volume": 27718,
+      "trading_value": 2713887450
+    },
+    {
+      "code": "004690",
+      "date": "2026-09-21",
+      "close": 130800,
+      "volume": 8308,
+      "trading_value": 1085191100
+    },
+    {
+      "code": "096770",
+      "date": "2026-09-22",
+      "close": 141300,
+      "volume": 702555,
+      "trading_value": 98406181200
+    },
+    {
+      "code": "051910",
+      "date": "2026-09-22",
+      "close": 256000,
+      "volume": 191253,
+      "trading_value": 48933836750
+    },
+    {
+      "code": "010950",
+      "date": "2026-09-22",
+      "close": 153200,
+      "volume": 437495,
+      "trading_value": 66404402600
+    },
+    {
+      "code": "011170",
+      "date": "2026-09-22",
+      "close": 62900,
+      "volume": 153366,
+      "trading_value": 9684896000
+    },
+    {
+      "code": "047050",
+      "date": "2026-09-22",
+      "close": 57100,
+      "volume": 492111,
+      "trading_value": 28035698800
+    },
+    {
+      "code": "373220",
+      "date": "2026-09-22",
+      "close": 352000,
+      "volume": 259256,
+      "trading_value": 91000431500
+    },
+    {
+      "code": "006400",
+      "date": "2026-09-22",
+      "close": 531000,
+      "volume": 209018,
+      "trading_value": 111157495500
+    },
+    {
+      "code": "247540",
+      "date": "2026-09-22",
+      "close": 104600,
+      "volume": 274754,
+      "trading_value": 28736578500
+    },
+    {
+      "code": "003670",
+      "date": "2026-09-22",
+      "close": 186100,
+      "volume": 365078,
+      "trading_value": 67102469000
+    },
+    {
+      "code": "006650",
+      "date": "2026-09-22",
+      "close": 95900,
+      "volume": 47784,
+      "trading_value": 4576300750
+    },
+    {
+      "code": "004690",
+      "date": "2026-09-22",
+      "close": 130600,
+      "volume": 2958,
+      "trading_value": 384868500
+    },
+    {
+      "code": "096770",
+      "date": "2026-09-23",
+      "close": 148700,
+      "volume": 999203,
+      "trading_value": 148661963250
+    },
+    {
+      "code": "051910",
+      "date": "2026-09-23",
+      "close": 253000,
+      "volume": 142057,
+      "trading_value": 36170571750
+    },
+    {
+      "code": "010950",
+      "date": "2026-09-23",
+      "close": 156500,
+      "volume": 376025,
+      "trading_value": 58872144050
+    },
+    {
+      "code": "011170",
+      "date": "2026-09-23",
+      "close": 60800,
+      "volume": 117555,
+      "trading_value": 7184848750
+    },
+    {
+      "code": "047050",
+      "date": "2026-09-23",
+      "close": 55500,
+      "volume": 376658,
+      "trading_value": 20943954850
+    },
+    {
+      "code": "373220",
+      "date": "2026-09-23",
+      "close": 352000,
+      "volume": 222728,
+      "trading_value": 78686281500
+    },
+    {
+      "code": "006400",
+      "date": "2026-09-23",
+      "close": 521000,
+      "volume": 376316,
+      "trading_value": 195363369000
+    },
+    {
+      "code": "247540",
+      "date": "2026-09-23",
+      "close": 105500,
+      "volume": 293225,
+      "trading_value": 30944103600
+    },
+    {
+      "code": "003670",
+      "date": "2026-09-23",
+      "close": 180600,
+      "volume": 553921,
+      "trading_value": 102839739400
+    },
+    {
+      "code": "006650",
+      "date": "2026-09-23",
+      "close": 91400,
+      "volume": 63516,
+      "trading_value": 5836637400
+    },
+    {
+      "code": "004690",
+      "date": "2026-09-23",
+      "close": 130100,
+      "volume": 3833,
+      "trading_value": 497416500
+    }
+  ],
+  "shares": []
+}
