@@ -1,8 +1,8 @@
 """교차검증 및 산출근거 패키지.
 
-월간 참조값은 일별 데이터와 동일한 KRX 정규장 기준이어야 한다. 일봉 합계와
-대조하면 수집 누락·중복·전사 오류가 원 단위로 드러난다. KIS 범용 월봉처럼
-시간외 거래가 섞일 수 있는 집계는 정규장 일봉의 참조값으로 사용하지 않는다.
+월간 참조값은 일별 데이터와 동일한 KIS 확정 일봉 기준이어야 한다. 일봉 합계와
+대조하면 수집 누락·중복·전사 오류가 원 단위로 드러난다. 일봉과 월봉 모두
+시간외/NXT 통합 체결을 포함하는 동일한 KIS 집계 기준을 사용한다.
 """
 from __future__ import annotations
 
@@ -112,7 +112,7 @@ def load_monthly_reference(path: Path | None = None) -> dict[tuple[str, str], tu
 def cross_check_monthly(
     prices: dict[str, list[Bar]], reference: dict[tuple[str, str], tuple[int, int]] | None = None
 ) -> list[MonthCheck]:
-    """일봉 합계를 KRX 정규장 월간 참조값과 대조한다. 우리가 가진 월만 검사한다."""
+    """일봉 합계를 KIS 확정 월봉 참조값과 대조한다. 우리가 가진 월만 검사한다."""
     ref = reference if reference is not None else load_monthly_reference()
     checks = []
     for code, bars in sorted(prices.items()):
@@ -302,5 +302,5 @@ def _summary(result: Result, label: str, ok: bool, checks: list[MonthCheck]) -> 
               "- `01_raw_bars.csv` — 평가에 사용된 일별 원자료 전량",
               "- `02_vwap.csv` — 종목·윈도우별 VWAP 중간값",
               "- `03_trace.csv` — 증감율부터 점수까지 전 단계",
-              "- `04_cross_check.csv` — KRX 정규장 월간 참조값 대조 결과", ""]
+              "- `04_cross_check.csv` — KIS 확정 월봉 참조값 대조 결과", ""]
     return "\n".join(lines)

@@ -99,7 +99,7 @@ async function init() {
     try { hSub = hSubRaw ? decodeURIComponent(hSubRaw) : hSubRaw; } catch (e) { /* 잘못된 인코딩은 무시 */ }
     if (visibleMainTabs().some(t => t.key === hTab)) S.tab = hTab;
     if (hSub && visibleViews().some(v => v.key === hSub)) S.evalKey = hSub;
-    document.getElementById("todayStr").textContent = koDate(D.latest.as_of) + " 기준 · KRX 정규장 전일 일봉";
+    document.getElementById("todayStr").textContent = koDate(D.latest.as_of) + " 기준 · KIS 확정 전일 일봉(시간외 포함)";
     wireMobileNav(); wireCreatorCredit(); renderMainNav(); renderTickerList(); renderSubtabs(); render();
   } catch (e) {
     document.getElementById("view").innerHTML =
@@ -179,7 +179,7 @@ function renderSubtabs() {
 }
 
 function renderTickerList() {
-  document.getElementById("tickerChangeBasis").textContent = `전일 종가 대비 · ${koMonthDay(D.latest.as_of)} KRX 정규장 기준`;
+  document.getElementById("tickerChangeBasis").textContent = `전일 종가 대비 · ${koMonthDay(D.latest.as_of)} KIS 확정 일봉 기준`;
   document.getElementById("tickerList").innerHTML = D.latest.tickers.map(t =>
     `<div class="nav-item ${t.group === "본사" ? "subject" : ""}">
        <span class="nav-dot" style="background:${slotColor(t.group)}"></span>

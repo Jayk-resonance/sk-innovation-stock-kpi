@@ -1,6 +1,6 @@
 """테스트 픽스처.
 
-`data/normalized/prices.csv`의 최신 KRX 정규장 실 데이터를 쓴다.
+`data/normalized/prices.csv`의 최신 KIS 확정 일봉 데이터를 쓴다.
 일일 갱신 뒤에도 사이트 산출물과 같은 입력으로 회귀 테스트하기 위함이다.
 """
 from __future__ import annotations

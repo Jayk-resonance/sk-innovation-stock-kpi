@@ -79,7 +79,7 @@ def test_adjusted_price_averages_multiple_windows(prices):
 
 
 def test_real_data_base_window_vwap(prices):
-    """기준일 2개월 VWAP — 회귀 고정 (KRX 정규장 실 데이터)."""
+    """기준일 2개월 VWAP — 회귀 고정 (KIS 확정 일봉 데이터)."""
     base = date(2025, 12, 30)
     assert adjusted_price(prices[SK], base, ["2M"], "A") == pytest.approx(116_905, abs=1)
     assert adjusted_price(prices[SK], base, ["2M"], "B") == pytest.approx(116_576, abs=1)
