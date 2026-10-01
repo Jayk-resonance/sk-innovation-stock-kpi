@@ -117,6 +117,17 @@ def test_september_provisional_snapshot_is_fixed_to_requested_date(
     assert "contribution" in snapshot["modes"]["최종"]
 
 
+def test_october_provisional_snapshot_is_fixed_to_september_month_end(
+    prices, universe, rules, calibration
+):
+    payload = build_latest(prices, universe, rules, calibration)
+    snapshot = next(view for view in payload["views"] if view["label"] == "10월 잠정평가")
+    assert snapshot["date"] == "2026-09-30"
+    assert snapshot["official_mode"] == "최종"
+    assert snapshot["snapshot"] is True
+    assert "contribution" in snapshot["modes"]["최종"]
+
+
 def test_h1_zero_score_surfaces_with_raw(prices, universe, rules, calibration):
     """0점으로 잘린 사실과 원값이 함께 실려야 한다."""
     payload = build_latest(prices, universe, rules, calibration)
