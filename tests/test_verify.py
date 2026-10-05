@@ -5,6 +5,7 @@ from pipeline.verify import (
     MonthCheck,
     build_evidence_package,
     cross_check_monthly,
+    load_monthly_reference,
     verify_windows,
 )
 
@@ -36,10 +37,16 @@ def test_full_month_matches_reference(prices):
     assert all(c.vwap_error == 0 for c in checks)
 
 
-def test_every_month_is_fully_verified(prices):
-    """백필 완료 후: 보유한 모든 달이 원 단위로 일치한다."""
+def test_every_month_is_fully_verified(prices, universe):
+    """KPI 종목의 모든 보유 월이 빠짐없이 월봉 참조값과 원 단위로 일치한다."""
+    months = {bar.day.strftime("%Y-%m") for bar in prices[universe.subject.code]}
+    expected = {(ticker.code, month) for ticker in universe.all_tickers for month in months}
+    assert months
+    reference = load_monthly_reference()
+    assert expected <= reference.keys(), "KPI 종목·월의 월봉 참조값이 빠졌다"
     checks = cross_check_monthly(prices)
-    assert len(checks) == 108  # 12개월 × 9종목
+    assert {(c.code, c.month) for c in checks} == expected
+    assert len(checks) == len(expected)
     assert all(c.covered and c.exact for c in checks)
 
 

@@ -285,7 +285,12 @@ def test_coverage_is_clean_after_backfill(prices, universe, rules, calibration):
     assert cov["gaps"] == []
     assert cov["unverified_months"] == []
     assert cov["mismatched_months"] == []
-    assert len(cov["verified_months"]) == 12
+    expected_months = {
+        bar.day.strftime("%Y-%m") for bar in prices[universe.subject.code]
+    }
+    assert expected_months
+    assert set(cov["verified_months"]) == expected_months
+    assert len(cov["verified_months"]) == len(expected_months)
 
 
 def test_next_eval_is_null_when_unannounced(prices, universe, rules, calibration):
