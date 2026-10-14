@@ -1,0 +1,98 @@
+{
+  "collected_at": "2026-10-15T07:00:24+09:00",
+  "source": "PlayMCP KIS unadjusted finalized daily history (inquire-daily-itemchartprice)",
+  "basis": "KIS finalized daily bar including after-hours/NXT-integrated volume and trading value",
+  "request_ids": {
+    "247540": "req_7bd3bb0c-9dfd-4a5d-8a17-c80a7d503b01",
+    "373220": "req_b711a31c-633f-4de1-bb5b-684b2c7714f4",
+    "003670": "req_f302a22a-744c-4103-94c8-029af6ed8f3c",
+    "004690": "req_01e9e9aa-5c7a-412c-8b5e-aa956487c86c",
+    "006400": "req_9f355822-b506-4cac-a789-6919160fed58",
+    "006650": "req_52bd6656-effb-4fde-b5d1-3e09eb404585",
+    "010950": "req_aaad3a9a-9fdb-4f6d-8116-4ee7e71b65d3",
+    "011170": "req_e3aa1a15-76bd-4102-b197-e44aade64d89",
+    "047050": "req_35e99dd2-4619-4e6a-a107-82479abbd530",
+    "051910": "req_3a5bdfc7-2bd3-4468-923b-3316bcb839c5",
+    "096770": "req_5c36504c-f9cf-4a03-93a4-3d703b8e51da"
+  },
+  "prices": [
+    {
+      "code": "003670",
+      "date": "2026-10-14",
+      "close": 185400,
+      "volume": 600131,
+      "trading_value": 110777926350
+    },
+    {
+      "code": "004690",
+      "date": "2026-10-14",
+      "close": 124000,
+      "volume": 4128,
+      "trading_value": 515453750
+    },
+    {
+      "code": "006400",
+      "date": "2026-10-14",
+      "close": 591000,
+      "volume": 886314,
+      "trading_value": 522448577000
+    },
+    {
+      "code": "006650",
+      "date": "2026-10-14",
+      "close": 88400,
+      "volume": 25757,
+      "trading_value": 2291835350
+    },
+    {
+      "code": "010950",
+      "date": "2026-10-14",
+      "close": 162500,
+      "volume": 309490,
+      "trading_value": 49785431600
+    },
+    {
+      "code": "011170",
+      "date": "2026-10-14",
+      "close": 57500,
+      "volume": 135207,
+      "trading_value": 7832560800
+    },
+    {
+      "code": "047050",
+      "date": "2026-10-14",
+      "close": 57500,
+      "volume": 420427,
+      "trading_value": 24226623700
+    },
+    {
+      "code": "051910",
+      "date": "2026-10-14",
+      "close": 267500,
+      "volume": 281724,
+      "trading_value": 75864791500
+    },
+    {
+      "code": "096770",
+      "date": "2026-10-14",
+      "close": 163200,
+      "volume": 1095731,
+      "trading_value": 178851313150
+    },
+    {
+      "code": "247540",
+      "date": "2026-10-14",
+      "close": 116500,
+      "volume": 619007,
+      "trading_value": 70993781100
+    },
+    {
+      "code": "373220",
+      "date": "2026-10-14",
+      "close": 422000,
+      "volume": 671525,
+      "trading_value": 283134672500
+    }
+  ],
+  "shares": []
+}
