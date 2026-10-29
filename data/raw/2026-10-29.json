@@ -1,0 +1,85 @@
+{
+  "collected_at": "2026-10-29T22:03:16.754696+00:00",
+  "source": "PlayMCP KIS unadjusted finalized daily history (inquire-daily-itemchartprice)",
+  "basis": "KIS finalized daily bar including after-hours/NXT-integrated volume and trading value",
+  "prices": [
+    {
+      "code": "247540",
+      "date": "2026-10-29",
+      "close": 92000,
+      "volume": 433050,
+      "trading_value": 40001047650
+    },
+    {
+      "code": "373220",
+      "date": "2026-10-29",
+      "close": 356000,
+      "volume": 903683,
+      "trading_value": 324339699000
+    },
+    {
+      "code": "096770",
+      "date": "2026-10-29",
+      "close": 129800,
+      "volume": 1139324,
+      "trading_value": 149439609100
+    },
+    {
+      "code": "051910",
+      "date": "2026-10-29",
+      "close": 234000,
+      "volume": 329157,
+      "trading_value": 76745039750
+    },
+    {
+      "code": "010950",
+      "date": "2026-10-29",
+      "close": 122300,
+      "volume": 460747,
+      "trading_value": 56079783100
+    },
+    {
+      "code": "011170",
+      "date": "2026-10-29",
+      "close": 47000,
+      "volume": 93853,
+      "trading_value": 4390529350
+    },
+    {
+      "code": "047050",
+      "date": "2026-10-29",
+      "close": 49250,
+      "volume": 418521,
+      "trading_value": 20415029450
+    },
+    {
+      "code": "006400",
+      "date": "2026-10-29",
+      "close": 538000,
+      "volume": 1132691,
+      "trading_value": 609034244500
+    },
+    {
+      "code": "003670",
+      "date": "2026-10-29",
+      "close": 160900,
+      "volume": 239896,
+      "trading_value": 39062234650
+    },
+    {
+      "code": "006650",
+      "date": "2026-10-29",
+      "close": 79100,
+      "volume": 31298,
+      "trading_value": 2483533000
+    },
+    {
+      "code": "004690",
+      "date": "2026-10-29",
+      "close": 119000,
+      "volume": 2871,
+      "trading_value": 339397100
+    }
+  ],
+  "shares": []
+}
