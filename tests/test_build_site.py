@@ -43,6 +43,30 @@ def test_views_include_today_and_confirmed_evaluations(prices, universe, rules, 
     assert all(v["confirmed"] for v in payload["views"][1:])
 
 
+def test_close_evaluation_uses_only_dated_closes(prices, universe, rules, calibration):
+    from dataclasses import replace
+
+    payload = build_latest(prices, universe, rules, calibration)
+    result = payload["close_evaluation"]
+    close = lambda code, day: next(b.close for b in prices[code] if b.day == day)
+    day = date.fromisoformat(payload["as_of"])
+    base = rules["base_date"]
+    sk = universe.subject.code
+    ret = lambda code: close(code, day) / close(code, base) - 1
+    peer = sum(weight * sum(ret(t.code) for t in members) / len(members)
+               for weight, members in universe.groups.values())
+    assert result["eval_date"] == payload["as_of"]
+    assert result["eval_price"] == pytest.approx(close(sk, day) / (1 - (ret(sk) - peer)), abs=0.01)
+    assert result["scores"]["close"]["anchor"] == close(sk, base)
+    assert result["score_marks"]["close"][-1]["price"] == pytest.approx(close(sk, base) * 1.15, abs=0.01)
+
+    from pipeline.build_site import _close_detail
+
+    different_volumes = {code: [replace(bar, volume=bar.volume * (i + 1))
+                               for i, bar in enumerate(bars)] for code, bars in prices.items()}
+    assert _close_detail(different_volumes, universe, rules, calibration, day) == result
+
+
 def test_sidebar_change_is_previous_trading_day_close_return(prices, universe, rules, calibration):
     """좌측 평가대상 등락률은 최신 종가의 직전 거래일 종가 대비 변화다."""
     payload = build_latest(prices, universe, rules, calibration)

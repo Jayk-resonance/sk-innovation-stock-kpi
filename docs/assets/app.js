@@ -18,6 +18,7 @@
  */
 const MAIN_TABS = [
   { key: "score", label: "주가 평가", icon: "📊" },
+  { key: "close-score", label: "주가 평가 (전일 기준)", icon: "📉" },
   { key: "prices", label: "주가 현황", icon: "📈" },
   { key: "case", label: "Case 시뮬레이션", icon: "🧮" },
   { key: "design", label: "27년 과제 설계", icon: "🛠️" },
@@ -76,7 +77,8 @@ function visibleViews() {
 }
 
 function visibleMainTabs() {
-  return MAIN_TABS.filter(t => !HIDDEN_MAIN_TABS.has(t.key));
+  return MAIN_TABS.filter(t => !HIDDEN_MAIN_TABS.has(t.key)
+    && (t.key !== "close-score" || D.latest.close_evaluation));
 }
 
 function currentView() {
@@ -169,6 +171,10 @@ function renderMainNav() {
 
 function renderSubtabs() {
   const el = document.getElementById("subtabs");
+  if (S.tab === "close-score") {
+    el.innerHTML = '<button class="tab active" aria-current="page">오늘의 점수</button>';
+    return;
+  }
   if (S.tab !== "score") { el.innerHTML = ""; return; }
   el.innerHTML = visibleViews().map(v => `
     <button class="tab ${S.evalKey === v.key ? "active" : ""}" data-sub="${v.key}">
@@ -356,6 +362,8 @@ function subjectPriceChart(m, name = "SK이노베이션", mode = "daily") {
     { key: "close", label: "단순 종가", color: "--series-1", width: 2.1 },
     { key: "vwap_2m", label: "2개월 거래량가중평균 주가", color: "--series-2", width: 2.3 },
     { key: "vwap_final", label: "2개월·1개월·최근 5거래일 거래량가중평균 주가의 산술평균", color: "--series-3", width: 2.8 },
+  ] : mode === "close" ? [
+    { key: "close", label: "단순 종가", color: "--series-1", width: 2.2 },
   ] : [
     { key: "close", label: "단순 종가", color: "--series-1", width: 2.2 },
     { key: "daily_weighted_price", label: m.method === "B" ? "1일 거래량가중평균 주가 (종가와 동일)" : "1일 거래량가중평균 주가", color: "--series-3", width: 2.7 },
@@ -402,7 +410,7 @@ function subjectPriceChart(m, name = "SK이노베이션", mode = "daily") {
     <div class="subject-chart-tooltip" hidden></div>
     <div class="mini-chart-meta">
       <span>${koMonthDay(first.date)} <b>단순 ${won(first.close)}원</b></span>
-      <span>${String(D.latest.base_date).slice(0,4)}년末 <b>단순 ${won(basePoint.close)}원</b></span>
+      ${mode === "close" ? "" : `<span>${String(D.latest.base_date).slice(0,4)}년末 <b>단순 ${won(basePoint.close)}원</b></span>`}
       <span>${koMonthDay(last.date)} <b>단순 ${won(last.close)}원</b></span>
     </div>
   </div>`;
@@ -418,6 +426,8 @@ function bindSubjectPriceCharts(root) {
       { key: "close", label: "단순 종가" },
       { key: "vwap_2m", label: "2개월 거래량가중평균 주가" },
       { key: "vwap_final", label: "최종 산술평균" },
+    ] : chart.dataset.subjectMode === "close" ? [
+      { key: "close", label: "단순 종가" },
     ] : [
       { key: "close", label: "단순 종가" },
       { key: "daily_weighted_price", label: chart.dataset.subjectMethod === "B" ? "1일 거래량가중평균 주가 (종가와 동일)" : "1일 거래량가중평균 주가" },
@@ -503,6 +513,11 @@ function miniCloseChart(code, name, compact = false, endDate = D.latest.as_of) {
 }
 
 function peerPopover(mem, m) {
+  if (m.method === "close") return `<div class="peer-popover" role="tooltip">
+    <div class="peer-pop-head"><b>${esc(mem.name)}</b><span>${koMonthDay(m.eval_date)} 기준 · 종가 추이</span></div>
+    ${miniCloseChart(mem.code, mem.name, true, m.eval_date)}
+    <div class="peer-calc-formula">${won(mem.price)}원 ÷ ${won(mem.base_price)}원 − 1 = <b>${signed(mem.change)}</b></div>
+  </div>`;
   if (!mem.windows_now?.length || !mem.code) return "";
   const values = mem.windows_now.map(w => won(w.vwap));
   const baseRanges = mem.windows_base.map(w => windowSpecLabel(w)).join(" · ");
@@ -558,6 +573,7 @@ function peerCriteriaPopover(t) {
 /** Peer 보정 — 그룹별로 묶는다. 60:40 가중치가 그룹 단위이므로 개별사가 아니라
  *  그룹 평균이 실제로 점수에 들어가는 값이다. */
 function peerSection(m, interactive = false) {
+  const priceLabel = m.method === "close" ? "종가" : "평가주가";
   const grp = (name) => {
     const g = m.groups[name];
     return `<div class="peer-grp">
@@ -566,9 +582,9 @@ function peerSection(m, interactive = false) {
         ? `<div class="m peer-member" tabindex="0" aria-label="${esc(mem.name)} 상세 보기">
              <span class="peer-name">${esc(mem.name)}<small>그래프 보기</small></span>
              <span class="peer-price-compare">
-               <span><small>${String(D.latest.base_date).slice(0,4)}년末 평가주가</small><b>${won(mem.base_price)}원</b></span>
+               <span><small>${String(D.latest.base_date).slice(0,4)}년末 ${priceLabel}</small><b>${won(mem.base_price)}원</b></span>
                <i aria-hidden="true">→</i>
-               <span><small>${koMonthDay(m.eval_date)} 평가주가</small><b>${won(mem.price)}원</b></span>
+               <span><small>${koMonthDay(m.eval_date)} ${priceLabel}</small><b>${won(mem.price)}원</b></span>
              </span>
              <span class="${dirClass(mem.change)}">${signed(mem.change)}</span>
              ${peerPopover(mem, m)}
@@ -828,7 +844,7 @@ function renderHistoricalScore(V, view) {
   bindSubjectPriceCharts(V);
 }
 
-function indexedScoreFormula(active = 0, showPeer = false) {
+function indexedScoreFormula(active = 0, showPeer = false, closeOnly = false) {
   const term = (step, label) => {
     const state = active ? (active === step ? " active" : " dimmed") : "";
     return `<span class="formula-term formula-step-${step}${state}"><span class="formula-index">${step}</span>${label}</span>`;
@@ -837,7 +853,7 @@ function indexedScoreFormula(active = 0, showPeer = false) {
   return `<div class="score-formula">
       <span class="formula-output${outputState}"><span class="formula-index">4</span>평가주가</span>
       <span class="formula-op">=</span>
-      ${term(1, "SK이노베이션 거래량가중평균")}
+      ${term(1, closeOnly ? "SK이노베이션 종가" : "SK이노베이션 거래량가중평균")}
       <span class="formula-op">÷ [1 − (</span>
       ${term(2, "SK이노베이션 증감률")}
       <span class="formula-op">−</span>
@@ -867,11 +883,11 @@ function scoreContributionCard(result) {
   const liftLeft = Math.min(basePos, evalPos), liftWidth = Math.abs(evalPos - basePos);
   const excessWord = c.target_100.excess_amount >= 0 ? "초과" : "미달";
   const clippedNote = c.clipped
-    ? `산출점수 <b>${pts(c.raw_score)}점</b> → 상한 적용 <strong>${pts(c.display_score)}점</strong>`
+    ? `산출점수 <b>${pts(c.raw_score)}점</b> → ${c.raw_score > c.display_score ? "상한" : "하한"} 적용 <strong>${pts(c.display_score)}점</strong>`
     : `산출점수와 적용점수 모두 <strong>${pts(c.display_score)}점</strong>`;
 
   return `<div class="card score-contribution-card">
-    <h3>평가주가 기여 분석 <span class="sub">평가주가 상승분을 SK 자체 상승과 Peer 상대성과로 분해</span></h3>
+    <h3>평가주가 기여 분석 <span class="sub">평가주가 변동을 SK 자체 변동과 Peer 상대성과로 분해</span></h3>
     <div class="contribution-flow" role="list" aria-label="평가주가 기여 단계">
       <div class="contribution-node base" role="listitem">
         <span class="contribution-kicker">출발점</span><b>2025년末 기준가격</b>
@@ -879,7 +895,7 @@ function scoreContributionCard(result) {
       </div>
       <span class="contribution-op" aria-hidden="true">+</span>
       <div class="contribution-node sk" role="listitem">
-        <span class="contribution-kicker">SK 자체 상승 ${signed(c.sk_change, 2)}</span><b>SK이노베이션 기여</b>
+        <span class="contribution-kicker">SK 자체 변동 ${signed(c.sk_change, 2)}</span><b>SK이노베이션 기여</b>
         <strong>${deltaWon(c.sk_contribution.amount)}</strong>
         <small>변동 영향 비중 ${skShare.toFixed(1)}%</small>
       </div>
@@ -903,7 +919,7 @@ function scoreContributionCard(result) {
         <span class="sk" style="width:${skShare}%"></span><span class="peer" style="width:${peerShare}%"></span>
       </div>
       <div class="contribution-legend">
-        <span><i class="sk"></i>SK 자체 상승 <b>${skShare.toFixed(1)}%</b></span>
+        <span><i class="sk"></i>SK 자체 변동 <b>${skShare.toFixed(1)}%</b></span>
         <span><i class="peer"></i>Peer 상대성과 보정 <b>${peerShare.toFixed(1)}%</b></span>
       </div>
     </div>
@@ -922,16 +938,19 @@ function scoreContributionCard(result) {
       <div class="score-cap-note">${clippedNote}</div>
     </div>
 
-    <p class="contribution-explainer">SK이노베이션은 ${signed(c.sk_change, 2)} 상승했고 Peer는 ${signed(c.peer_change, 2)} 변동해, 상대성과는 ${signed(c.relative_change, 2)}p입니다. 이 상대성과를 산식의 분모에 반영하면 평가주가에 ${signed(c.peer_multiplier_effect, 2)}의 추가 효과가 발생합니다.</p>
+    <p class="contribution-explainer">SK이노베이션 증감률은 ${signed(c.sk_change, 2)}, Peer 증감률은 ${signed(c.peer_change, 2)}로 상대성과는 ${signed(c.relative_change, 2)}p입니다. 이 상대성과를 분모에 반영한 효과는 ${signed(c.peer_multiplier_effect, 2)}입니다.</p>
   </div>`;
 }
 
 function renderScore(V) {
-  const view = currentView();
+  const closeOnly = S.tab === "close-score";
+  const view = closeOnly ? D.latest.views.find(v => v.key === "today") : currentView();
   if (view.key !== "today" && !view.snapshot) return renderHistoricalScore(V, view);
-  const result = view.modes["최종"];
-  const score = result.scores.V2;
-  const marks = result.score_marks.V2;
+  const result = closeOnly ? D.latest.close_evaluation : view.modes["최종"];
+  const baseline = closeOnly ? "close" : "V2";
+  const score = result.scores[baseline];
+  const marks = result.score_marks[baseline];
+  const formula = (active, showPeer) => indexedScoreFormula(active, showPeer, closeOnly);
   const baseYear = String(D.latest.base_date).slice(0, 4);
 
   V.innerHTML = `
@@ -942,9 +961,11 @@ function renderScore(V) {
         <span class="raw">평가 주가 ${won(result.eval_price)}원</span>
       </div>
       ${scoreGauge(marks, score.value)}
+      ${closeOnly ? `<div class="hero-note">종가 기준 참고 점수 · 40점 기준은 ${koDate(D.latest.base_date)} SK이노베이션 종가 <b>${won(score.anchor)}원</b>입니다.
+        <a href="#score/today" data-score-compare>같은 거래일의 주가 평가 ${pts(view.modes["최종"].scores.V2.value)}점 보기</a></div>` : ""}
       <div class="indexed-formula">
         <div class="formula-kicker">평가주가 산식</div>
-        ${indexedScoreFormula(0, true)}
+        ${formula(0, true)}
         <div class="formula-guide">산식의 번호와 아래 산출 단계의 번호가 서로 연결됩니다.</div>
       </div>
     </div>
@@ -955,14 +976,14 @@ function renderScore(V) {
         <section class="calc-step step-1">
           <div class="calc-step-head">
             <span class="step-badge">1</span>
-            <div><b>SK이노베이션 거래량가중평균 주가</b><span>산식의 분자</span></div>
+            <div><b>${closeOnly ? "SK이노베이션 종가" : "SK이노베이션 거래량가중평균 주가"}</b><span>산식의 분자</span></div>
           </div>
-          ${indexedScoreFormula(1)}
-          <p class="step-copy">각 기간은 (종가 × 거래량) 합계 ÷ 거래량 합계로 계산하고, 2개월·1개월·최근 5거래일 값을 산술평균합니다.</p>
-          ${subjectTable(result, true, true)}
+          ${formula(1)}
+          <p class="step-copy">${closeOnly ? "가장 최근 거래일의 KIS 확정 종가를 그대로 사용합니다." : "각 기간은 (종가 × 거래량) 합계 ÷ 거래량 합계로 계산하고, 2개월·1개월·최근 5거래일 값을 산술평균합니다."}</p>
+          ${closeOnly ? "" : subjectTable(result, true, true)}
           <div class="step-result">① 산식에 사용되는 값 <b>${won(result.subject_price)}원</b></div>
-          <div class="chart-caption">SK이노베이션 주가 추이 · 단순 종가·2개월 거래량가중평균 주가·최종 산술평균 · ${baseYear}년末 기준 2개월 전부터 ${koMonthDay(result.eval_date)}까지</div>
-          ${subjectPriceChart(result, "SK이노베이션", "evaluation")}
+          <div class="chart-caption">SK이노베이션 주가 추이 · ${closeOnly ? "최근 20거래일 종가" : `단순 종가·2개월 거래량가중평균 주가·최종 산술평균 · ${baseYear}년末 기준 2개월 전부터 ${koMonthDay(result.eval_date)}까지`}</div>
+          ${subjectPriceChart(result, "SK이노베이션", closeOnly ? "close" : "evaluation")}
         </section>
 
         <section class="calc-step step-2">
@@ -970,8 +991,8 @@ function renderScore(V) {
             <span class="step-badge">2</span>
             <div><b>SK이노베이션 증감률</b><span>괄호 안 첫 번째 값</span></div>
           </div>
-          ${indexedScoreFormula(2)}
-          <p class="step-copy">${koMonthDay(result.eval_date)} 거래량가중평균을 ${baseYear}년末 거래량가중평균과 비교합니다.</p>
+          ${formula(2)}
+          <p class="step-copy">${closeOnly ? `${koMonthDay(result.eval_date)} 종가를 ${baseYear}년말 종가와 비교합니다.` : `${koMonthDay(result.eval_date)} 거래량가중평균을 ${baseYear}년末 거래량가중평균과 비교합니다.`}</p>
           <div class="step-equation">
             <span>(</span><b>${won(result.subject_price)}원</b><span>÷</span>
             <b>${won(result.subject_base_price)}원</b><span>) − 1 =</span>
@@ -984,7 +1005,7 @@ function renderScore(V) {
             <span class="step-badge">3</span>
             <div><b>Peer 증감률</b><span>괄호 안 두 번째 값</span></div>
           </div>
-          ${indexedScoreFormula(3, true)}
+          ${formula(3, true)}
           <p class="step-copy">각 그룹 안의 종목 증감률을 단순 평균한 뒤, 에화 그룹 60%와 배소 그룹 40%를 가중 평균합니다.</p>
           ${peerSection(result, true)}
         </section>
@@ -994,7 +1015,7 @@ function renderScore(V) {
             <span class="step-badge">4</span>
             <div><b>평가주가 산출</b><span>1~3단계 결과를 산식에 결합</span></div>
           </div>
-          ${indexedScoreFormula(4)}
+          ${formula(4)}
           <p class="step-copy">①을 분자로 사용하고, ②에서 ③을 뺀 값을 분모에 반영해 평가주가를 계산합니다.</p>
           ${finalCalculation(result)}
         </section>
@@ -1002,6 +1023,11 @@ function renderScore(V) {
     </div>
 
     ${scoreContributionCard(result)}`;
+  V.querySelector("[data-score-compare]")?.addEventListener("click", event => {
+    event.preventDefault();
+    S.tab = "score"; S.evalKey = "today";
+    pushHash(); renderMainNav(); renderSubtabs(); render();
+  });
   bindSubjectPriceCharts(V);
 }
 
@@ -1666,7 +1692,7 @@ function renderDesign(V) {
 
 function render() {
   const V = document.getElementById("view");
-  if (S.tab === "score") return renderScore(V);
+  if (S.tab === "score" || S.tab === "close-score") return renderScore(V);
   if (S.tab === "case") return renderCase(V);
   if (S.tab === "design") return renderDesign(V);
   return renderPrices(V);

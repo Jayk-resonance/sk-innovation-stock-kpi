@@ -130,6 +130,37 @@ def compose(change: dict[str, float], universe: Universe, subject_price: float) 
     }
 
 
+def evaluate_close(
+    prices: dict[str, list[Bar]], universe: Universe, rules: dict,
+    calibration: dict, eval_date: date,
+) -> tuple[Result, dict[str, float], dict[str, float]]:
+    """Compare like-for-like dated closes and anchor 40 points to the base close."""
+    actions = [a for a in calibration.get("corporate_actions") or []
+               if a["effective_date"] <= eval_date]
+    base_date = rules["base_date"]
+    base, now = {}, {}
+    for ticker in universe.all_tickers:
+        by_date = {bar.day: bar.close for bar in apply_corporate_actions(
+            prices[ticker.code], ticker.code, actions
+        )}
+        for day, output in ((base_date, base), (eval_date, now)):
+            close = by_date.get(day)
+            if close is None or close <= 0:
+                raise ValueError(f"{ticker.code} {day}: 유효한 종가 없음")
+            output[ticker.code] = close
+
+    subject = universe.subject.code
+    change = {code: now[code] / base[code] - 1 for code in now}
+    comp = compose(change, universe, now[subject])
+    anchor = base[subject]
+    raw, value, clipped = score_of(comp["eval_price"], anchor, rules["score_scale"])
+    return Result(
+        eval_date=eval_date, mode="종가", method="close", subject_price=now[subject],
+        subject_change=change[subject], scores={"close": Score("close", anchor, raw, value, clipped)},
+        **comp,
+    ), base, now
+
+
 def resolve_anchor(
     spec: dict,
     prices: dict[str, list[Bar]],
