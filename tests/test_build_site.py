@@ -57,14 +57,19 @@ def test_close_evaluation_uses_only_dated_closes(prices, universe, rules, calibr
                for weight, members in universe.groups.values())
     assert result["eval_date"] == payload["as_of"]
     assert result["eval_price"] == pytest.approx(close(sk, day) / (1 - (ret(sk) - peer)), abs=0.01)
-    assert result["scores"]["close"]["anchor"] == close(sk, base)
-    assert result["score_marks"]["close"][-1]["price"] == pytest.approx(close(sk, base) * 1.15, abs=0.01)
+    regular = payload["views"][0]["modes"]["최종"]
+    assert result["scores"]["close"]["anchor"] == regular["scores"]["V2"]["anchor"]
+    assert result["score_marks"]["close"] == regular["score_marks"]["V2"]
+    assert result["contribution"]["base_price"] == close(sk, base)
+    assert result["subject_chart"] == [
+        {"date": row["date"], "close": row["close"]} for row in regular["subject_chart"]
+    ]
 
     from pipeline.build_site import _close_detail
 
     different_volumes = {code: [replace(bar, volume=bar.volume * (i + 1))
                                for i, bar in enumerate(bars)] for code, bars in prices.items()}
-    assert _close_detail(different_volumes, universe, rules, calibration, day) == result
+    assert _close_detail(different_volumes, universe, rules, calibration, day, regular["subject_chart"]) == result
 
 
 def test_sidebar_change_is_previous_trading_day_close_return(prices, universe, rules, calibration):

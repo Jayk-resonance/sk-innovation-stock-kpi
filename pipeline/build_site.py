@@ -344,10 +344,11 @@ def _coverage(prices: dict[str, list[Bar]]) -> dict:
             "unverified_months": unverified, "mismatched_months": mismatched}
 
 
-def _score_contribution(detail: dict, baseline: str = "V2") -> dict:
+def _score_contribution(detail: dict, baseline: str = "V2", base_price: float | None = None) -> dict:
     """오늘의 최종 평가주가 상승분을 SK 자체 상승과 Peer 보정 효과로 분해한다."""
     score = detail["scores"][baseline]
-    base_price = score["anchor"]
+    if base_price is None:
+        base_price = score["anchor"]
     subject_price = detail["subject_price"]
     eval_price = detail["eval_price"]
     sk_amount = subject_price - base_price
@@ -380,7 +381,7 @@ def _score_contribution(detail: dict, baseline: str = "V2") -> dict:
         "target_100": {
             "price": round(target_100, 2),
             "excess_amount": round(eval_price - target_100, 2),
-            "excess_pct_points": round((eval_price - target_100) / base_price, 6),
+            "excess_pct_points": round((eval_price - target_100) / score["anchor"], 6),
         },
         "raw_score": score["raw"],
         "display_score": score["value"],
@@ -388,15 +389,14 @@ def _score_contribution(detail: dict, baseline: str = "V2") -> dict:
     }
 
 
-def _close_detail(prices, universe, rules, calibration, as_of) -> dict:
+def _close_detail(prices, universe, rules, calibration, as_of, regular_chart) -> dict:
     result, base, now = evaluate_close(prices, universe, rules, calibration, as_of)
     subject = universe.subject.code
     detail = {
         **_result_json(result),
         "subject_base_price": round(base[subject], 2),
         "subject_chart": [
-            {"date": bar.day.isoformat(), "close": bar.close}
-            for bar in [b for b in prices[subject] if b.day <= as_of][-20:]
+            {"date": point["date"], "close": point["close"]} for point in regular_chart
         ],
         "groups": {
             name: {
@@ -408,9 +408,9 @@ def _close_detail(prices, universe, rules, calibration, as_of) -> dict:
                 } for t in members],
             } for name, (weight, members) in universe.groups.items()
         },
-        "score_marks": {"close": _score_marks(rules["score_scale"], base[subject])},
+        "score_marks": {"close": _score_marks(rules["score_scale"], result.scores["close"].anchor)},
     }
-    detail["contribution"] = _score_contribution(detail, "close")
+    detail["contribution"] = _score_contribution(detail, "close", base[subject])
     return detail
 
 
@@ -520,7 +520,9 @@ def build_latest(
         "close_group_changes": close_group_changes,
         "close_peer_change": close_peer_change,
         "views": views,
-        "close_evaluation": _close_detail(prices, universe, rules, calibration, as_of),
+        "close_evaluation": _close_detail(
+            prices, universe, rules, calibration, as_of, views[0]["modes"]["최종"]["subject_chart"]
+        ),
         "method_compare": method_compare,
         "next_eval": ({"label": upcoming[0]["label"], "date": upcoming[0]["date"].isoformat(),
                        "days": (upcoming[0]["date"] - as_of).days} if upcoming else None),

@@ -407,10 +407,12 @@ function subjectPriceChart(m, name = "SK이노베이션", mode = "daily") {
       ${ticks}
     </svg>
     <div class="subject-chart-legend">${legend}</div>
-    <div class="subject-chart-tooltip" hidden></div>
+    ${mode === "close" ? `<div class="subject-chart-tooltip subject-chart-readout">
+      <b>${koMonthDay(last.date)}</b><span>단순 종가 <strong>${won(last.close)}원</strong></span>
+    </div>` : '<div class="subject-chart-tooltip" hidden></div>'}
     <div class="mini-chart-meta">
       <span>${koMonthDay(first.date)} <b>단순 ${won(first.close)}원</b></span>
-      ${mode === "close" ? "" : `<span>${String(D.latest.base_date).slice(0,4)}년末 <b>단순 ${won(basePoint.close)}원</b></span>`}
+      <span>${String(D.latest.base_date).slice(0,4)}년末 <b>단순 ${won(basePoint.close)}원</b></span>
       <span>${koMonthDay(last.date)} <b>단순 ${won(last.close)}원</b></span>
     </div>
   </div>`;
@@ -434,11 +436,16 @@ function bindSubjectPriceCharts(root) {
     ];
     const dots = new Map([...chart.querySelectorAll(".subject-chart-dot")].map(dot => [dot.dataset.chartKey, dot]));
     const tip = chart.querySelector(".subject-chart-tooltip"), W = 920, H = 250, P = { l: 46, r: 22, t: 20, b: 30 };
+    const fixedReadout = chart.dataset.subjectMode === "close";
+    const renderReadout = p => {
+      tip.innerHTML = `<b>${koMonthDay(p.date)}</b>${series.map(s => `<span>${esc(s.label)} <strong>${p[s.key] == null ? "계산 시작 전" : `${won(p[s.key])}원`}</strong></span>`).join("")}`;
+    };
     const show = event => {
       const rect = svg.getBoundingClientRect();
       const ratio = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width));
-      const i = Math.round(((ratio * W) - P.l) / (W - P.l - P.r) * (points.length - 1));
-      const p = points[Math.max(0, Math.min(points.length - 1, i))];
+      const i = Math.max(0, Math.min(points.length - 1,
+        Math.round(((ratio * W) - P.l) / (W - P.l - P.r) * (points.length - 1))));
+      const p = points[i];
       const cx = P.l + i / (points.length - 1) * (W - P.l - P.r);
       const y = value => P.t + (hi - value) / (hi - lo) * (H - P.t - P.b);
       hover.hidden = false;
@@ -449,12 +456,17 @@ function bindSubjectPriceCharts(root) {
         if (value == null) dot.setAttribute("visibility", "hidden");
         else { dot.setAttribute("cy", y(value)); dot.removeAttribute("visibility"); }
       });
-      tip.innerHTML = `<b>${koMonthDay(p.date)}</b>${series.map(s => `<span>${esc(s.label)} <strong>${p[s.key] == null ? "계산 시작 전" : `${won(p[s.key])}원`}</strong></span>`).join("")}`;
+      renderReadout(p);
       tip.hidden = false;
-      tip.style.left = `${Math.max(8, Math.min(chart.clientWidth - tip.offsetWidth - 8, event.clientX - rect.left + 12))}px`;
+      if (!fixedReadout) tip.style.left = `${Math.max(8, Math.min(chart.clientWidth - tip.offsetWidth - 8, event.clientX - rect.left + 12))}px`;
     };
     hit.addEventListener("pointermove", show);
-    hit.addEventListener("pointerleave", () => { hover.hidden = true; tip.hidden = true; });
+    if (fixedReadout) hit.addEventListener("pointerdown", show);
+    hit.addEventListener("pointerleave", () => {
+      hover.hidden = true;
+      if (fixedReadout) renderReadout(points.at(-1));
+      else tip.hidden = true;
+    });
   });
 }
 
@@ -890,7 +902,7 @@ function scoreContributionCard(result) {
     <h3>평가주가 기여 분석 <span class="sub">평가주가 변동을 SK 자체 변동과 Peer 상대성과로 분해</span></h3>
     <div class="contribution-flow" role="list" aria-label="평가주가 기여 단계">
       <div class="contribution-node base" role="listitem">
-        <span class="contribution-kicker">출발점</span><b>2025년末 기준가격</b>
+        <span class="contribution-kicker">출발점</span><b>2025년末 ${result.method === "close" ? "종가" : "기준가격"}</b>
         <strong>${won(c.base_price)}원</strong>
       </div>
       <span class="contribution-op" aria-hidden="true">+</span>
@@ -961,7 +973,7 @@ function renderScore(V) {
         <span class="raw">평가 주가 ${won(result.eval_price)}원</span>
       </div>
       ${scoreGauge(marks, score.value)}
-      ${closeOnly ? `<div class="hero-note">종가 기준 참고 점수 · 40점 기준은 ${koDate(D.latest.base_date)} SK이노베이션 종가 <b>${won(score.anchor)}원</b>입니다.
+      ${closeOnly ? `<div class="hero-note">종가 기준 참고 점수 · 40점 기준 <b>${won(score.anchor)}원</b>과 점수 구간은 기존 주가 평가와 같습니다.
         <a href="#score/today" data-score-compare>같은 거래일의 주가 평가 ${pts(view.modes["최종"].scores.V2.value)}점 보기</a></div>` : ""}
       <div class="indexed-formula">
         <div class="formula-kicker">평가주가 산식</div>
@@ -982,7 +994,7 @@ function renderScore(V) {
           <p class="step-copy">${closeOnly ? "가장 최근 거래일의 KIS 확정 종가를 그대로 사용합니다." : "각 기간은 (종가 × 거래량) 합계 ÷ 거래량 합계로 계산하고, 2개월·1개월·최근 5거래일 값을 산술평균합니다."}</p>
           ${closeOnly ? "" : subjectTable(result, true, true)}
           <div class="step-result">① 산식에 사용되는 값 <b>${won(result.subject_price)}원</b></div>
-          <div class="chart-caption">SK이노베이션 주가 추이 · ${closeOnly ? "최근 20거래일 종가" : `단순 종가·2개월 거래량가중평균 주가·최종 산술평균 · ${baseYear}년末 기준 2개월 전부터 ${koMonthDay(result.eval_date)}까지`}</div>
+          <div class="chart-caption">SK이노베이션 주가 추이 · ${closeOnly ? "단순 종가" : "단순 종가·2개월 거래량가중평균 주가·최종 산술평균"} · ${baseYear}년末 기준 2개월 전부터 ${koMonthDay(result.eval_date)}까지</div>
           ${subjectPriceChart(result, "SK이노베이션", closeOnly ? "close" : "evaluation")}
         </section>
 

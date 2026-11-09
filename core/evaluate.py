@@ -134,7 +134,7 @@ def evaluate_close(
     prices: dict[str, list[Bar]], universe: Universe, rules: dict,
     calibration: dict, eval_date: date,
 ) -> tuple[Result, dict[str, float], dict[str, float]]:
-    """Compare like-for-like dated closes and anchor 40 points to the base close."""
+    """Compare dated closes on the same V2 scale as the regular evaluation."""
     actions = [a for a in calibration.get("corporate_actions") or []
                if a["effective_date"] <= eval_date]
     base_date = rules["base_date"]
@@ -152,7 +152,8 @@ def evaluate_close(
     subject = universe.subject.code
     change = {code: now[code] / base[code] - 1 for code in now}
     comp = compose(change, universe, now[subject])
-    anchor = base[subject]
+    anchor = resolve_anchor(calibration["baselines"]["V2"], prices, universe, rules,
+                            calibration, rules["vwap_primary"])
     raw, value, clipped = score_of(comp["eval_price"], anchor, rules["score_scale"])
     return Result(
         eval_date=eval_date, mode="종가", method="close", subject_price=now[subject],
