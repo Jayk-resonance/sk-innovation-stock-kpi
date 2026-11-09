@@ -15,6 +15,8 @@ eval_dates:
   - { label: "9월 잠정평가", date: "2026-09-08", mode: 최종, snapshot: true }
   # 10월 평가용 기록 탭. 9월 말 확정 데이터를 기준으로 고정하며 이후 갱신하지 않는다.
   - { label: "10월 잠정평가", date: "2026-09-30", mode: 최종, snapshot: true }
+  # 10월 마지막 거래일 기준의 별도 기록 탭.
+  - { label: "10월말", date: "2026-10-30", mode: 최종, snapshot: true }
   # - { label: "2026 3분기", date: null, mode: 잠정 }   # 안내 수신 후 기입
   # - { label: "2026 최종",  date: null, mode: 최종 }   # 안내 수신 후 기입
 
