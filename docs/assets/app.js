@@ -903,7 +903,7 @@ function scoreContributionCard(result, mode = "") {
     : `산출점수와 적용점수 모두 <strong>${pts(c.display_score)}점</strong>`;
 
   return `<div class="card score-contribution-card">
-    <h3>평가주가 기여 분석 <span class="sub">${mode ? `${esc(mode)} 방식 · ` : ""}SK 자체 변동과 Peer 보정이 평가주가에 미친 영향</span></h3>
+    <h3>평가주가 기여 분석 <span class="sub">${mode ? `${esc(mode)} 방식 · ` : ""}기여액과 변동률은 연말 기준가격 대비</span></h3>
     <div class="contribution-flow" role="list" aria-label="평가주가 기여 단계">
       <div class="contribution-node base" role="listitem">
         <span class="contribution-kicker">출발점</span><b>2025년末 ${result.method === "close" ? "종가" : "기준가격"}</b>
@@ -911,21 +911,25 @@ function scoreContributionCard(result, mode = "") {
       </div>
       <span class="contribution-op" aria-hidden="true">+</span>
       <div class="contribution-node sk" role="listitem">
-        <span class="contribution-kicker">SK 자체 변동 ${signed(c.sk_change, 2)}</span><b>SK이노베이션 기여</b>
-        <strong>${deltaWon(c.sk_contribution.amount)}</strong>
         <small>변동 영향 비중 ${skShare.toFixed(1)}%</small>
+        <b>SKI 주가 변동</b>
+        <strong>${deltaWon(c.sk_contribution.amount)}</strong>
+        <span class="contribution-rate">${signed(c.sk_contribution.amount / c.base_price, 2)}</span>
       </div>
       <span class="contribution-op" aria-hidden="true">+</span>
       <div class="contribution-node peer" role="listitem">
-        <span class="contribution-kicker">Peer 증감률 ${signed(c.peer_change, 2)}</span><b>Peer 상대성과 보정</b>
+        <small>변동 영향 비중 ${peerShare.toFixed(1)}%</small>
+        <b>Peer 상대증감률 보정 <span class="contribution-kicker">${signed(c.relative_change, 2)}p</span></b>
         <strong>${deltaWon(c.peer_contribution.amount)}</strong>
-        <small>분모 보정효과 ${signed(c.peer_multiplier_effect, 2)} · 영향 비중 ${peerShare.toFixed(1)}%</small>
+        <span class="contribution-rate">${signed(c.peer_contribution.amount / c.base_price, 2)}</span>
+        <small>분모 보정효과 ${signed(c.peer_multiplier_effect, 2)}</small>
       </div>
       <span class="contribution-op" aria-hidden="true">=</span>
       <div class="contribution-node final" role="listitem">
-        <span class="contribution-kicker">최종 상대성과 ${signed(c.relative_change, 2)}p</span><b>최종 평가주가</b>
-        <strong>${won(c.eval_price)}원</strong>
-        <small>연말 기준 대비 ${deltaWon(c.total_lift.amount)} (${signed(c.total_lift.change, 2)})</small>
+        <span class="contribution-kicker">최종 평가주가 변동</span>
+        <strong>${signed(c.total_lift.change, 2)}</strong>
+        <span class="contribution-rate">${deltaWon(c.total_lift.amount)}</span>
+        <small>최종 평가주가 ${won(c.eval_price)}원</small>
       </div>
     </div>
 
@@ -935,8 +939,8 @@ function scoreContributionCard(result, mode = "") {
         <span class="sk" style="width:${skShare}%"></span><span class="peer" style="width:${peerShare}%"></span>
       </div>
       <div class="contribution-legend">
-        <span><i class="sk"></i>SK 자체 변동 <b>${skShare.toFixed(1)}%</b></span>
-        <span><i class="peer"></i>Peer 상대성과 보정 <b>${peerShare.toFixed(1)}%</b></span>
+        <span><i class="sk"></i>SKI 주가 변동 <b>${skShare.toFixed(1)}%</b></span>
+        <span><i class="peer"></i>Peer 상대증감률 보정 <b>${peerShare.toFixed(1)}%</b></span>
       </div>
     </div>
 
@@ -954,7 +958,7 @@ function scoreContributionCard(result, mode = "") {
       <div class="score-cap-note">${clippedNote}</div>
     </div>
 
-    <p class="contribution-explainer">SK이노베이션 증감률은 ${signed(c.sk_change, 2)}, Peer 증감률은 ${signed(c.peer_change, 2)}로 상대성과는 ${signed(c.relative_change, 2)}p입니다. 이 상대성과를 분모에 반영하면 보정 전 SK 주가가 ${signed(c.peer_multiplier_effect, 2)} 변합니다. 최종 평가주가의 연말 기준 대비 변동률은 ${signed(c.total_lift.change, 2)}입니다.</p>
+    <p class="contribution-explainer">SKI 주가 증감률 ${signed(c.sk_change, 2)} − Peer 증감률 ${signed(c.peer_change, 2)} = 상대증감률 ${signed(c.relative_change, 2)}p입니다. 분모 보정효과는 보정 전 SKI 주가 대비 변동률입니다. 위 카드의 SKI·Peer 기여율과 최종 평가주가 변동률은 모두 같은 연말 기준가격으로 나눴습니다. 표시값은 반올림으로 합계와 차이가 날 수 있습니다.</p>
   </div>`;
 }
 
