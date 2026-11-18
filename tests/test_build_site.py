@@ -139,7 +139,7 @@ def test_september_provisional_snapshot_is_fixed_to_requested_date(
     prices, universe, rules, calibration
 ):
     payload = build_latest(prices, universe, rules, calibration)
-    snapshot = next(view for view in payload["views"] if view["label"] == "9월 잠정평가")
+    snapshot = next(view for view in payload["views"] if view["label"] == "9월 잠정평가 (Inc.)")
     assert snapshot["date"] == "2026-09-08"
     assert snapshot["official_mode"] == "최종"
     assert snapshot["snapshot"] is True
@@ -155,6 +155,15 @@ def test_october_provisional_snapshot_is_fixed_to_september_month_end(
     assert snapshot["official_mode"] == "최종"
     assert snapshot["snapshot"] is True
     assert "contribution" in snapshot["modes"]["최종"]
+
+
+def test_november_final_snapshot_is_fixed_to_november_16(prices, universe, rules, calibration):
+    payload = build_latest(prices, universe, rules, calibration)
+    snapshot = next(view for view in payload["views"] if view["label"] == "11월 최종평가 (Inc.)")
+    assert snapshot["date"] == "2026-11-16"
+    assert snapshot["snapshot"] is True
+    assert snapshot["official_mode"] == "최종"
+    assert snapshot["modes"]["최종"]["subject_chart"][-1]["date"] == snapshot["date"]
 
 
 def test_h1_zero_score_surfaces_with_raw(prices, universe, rules, calibration):
@@ -219,7 +228,7 @@ def test_today_contribution_reconciles_to_evaluation_price(prices, universe, rul
         + contribution["peer_contribution"]["share"]
     ) == pytest.approx(1, abs=1e-6)
     assert contribution["target_100"]["price"] == pytest.approx(
-        contribution["base_price"] * 1.15, abs=0.5
+        final["scores"]["V2"]["anchor"] * 1.15, abs=0.5
     )
 
 

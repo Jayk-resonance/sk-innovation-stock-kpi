@@ -348,7 +348,7 @@ def _score_contribution(detail: dict, baseline: str = "V2", base_price: float | 
     """오늘의 최종 평가주가 상승분을 SK 자체 상승과 Peer 보정 효과로 분해한다."""
     score = detail["scores"][baseline]
     if base_price is None:
-        base_price = score["anchor"]
+        base_price = detail["subject_base_price"]
     subject_price = detail["subject_price"]
     eval_price = detail["eval_price"]
     sk_amount = subject_price - base_price
@@ -488,10 +488,11 @@ def build_latest(
                                        entry["date"], m, method)
                       for m in ("잠정", "최종")},
         }
-        if view["snapshot"]:
-            view["modes"]["최종"]["contribution"] = _score_contribution(
-                view["modes"]["최종"]
-            )
+        contribution_mode = "최종" if view["snapshot"] else view["official_mode"]
+        contribution_result = view["modes"][contribution_mode]
+        contribution_result["contribution"] = _score_contribution(
+            contribution_result, "V2" if view["snapshot"] else "V3"
+        )
         views.append(view)
 
     # 산식 A/B 대조는 공식 방식에서만 필요하다

@@ -209,6 +209,7 @@ main{flex:1;min-width:0;display:flex;flex-direction:column}
 .contribution-node.sk{color:var(--series-1);background:var(--series-1-soft);border-color:rgba(100,37,254,.18)}
 .contribution-node.peer{color:var(--series-3);background:var(--series-3-soft);border-color:rgba(6,118,71,.18)}
 .contribution-node.final{color:var(--primary-ink);background:var(--primary-tint);border-color:var(--primary-border)}
+.tab-suffix{font-size:.7em}
 .contribution-kicker{font-size:10.5px;font-weight:var(--w-bold);color:currentColor;opacity:.86}
 .contribution-node b{font-size:12.5px;color:var(--ink)}
 .contribution-node strong{font-size:20px;line-height:1.15;letter-spacing:-.02em;color:currentColor}
