@@ -176,10 +176,13 @@ function renderSubtabs() {
     return;
   }
   if (S.tab !== "score") { el.innerHTML = ""; return; }
-  el.innerHTML = visibleViews().map(v => `
-    <button class="tab ${S.evalKey === v.key ? "active" : ""}" data-sub="${v.key}">
-      ${esc(v.label.replace(/ \(Inc\.\)$/, ""))}${v.label.endsWith(" (Inc.)") ? ' <small class="tab-suffix">(Inc.)</small>' : ""}
-    </button>`).join("");
+  el.innerHTML = visibleViews().map(v => {
+    const [, title, suffix] = v.label.match(/^(.*?) (\((?:Inc\.|이사회)\))$/) ?? [null, v.label];
+    return `
+      <button class="tab ${S.evalKey === v.key ? "active" : ""}" data-sub="${esc(v.key)}">
+        ${esc(title)}${suffix ? ` <small class="tab-suffix">${esc(suffix)}</small>` : ""}
+      </button>`;
+  }).join("");
   document.querySelectorAll("[data-sub]").forEach(b =>
     b.addEventListener("click", () => { S.evalKey = b.dataset.sub; pushHash(); renderSubtabs(); render(); }));
 }

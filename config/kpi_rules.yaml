@@ -10,11 +10,11 @@ base_date: "2025-12-30"
 # 안내 미수신분은 비워 둔다. 비어 있으면 사이트에 "평가일 미확정"으로 표시된다.
 eval_dates:
   - { label: "2026 1분기", date: "2026-04-16", mode: 잠정 }
-  - { label: "2026 상반기", date: "2026-07-15", mode: 잠정 }
+  - { label: "2026 상반기", date: "2026-07-15", mode: 최종, snapshot: true }
   # SK Inc. 요청일의 최종 방식 평가값을 고정 표시한다. 이후 일일 갱신일을 따라가지 않는다.
   - { label: "9월 잠정평가 (Inc.)", date: "2026-09-08", mode: 최종, snapshot: true }
   # 10월 평가용 기록 탭. 9월 말 확정 데이터를 기준으로 고정하며 이후 갱신하지 않는다.
-  - { label: "10월 잠정평가", date: "2026-09-30", mode: 최종, snapshot: true }
+  - { label: "10월 잠정평가 (이사회)", key: "10월-잠정평가", date: "2026-09-30", mode: 최종, snapshot: true }
   # SK Inc. 최종평가용 11월 16일 기준 기록 탭.
   - { label: "11월 최종평가 (Inc.)", date: "2026-11-16", mode: 최종, snapshot: true }
   # - { label: "2026 3분기", date: null, mode: 잠정 }   # 안내 수신 후 기입

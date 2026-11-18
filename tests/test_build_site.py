@@ -150,7 +150,8 @@ def test_october_provisional_snapshot_is_fixed_to_september_month_end(
     prices, universe, rules, calibration
 ):
     payload = build_latest(prices, universe, rules, calibration)
-    snapshot = next(view for view in payload["views"] if view["label"] == "10월 잠정평가")
+    snapshot = next(view for view in payload["views"] if view["label"] == "10월 잠정평가 (이사회)")
+    assert snapshot["key"] == "10월-잠정평가"
     assert snapshot["date"] == "2026-09-30"
     assert snapshot["official_mode"] == "최종"
     assert snapshot["snapshot"] is True
@@ -170,6 +171,12 @@ def test_h1_zero_score_surfaces_with_raw(prices, universe, rules, calibration):
     """0점으로 잘린 사실과 원값이 함께 실려야 한다."""
     payload = build_latest(prices, universe, rules, calibration)
     h1 = next(v for v in payload["views"] if v["label"] == "2026 상반기")
+    assert h1["date"] == "2026-07-15"
+    assert h1["snapshot"] is True
+    assert h1["official_mode"] == "최종"
+    final = h1["modes"]["최종"]
+    assert final["subject_chart"][-1]["date"] == h1["date"]
+    assert final["contribution"]["display_score"] == final["scores"]["V2"]["value"]
     prov = h1["modes"]["잠정"]["scores"]["V3"]
     assert prov["value"] == 0
     assert prov["raw"] < 0

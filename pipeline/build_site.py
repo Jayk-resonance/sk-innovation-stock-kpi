@@ -481,7 +481,7 @@ def build_latest(
     )
     for entry in reversed([e for e in rules["eval_dates"] if e["date"]]):
         view = {
-            "key": entry["label"].replace(" ", "-"), "label": entry["label"],
+            "key": entry.get("key", entry["label"].replace(" ", "-")), "label": entry["label"],
             "date": entry["date"].isoformat(), "official_mode": entry["mode"], "confirmed": True,
             "snapshot": bool(entry.get("snapshot")),
             "modes": {m: _mode_detail(prices, universe, rules, calibration,
