@@ -1,0 +1,111 @@
+{
+  "collected_at": "2026-11-25T07:02:44.211766+09:00",
+  "source": "PlayMCP KIS unadjusted finalized daily history (inquire-daily-itemchartprice)",
+  "basis": "KIS finalized daily bar including after-hours/NXT-integrated volume and trading value",
+  "request_ids": {
+    "D": {
+      "247540": "req_5148a81c-845d-46ba-9073-653429cbc442",
+      "373220": "req_12240dcd-b85f-4274-90da-cccc52f2123d",
+      "096770": "req_f29616a7-e745-4bd5-9433-571cea822a28",
+      "051910": "req_ace51323-7a2b-4515-8238-2cb7a21207e8",
+      "010950": "req_d50a1c4a-69f7-4540-8418-740aeef733f6",
+      "011170": "req_881f010f-04c5-4f02-97cf-4609cf57e361",
+      "047050": "req_b5d02ebc-5ab3-483b-be04-669c12b606d7",
+      "006400": "req_4feafac7-eecb-461c-93c1-e69029c0ed67",
+      "003670": "req_1d695b1e-457d-413c-b26c-2a76d991f070",
+      "006650": "req_a24f1f83-1acd-4e69-a7fd-4cacf56be114",
+      "004690": "req_c20fd624-7628-4088-ae90-b8217632161b"
+    },
+    "M": {
+      "247540": "req_bf8d85ed-2a78-42ea-ac88-03c35eb78e12",
+      "373220": "req_da2c0700-c728-4754-955a-6ec53f62382a",
+      "096770": "req_46bc46b6-b6c8-438a-92df-4bfde928d83c",
+      "051910": "req_06610b27-bbf1-4bac-b696-227be390b935",
+      "010950": "req_f0da643a-df17-41bb-86a5-9cd832a806d4",
+      "011170": "req_fbe403cd-7db6-4590-9377-4f1ddd6d6009",
+      "047050": "req_89130aeb-714f-440a-b6ee-2a76b65ee907",
+      "006400": "req_17a895e1-a4ce-4031-8682-a9a8b7416e3e",
+      "003670": "req_e27141cb-63c8-4c34-92b6-1d77a43c1bfe"
+    }
+  },
+  "prices": [
+    {
+      "code": "247540",
+      "date": "2026-11-24",
+      "close": 88400,
+      "volume": 403606,
+      "trading_value": 35242111800
+    },
+    {
+      "code": "373220",
+      "date": "2026-11-24",
+      "close": 314500,
+      "volume": 395450,
+      "trading_value": 122521794500
+    },
+    {
+      "code": "096770",
+      "date": "2026-11-24",
+      "close": 92100,
+      "volume": 636453,
+      "trading_value": 58254539800
+    },
+    {
+      "code": "051910",
+      "date": "2026-11-24",
+      "close": 213500,
+      "volume": 277173,
+      "trading_value": 58049796850
+    },
+    {
+      "code": "010950",
+      "date": "2026-11-24",
+      "close": 94400,
+      "volume": 323290,
+      "trading_value": 30397936500
+    },
+    {
+      "code": "011170",
+      "date": "2026-11-24",
+      "close": 44450,
+      "volume": 99874,
+      "trading_value": 4376690950
+    },
+    {
+      "code": "047050",
+      "date": "2026-11-24",
+      "close": 46850,
+      "volume": 256184,
+      "trading_value": 11919120475
+    },
+    {
+      "code": "006400",
+      "date": "2026-11-24",
+      "close": 450000,
+      "volume": 779875,
+      "trading_value": 342472307500
+    },
+    {
+      "code": "003670",
+      "date": "2026-11-24",
+      "close": 170400,
+      "volume": 340417,
+      "trading_value": 57156188100
+    },
+    {
+      "code": "006650",
+      "date": "2026-11-24",
+      "close": 81600,
+      "volume": 25295,
+      "trading_value": 2032570400
+    },
+    {
+      "code": "004690",
+      "date": "2026-11-24",
+      "close": 126100,
+      "volume": 11709,
+      "trading_value": 1458607300
+    }
+  ],
+  "shares": []
+}
