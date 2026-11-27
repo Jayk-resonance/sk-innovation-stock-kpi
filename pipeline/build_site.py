@@ -16,6 +16,7 @@ import subprocess
 from core.calendar import minus_months
 from core.evaluate import adjusted_prices, base_adjusted_prices, evaluate, evaluate_close, price_for_points
 from core.scenarios import (
+    flat_projection_prices,
     peer_waterfall,
     remaining_path_scenarios,
     score_matrix,
@@ -24,6 +25,7 @@ from core.scenarios import (
     target_price,
 )
 from core.schema import Bar, Universe, load_candidates, load_peer_criteria
+from core.vwap import adjusted_price, apply_corporate_actions, slice_spec_window, slice_window, vwap
 from pipeline.ingest import load_shares
 from pipeline.qc import GAP_ERROR_DAYS, check_calendar_gaps, trading_days
 from pipeline.verify import cross_check_monthly
@@ -215,8 +217,6 @@ def _mode_detail(prices, universe, rules, calibration, eval_date, mode, method) 
     잠정과 최종을 나란히 놓고 어디서 갈라지는지 보려면 윈도우별 VWAP 까지
     필요하다. 화면에서 다시 계산하지 않도록 여기서 전부 펼쳐 넘긴다.
     """
-    from core.vwap import adjusted_price, apply_corporate_actions, slice_spec_window, slice_window, vwap
-
     specs = rules["windows"][mode]
     base_ranges = (rules.get("base_window_ranges") or {}).get(mode)
     actions = calibration.get("corporate_actions") or []
@@ -533,8 +533,63 @@ def build_latest(
     }
 
 
+YEAR_END_AS_OF = date(2026, 11, 26)
+YEAR_END_CUTOFF = date(2026, 12, 31)
+# 2026년의 이 고정 시나리오에만 적용. KRX 성탄절·연말 휴장.
+YEAR_END_CLOSED = (date(2026, 12, 25), YEAR_END_CUTOFF)
+
+
+def build_year_end_estimate(prices, universe, rules, calibration) -> dict:
+    """11/26 확정 봉을 반복해 만든 2026년말 보합 추정. 실적 시계열과 분리한다."""
+    as_of = YEAR_END_AS_OF
+    start = as_of + timedelta(days=1)
+    candidates = (as_of + timedelta(days=n) for n in range(1, (YEAR_END_CUTOFF - as_of).days + 1))
+    sessions = [day for day in candidates if day.weekday() < 5 and day not in YEAR_END_CLOSED]
+    end = sessions[-1]
+    projected = flat_projection_prices(prices, universe, as_of, sessions)
+    method, mode = "B", "최종"
+    specs = rules["windows"][mode]
+    actions = [a for a in calibration.get("corporate_actions") or [] if a["effective_date"] <= as_of]
+    fixed_calibration = {**calibration, "corporate_actions": actions}
+    result = evaluate(projected, universe, rules, fixed_calibration, end, mode, method)
+    now = adjusted_prices(projected, universe, end, specs, method, actions)
+    base = base_adjusted_prices(projected, universe, rules, mode, method, actions)
+
+    def ticker_row(ticker):
+        actual = next(bar for bar in projected[ticker.code] if bar.day == as_of)
+        return {
+            "name": ticker.name, "code": ticker.code, "close": actual.close, "volume": actual.volume,
+            "price": round(now[ticker.code], 2), "base_price": round(base[ticker.code], 2),
+            "change": round(now[ticker.code] / base[ticker.code] - 1, 6),
+        }
+
+    windows = []
+    subject = apply_corporate_actions(projected[universe.subject.code], universe.subject.code, actions)
+    for spec in specs:
+        bars = slice_spec_window(subject, end, spec)
+        windows.append({
+            "spec": spec, "start_date": bars[0].day.isoformat(), "end_date": bars[-1].day.isoformat(),
+            "actual_days": sum(bar.day <= as_of for bar in bars),
+            "projected_days": sum(bar.day > as_of for bar in bars),
+            "vwap": round(vwap(bars, method), 2),
+        })
+    return {
+        **_result_json(result),
+        "as_of": as_of.isoformat(), "start_date": start.isoformat(),
+        "cutoff_date": YEAR_END_CUTOFF.isoformat(), "base_date": rules["base_date"].isoformat(),
+        "trading_dates": [day.isoformat() for day in sessions],
+        "closed_dates": [day.isoformat() for day in YEAR_END_CLOSED],
+        "subject": ticker_row(universe.subject), "windows": windows,
+        "groups": {
+            name: {"weight": weight, "members": [ticker_row(t) for t in tickers]}
+            for name, (weight, tickers) in universe.groups.items()
+        },
+        "score_marks": _score_marks(rules["score_scale"], result.scores["V2"].anchor),
+    }
+
+
 def build_scenarios(prices: dict[str, list[Bar]], universe: Universe, rules: dict, calibration: dict) -> dict:
-    """탭3(Case 시뮬레이션) 전용 — 12칸 매트릭스 · 잔여기간 경로 · 점수 시계열.
+    """Case 시뮬레이션·점수 시계열 및 전일 기준 탭의 고정 연말 추정.
 
     목표 역산·Peer 기여도·민감도는 탭2 소속이라 `build_latest()` 의 `_mode_detail`
     쪽에 이미 실려 있다(PLAN.md §6 "1·2·3번은 탭2, 4·5번은 탭3").
@@ -552,7 +607,9 @@ def build_scenarios(prices: dict[str, list[Bar]], universe: Universe, rules: dic
     events = [{"label": e["label"], "date": e["date"].isoformat()}
               for e in rules["eval_dates"] if e["date"]]
     return {"as_of": as_of.isoformat(), "matrix": matrix, "remaining_paths": paths,
-            "timeseries": timeseries, "events": events}
+            "timeseries": timeseries, "events": events,
+            "year_end_flat": build_year_end_estimate(prices, universe, rules, calibration)
+            if as_of >= YEAR_END_AS_OF else None}
 
 
 def build_bars(prices: dict[str, list[Bar]]) -> dict:

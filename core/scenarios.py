@@ -177,6 +177,25 @@ def _synthetic_extend(bars: list[Bar], upto: date, daily_return: float) -> list[
     return out
 
 
+def flat_projection_prices(
+    prices: dict[str, list[Bar]], universe: Universe, as_of: date, future_sessions: list[date],
+) -> dict[str, list[Bar]]:
+    """Keep only data known at as_of and repeat each ticker's own close and volume."""
+    if future_sessions != sorted(set(future_sessions)) or any(d <= as_of for d in future_sessions):
+        raise ValueError("추정 거래일은 기준일 이후의 중복 없는 오름차순 날짜여야 한다")
+    projected = {}
+    for ticker in universe.all_tickers:
+        actual = [bar for bar in prices.get(ticker.code, []) if bar.day <= as_of]
+        if not actual or actual[-1].day != as_of or actual[-1].volume <= 0:
+            raise ValueError(f"{ticker.code} {as_of}: 추정에 필요한 확정 일봉이 없다")
+        last = actual[-1]
+        projected[ticker.code] = actual + [
+            # Method B uses close × volume, not observed trading value.
+            Bar(day, last.close, last.volume, last.close * last.volume) for day in future_sessions
+        ]
+    return projected
+
+
 def remaining_path_scenarios(
     prices, universe: Universe, rules: dict, calibration: dict,
     as_of: date, horizon_months: int, method: str = "B", baseline_key: str = "V3",

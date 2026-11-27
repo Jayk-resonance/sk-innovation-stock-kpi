@@ -14,7 +14,7 @@
  *
  * 내비게이션 2층 구조:
  *   메인 탭(사이드바, 아이콘) — 주가 평가 / 주가 현황
- *   서브탭(상단, 주가 평가 전용) — 오늘의 점수 / 확정 평가일별 화면
+ *   서브탭(상단) — 오늘의 점수 / 확정 평가일별 화면 / 연말 추정
  */
 const MAIN_TABS = [
   { key: "score", label: "주가 평가", icon: "📊" },
@@ -23,7 +23,7 @@ const MAIN_TABS = [
   { key: "case", label: "Case 시뮬레이션", icon: "🧮" },
   { key: "design", label: "27년 과제 설계", icon: "🛠️" },
 ];
-const S = { tab: "score", evalKey: "today", method: null, horizon: 2 };
+const S = { tab: "score", evalKey: "today", closeView: "today", method: null, horizon: 2 };
 const D = { latest: null, history: null, scenarios: null, bars: null };
 const HIDDEN_EVAL_KEYS = new Set(["2026-1분기"]); // 다시 표시하려면 이 키를 제거한다.
 // 점수 시계열을 주가 현황 탭으로 옮기면서 나머지(기준선별 점수·잔여기간 시나리오)만
@@ -85,6 +85,16 @@ function currentView() {
   return visibleViews().find(v => v.key === S.evalKey) || visibleViews()[0];
 }
 
+function readHash() {
+  const [tab, rawSub] = location.hash.slice(1).split("/");
+  let sub = rawSub;
+  // 고정 스냅샷 키는 주소창에서 퍼센트 인코딩될 수 있다.
+  try { sub = rawSub && decodeURIComponent(rawSub); } catch (e) { /* 잘못된 인코딩은 무시 */ }
+  S.tab = visibleMainTabs().some(t => t.key === tab) ? tab : "score";
+  if (S.tab === "score") S.evalKey = visibleViews().some(v => v.key === sub) ? sub : "today";
+  if (S.tab === "close-score") S.closeView = D.scenarios.year_end_flat && sub === "year-end" ? sub : "today";
+}
+
 async function init() {
   try {
     [D.latest, D.history, D.scenarios, D.bars] = await Promise.all([
@@ -93,14 +103,14 @@ async function init() {
     verifyDefaultsMatchToday();
     wireExportDelegation();
     S.method = D.latest.method_primary;
-    // 서브탭 키에 한글이 섞여 있다(예: "2026-상반기"). 주소창을 거쳐 오면
-    // 브라우저가 퍼센트 인코딩할 수 있으므로 decodeURIComponent 로 정규화한다.
-    // 이미 디코딩된 문자열(% 없음)에 다시 걸어도 그대로 반환되어 안전하다.
-    const [hTab, hSubRaw] = location.hash.slice(1).split("/");
-    let hSub = hSubRaw;
-    try { hSub = hSubRaw ? decodeURIComponent(hSubRaw) : hSubRaw; } catch (e) { /* 잘못된 인코딩은 무시 */ }
-    if (visibleMainTabs().some(t => t.key === hTab)) S.tab = hTab;
-    if (hSub && visibleViews().some(v => v.key === hSub)) S.evalKey = hSub;
+    readHash();
+    window.addEventListener("hashchange", () => {
+      const before = [S.tab, S.evalKey, S.closeView].join("/");
+      readHash();
+      if ([S.tab, S.evalKey, S.closeView].join("/") !== before) {
+        renderMainNav(); renderSubtabs(); render();
+      }
+    });
     document.getElementById("todayStr").textContent = koDate(D.latest.as_of) + " 기준 · KIS 확정 전일 일봉(시간외 포함)";
     wireMobileNav(); wireCreatorCredit(); renderMainNav(); renderTickerList(); renderSubtabs(); render();
   } catch (e) {
@@ -111,7 +121,8 @@ async function init() {
 
 function pushHash() {
   location.hash = S.tab === "score"
-    ? `${S.tab}/${encodeURIComponent(S.evalKey)}` : S.tab;
+    ? `${S.tab}/${encodeURIComponent(S.evalKey)}`
+    : S.tab === "close-score" && S.closeView === "year-end" ? "close-score/year-end" : S.tab;
 }
 
 function setMobileNavOpen(open) {
@@ -172,7 +183,13 @@ function renderMainNav() {
 function renderSubtabs() {
   const el = document.getElementById("subtabs");
   if (S.tab === "close-score") {
-    el.innerHTML = '<button class="tab active" aria-current="page">오늘의 점수</button>';
+    const views = [["today", "오늘의 점수"]];
+    if (D.scenarios.year_end_flat) views.push(["year-end", "연말 추정"]);
+    el.innerHTML = views.map(([key, label]) => `
+      <button class="tab${S.closeView === key ? " active" : ""}"${S.closeView === key ? ' aria-current="page"' : ""} data-close-view="${key}">${label}</button>`
+    ).join("");
+    el.querySelectorAll("[data-close-view]").forEach(b =>
+      b.addEventListener("click", () => { S.closeView = b.dataset.closeView; pushHash(); renderSubtabs(); render(); }));
     return;
   }
   if (S.tab !== "score") { el.innerHTML = ""; return; }
@@ -962,6 +979,61 @@ function scoreContributionCard(result, mode = "") {
   </div>`;
 }
 
+function renderYearEndEstimate(V) {
+  const m = D.scenarios.year_end_flat, score = m.scores.V2;
+  const dateRange = (first, last) => `${koMonthDay(first)}~${koMonthDay(last)}`;
+  const year = m.base_date.slice(0, 4);
+  const windows = { "2M": "2개월", "1M": "1개월", "1W": "1주 (최근 5거래일)" };
+  const row = (t, cls = "") => `<tr class="${cls}">
+    <td>${esc(t.name)}</td><td class="num">${won(t.close)}원</td><td class="num">${won(t.volume)}주</td>
+    <td class="num">${won(t.base_price)}원</td><td class="num">${won(t.price)}원</td>
+    <td class="num ${dirClass(t.change)}">${signed(t.change)}</td></tr>`;
+  V.innerHTML = `
+    <div class="hero">
+      <div class="eyebrow">${koDate(m.cutoff_date)} 연말 추정 <span class="snapshot-badge">${koMonthDay(m.as_of)} 고정 시나리오</span></div>
+      <div class="score-main"><b>${pts(score.value)}</b><span class="unit">점</span>
+        <span class="raw">추정 평가주가 ${won(m.eval_price)}원</span></div>
+      ${scoreGauge(m.score_marks, score.value)}
+      <div class="hero-note">
+        ${koMonthDay(m.as_of)} <b>KIS 확정 일봉</b>의 종가와 거래량을 SK이노베이션과 Peer 각 종목의
+        ${dateRange(m.start_date, m.cutoff_date)} 중 <b>${m.trading_dates.length}거래일</b>에 동일하게 적용했습니다.
+        주말과 ${m.closed_dates.map(koMonthDay).join("·")} 휴장일을 제외해 ${koMonthDay(m.eval_date)}까지 계산했습니다.
+        이 탭은 가정에 따른 추정치입니다.
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>SK이노베이션 연말 주가 <span class="sub">2개월·1개월·1주 거래량가중평균의 산술평균</span></h3>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th scope="col">구간</th><th scope="col">거래일 범위</th><th scope="col">실제 / 가정 거래일</th><th scope="col">가중평균 주가</th></tr></thead>
+        <tbody>${m.windows.map(w => `<tr><td>${esc(windows[w.spec] || w.spec)}</td>
+          <td>${dateRange(w.start_date, w.end_date)}</td><td class="num">${w.actual_days}일 / ${w.projected_days}일</td>
+          <td class="num">${won(w.vwap)}원</td></tr>`).join("")}
+          <tr class="subject"><td colspan="3"><b>세 구간의 산술평균</b></td><td class="num"><b>${won(m.subject_price)}원</b></td></tr>
+        </tbody>
+      </table></div>
+    </div>
+
+    <div class="card">
+      <h3>Peer 보정 및 평가주가</h3>
+      <p class="step-copy">SK이노베이션과 Peer 모두 ${year}년 말과 2026년 말에 같은 2개월·1개월·1주 방식을 적용했습니다.</p>
+      <div class="wtable">
+        ${Object.entries(m.groups).map(([name, g]) => `<div class="r"><span class="k">${esc(name)} Peer 그룹 · 가중치 ${(g.weight * 100).toFixed(0)}%</span>
+          <span class="v ${dirClass(m.group_changes[name])}">${signed(m.group_changes[name])}</span></div>`).join("")}
+        <div class="r sum"><span class="k">Peer 가중 증감률</span><span class="v ${dirClass(m.peer_change)}">${signed(m.peer_change)}</span></div>
+      </div>
+      ${finalCalculation(m)}
+    </div>
+
+    <div class="card">
+      <h3>종목별 가정과 산출 결과 <span class="sub">${koMonthDay(m.as_of)} KIS 확정 종가·거래량 고정</span></h3>
+      <div class="tbl-wrap"><table id="yearEndInputs">
+        <thead><tr><th scope="col">종목</th><th scope="col">고정 종가</th><th scope="col">일 거래량</th><th scope="col">${year}년 말 주가</th><th scope="col">연말 추정 주가</th><th scope="col">증감률</th></tr></thead>
+        <tbody>${row(m.subject, "subject")}${Object.values(m.groups).flatMap(g => g.members.map(t => row(t))).join("")}</tbody>
+      </table></div>
+    </div>`;
+}
+
 function renderScore(V) {
   const closeOnly = S.tab === "close-score";
   const view = closeOnly ? D.latest.views.find(v => v.key === "today") : currentView();
@@ -1712,6 +1784,7 @@ function renderDesign(V) {
 
 function render() {
   const V = document.getElementById("view");
+  if (S.tab === "close-score" && S.closeView === "year-end") return renderYearEndEstimate(V);
   if (S.tab === "score" || S.tab === "close-score") return renderScore(V);
   if (S.tab === "case") return renderCase(V);
   if (S.tab === "design") return renderDesign(V);

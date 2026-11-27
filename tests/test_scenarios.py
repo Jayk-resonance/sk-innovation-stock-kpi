@@ -1,9 +1,10 @@
-from datetime import date
+from datetime import date, timedelta
 
 import pytest
 
 from core.evaluate import evaluate
 from core.scenarios import (
+    flat_projection_prices,
     peer_waterfall,
     remaining_path_scenarios,
     score_matrix,
@@ -11,6 +12,8 @@ from core.scenarios import (
     sensitivity_table,
     target_price,
 )
+from core.schema import Bar
+from pipeline.build_site import build_year_end_estimate
 
 EVAL_DATE = date(2026, 7, 15)
 
@@ -112,3 +115,41 @@ def test_remaining_path_lock_in_shrinks_with_longer_horizon(prices, universe, ru
     far = remaining_path_scenarios(prices, universe, rules, calibration, as_of, 3, "B")
     assert near["lock_in_pct"] > far["lock_in_pct"]
     assert 0.0 <= far["lock_in_pct"] <= 1.0
+
+
+def test_year_end_flat_uses_each_tickers_nov26_price_and_volume(prices, universe, rules, calibration):
+    s = build_year_end_estimate(prices, universe, rules, calibration)
+    assert (s["as_of"], s["cutoff_date"], s["eval_date"]) == ("2026-11-26", "2026-12-31", "2026-12-30")
+    sessions = [date.fromisoformat(d) for d in s["trading_dates"]]
+    assert len(sessions) == 23
+    assert sessions[0] == date(2026, 11, 27)
+    assert all(d.weekday() < 5 and d != date(2026, 12, 25) for d in sessions)
+
+    # Independently compute the three-window average: 1M and 1W are fully projected.
+    rows = [s["subject"], *(r for g in s["groups"].values() for r in g["members"])]
+    for row in rows:
+        actual = [b for b in prices[row["code"]] if date(2026, 11, 2) <= b.day <= date(2026, 11, 26)]
+        last = actual[-1]
+        assert (row["close"], row["volume"]) == (last.close, last.volume)
+        future_volume = 23 * last.volume
+        two_month = (sum(b.close * b.volume for b in actual) + last.close * future_volume) / (
+            sum(b.volume for b in actual) + future_volume
+        )
+        assert row["price"] == pytest.approx((two_month + 2 * last.close) / 3, abs=0.005)
+    assert [(w["actual_days"], w["projected_days"]) for w in s["windows"]] == [(19, 23), (0, 21), (0, 5)]
+    assert s["peer_change"] == pytest.approx(0.6 * s["group_changes"]["에화"] + 0.4 * s["group_changes"]["배소"], abs=1e-6)
+    assert s["eval_price"] == pytest.approx(s["subject_price"] / (1 - (s["subject_change"] - s["peer_change"])), abs=0.15)
+    assert s["scores"]["V2"]["anchor"] == calibration["baselines"]["V2"]["value"]
+
+
+def test_year_end_scenario_does_not_follow_later_daily_updates(prices, universe, rules, calibration):
+    as_of = date(2026, 11, 26)
+    future = as_of + timedelta(days=1)
+    known = {code: [b for b in bars if b.day <= as_of] for code, bars in prices.items()}
+    newer = {code: bars + [Bar(future, 1200, 2, 2400)] for code, bars in known.items()}
+    assert build_year_end_estimate(known, universe, rules, calibration) == build_year_end_estimate(
+        newer, universe, rules, calibration
+    )
+    missing = {**known, universe.peers[0].code: known[universe.peers[0].code][:-1]}
+    with pytest.raises(ValueError, match=f"{universe.peers[0].code} {as_of}"):
+        flat_projection_prices(missing, universe, as_of, [future])
