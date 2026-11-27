@@ -194,7 +194,7 @@ function renderSubtabs() {
   }
   if (S.tab !== "score") { el.innerHTML = ""; return; }
   el.innerHTML = visibleViews().map(v => {
-    const [, title, suffix] = v.label.match(/^(.*?) (\((?:Inc\.|이사회)\))$/) ?? [null, v.label];
+    const [, title, suffix] = v.label.match(/^(.*?) (\((?:Inc\.|이사회|위원회)\))$/) ?? [null, v.label];
     return `
       <button class="tab ${S.evalKey === v.key ? "active" : ""}" data-sub="${esc(v.key)}">
         ${esc(title)}${suffix ? ` <small class="tab-suffix">${esc(suffix)}</small>` : ""}
@@ -500,13 +500,17 @@ function graphStartDate() {
     .toISOString().slice(0, 10);
 }
 
-function miniCloseChart(code, name, compact = false, endDate = D.latest.as_of) {
+function miniCloseChart(code, name, compact = false, endDate = D.latest.as_of, projection = null) {
   const bars = D.bars[code];
   if (!bars) return "";
   const start = graphStartDate();
   const end = endDate;
   const points = bars.dates.map((date, i) => ({ date, close: bars.close[i] }))
     .filter(p => p.date >= start && p.date <= end && p.close != null);
+  const actualCount = points.length;
+  if (projection && actualCount) {
+    points.push(...projection.dates.map(date => ({ date, close: projection.close })));
+  }
   if (points.length < 2) return "";
 
   const W = 640, H = compact ? 129 : 140;
@@ -516,7 +520,9 @@ function miniCloseChart(code, name, compact = false, endDate = D.latest.as_of) {
   if (lo === hi) { lo *= .99; hi *= 1.01; }
   const x = i => P.l + i / (points.length - 1) * (W - P.l - P.r);
   const y = value => P.t + (hi - value) / (hi - lo) * (H - P.t - P.b);
-  const path = points.map((p, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${y(p.close).toFixed(1)}`).join(" ");
+  const path = (from, to) => points.slice(from, to).map((p, i) =>
+    `${i ? "L" : "M"}${x(i + from).toFixed(1)},${y(p.close).toFixed(1)}`
+  ).join(" ");
   let baseIndex = points.findIndex(p => p.date === D.latest.base_date);
   if (baseIndex < 0) baseIndex = points.reduce((best, p, i) => p.date <= D.latest.base_date ? i : best, 0);
   const basePoint = points[baseIndex];
@@ -525,21 +531,22 @@ function miniCloseChart(code, name, compact = false, endDate = D.latest.as_of) {
   const color = slotColor(meta?.group || "본사");
 
   return `<div class="mini-close-chart${compact ? " compact" : ""}">
-    <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(name)} 종가 추이">
+    <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(name)} ${projection ? "실제·가정 종가 추이" : "종가 추이"}">
       <line x1="${P.l}" y1="${y(lo)}" x2="${W-P.r}" y2="${y(lo)}" stroke="${tok("--grid")}"/>
       <line x1="${P.l}" y1="${y(hi)}" x2="${W-P.r}" y2="${y(hi)}" stroke="${tok("--grid")}"/>
       <text x="${P.l - 6}" y="${(y(lo) + 3).toFixed(1)}" text-anchor="end" font-size="9.5" fill="${tok("--muted")}">${won(lo)}원</text>
       <text x="${P.l - 6}" y="${(y(hi) + 3).toFixed(1)}" text-anchor="end" font-size="9.5" fill="${tok("--muted")}">${won(hi)}원</text>
       <line x1="${x(baseIndex)}" y1="${P.t}" x2="${x(baseIndex)}" y2="${H-P.b}"
         stroke="${tok("--axis")}" stroke-dasharray="4 4"/>
-      <path d="${path}" fill="none" stroke="${color}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="${path(0, actualCount)}" fill="none" stroke="${color}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+      ${projection ? `<path d="${path(actualCount - 1)}" fill="none" stroke="${color}" stroke-width="2.4" stroke-dasharray="5 4" stroke-linecap="round"/>` : ""}
       <circle cx="${x(points.length-1)}" cy="${y(last.close)}" r="3.5" fill="${color}"/>
       <text x="${x(baseIndex)}" y="${H-7}" text-anchor="middle" font-size="10" fill="${tok("--muted")}">${esc(String(D.latest.base_date).slice(0,4)+"년末")}</text>
     </svg>
     <div class="mini-chart-meta">
       <span>${koMonthDay(first.date)} <b>${won(first.close)}원</b></span>
       <span>${String(D.latest.base_date).slice(0,4)}년末 <b>${won(basePoint.close)}원</b></span>
-      <span>${koMonthDay(last.date)} <b>${won(last.close)}원</b></span>
+      <span>${koMonthDay(last.date)}${projection ? " 가정" : ""} <b>${won(last.close)}원</b></span>
     </div>
   </div>`;
 }
@@ -979,15 +986,51 @@ function scoreContributionCard(result, mode = "") {
   </div>`;
 }
 
+function yearEndPeerSection(m) {
+  const year = m.base_date.slice(0, 4);
+  const peer = mem => `<details class="year-end-peer">
+    <summary class="m">
+      <span class="peer-name"><b>${esc(mem.name)}</b><small>상세 보기</small></span>
+      <span class="peer-price-compare">
+        <span><small>${year}년 말 2/1/1</small><b>${won(mem.base_price)}원</b></span>
+        <i aria-hidden="true">→</i>
+        <span><small>연말 추정 2/1/1</small><b>${won(mem.price)}원</b></span>
+      </span>
+      <strong class="${dirClass(mem.change)}">${signed(mem.change)}</strong>
+    </summary>
+    <div class="year-end-peer-detail">
+      <p class="step-copy">${koMonthDay(m.as_of)} KIS 확정 종가 <b>${won(mem.close)}원</b> · 일 거래량 <b>${won(mem.volume)}주</b> 고정</p>
+      ${miniCloseChart(mem.code, mem.name, true, m.as_of, { dates: m.trading_dates, close: mem.close })}
+      <p class="step-copy">실선: ${koMonthDay(m.as_of)}까지 실제 종가 · 점선: 이후 연말까지 가정 종가</p>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th scope="col">가중평균 구간</th><th scope="col">${year}년 말</th><th scope="col">연말 추정</th></tr></thead>
+        <tbody>${mem.windows_now.map((w, i) => {
+          const b = mem.windows_base[i];
+          return `<tr><td>${esc(w.spec)}</td>
+            <td class="num">${won(b.vwap)}원 <small>(${compactDate(b.start_date)}~${compactDate(b.end_date)})</small></td>
+            <td class="num">${won(w.vwap)}원 <small>(${compactDate(w.start_date)}~${compactDate(w.end_date)})</small></td></tr>`;
+        }).join("")}
+        <tr class="subject"><td><b>산술평균</b></td><td class="num"><b>${won(mem.base_price)}원</b></td><td class="num"><b>${won(mem.price)}원</b></td></tr>
+        </tbody>
+      </table></div>
+    </div>
+  </details>`;
+  return `<div class="group-sec">
+    <div class="group-sec-h">Peer 종목별 증감률 <span class="hover-help">종목을 펼치면 종가 추이와 기간별 산출 근거를 볼 수 있습니다</span></div>
+    ${Object.entries(m.groups).map(([name, g]) => `<div class="peer-grp">
+      <div class="peer-grp-h"><span>${esc(name)} 그룹</span><span class="w">가중치 ${(g.weight * 100).toFixed(0)}%</span></div>
+      ${g.members.map(peer).join("")}
+      <div class="m peer-group-average"><b>그룹 평균</b><b class="${dirClass(m.group_changes[name])}">${signed(m.group_changes[name])}</b></div>
+    </div>`).join("")}
+    <div class="wtable"><div class="r sum"><span class="k">Peer 가중 증감률</span><span class="v ${dirClass(m.peer_change)}">${signed(m.peer_change)}</span></div></div>
+  </div>`;
+}
+
 function renderYearEndEstimate(V) {
   const m = D.scenarios.year_end_flat, score = m.scores.V2;
   const dateRange = (first, last) => `${koMonthDay(first)}~${koMonthDay(last)}`;
   const year = m.base_date.slice(0, 4);
   const windows = { "2M": "2개월", "1M": "1개월", "1W": "1주 (최근 5거래일)" };
-  const row = (t, cls = "") => `<tr class="${cls}">
-    <td>${esc(t.name)}</td><td class="num">${won(t.close)}원</td><td class="num">${won(t.volume)}주</td>
-    <td class="num">${won(t.base_price)}원</td><td class="num">${won(t.price)}원</td>
-    <td class="num ${dirClass(t.change)}">${signed(t.change)}</td></tr>`;
   V.innerHTML = `
     <div class="hero">
       <div class="eyebrow">${koDate(m.cutoff_date)} 연말 추정 <span class="snapshot-badge">${koMonthDay(m.as_of)} 고정 시나리오</span></div>
@@ -1004,6 +1047,7 @@ function renderYearEndEstimate(V) {
 
     <div class="card">
       <h3>SK이노베이션 연말 주가 <span class="sub">2개월·1개월·1주 거래량가중평균의 산술평균</span></h3>
+      <p class="step-copy">${koMonthDay(m.as_of)} KIS 확정 종가 <b>${won(m.subject.close)}원</b> · 일 거래량 <b>${won(m.subject.volume)}주</b> 고정</p>
       <div class="tbl-wrap"><table>
         <thead><tr><th scope="col">구간</th><th scope="col">거래일 범위</th><th scope="col">실제 / 가정 거래일</th><th scope="col">가중평균 주가</th></tr></thead>
         <tbody>${m.windows.map(w => `<tr><td>${esc(windows[w.spec] || w.spec)}</td>
@@ -1017,20 +1061,8 @@ function renderYearEndEstimate(V) {
     <div class="card">
       <h3>Peer 보정 및 평가주가</h3>
       <p class="step-copy">SK이노베이션과 Peer 모두 ${year}년 말과 2026년 말에 같은 2개월·1개월·1주 방식을 적용했습니다.</p>
-      <div class="wtable">
-        ${Object.entries(m.groups).map(([name, g]) => `<div class="r"><span class="k">${esc(name)} Peer 그룹 · 가중치 ${(g.weight * 100).toFixed(0)}%</span>
-          <span class="v ${dirClass(m.group_changes[name])}">${signed(m.group_changes[name])}</span></div>`).join("")}
-        <div class="r sum"><span class="k">Peer 가중 증감률</span><span class="v ${dirClass(m.peer_change)}">${signed(m.peer_change)}</span></div>
-      </div>
+      ${yearEndPeerSection(m)}
       ${finalCalculation(m)}
-    </div>
-
-    <div class="card">
-      <h3>종목별 가정과 산출 결과 <span class="sub">${koMonthDay(m.as_of)} KIS 확정 종가·거래량 고정</span></h3>
-      <div class="tbl-wrap"><table id="yearEndInputs">
-        <thead><tr><th scope="col">종목</th><th scope="col">고정 종가</th><th scope="col">일 거래량</th><th scope="col">${year}년 말 주가</th><th scope="col">연말 추정 주가</th><th scope="col">증감률</th></tr></thead>
-        <tbody>${row(m.subject, "subject")}${Object.values(m.groups).flatMap(g => g.members.map(t => row(t))).join("")}</tbody>
-      </table></div>
     </div>`;
 }
 

@@ -7,7 +7,7 @@ from datetime import date
 import pytest
 
 from core.evaluate import evaluate
-from core.schema import load_candidates
+from core.schema import Bar, load_candidates
 from pipeline.build_site import (
     _market_cap_rating,
     build_bars,
@@ -165,6 +165,20 @@ def test_november_final_snapshot_is_fixed_to_november_16(prices, universe, rules
     assert snapshot["snapshot"] is True
     assert snapshot["official_mode"] == "최종"
     assert snapshot["modes"]["최종"]["subject_chart"][-1]["date"] == snapshot["date"]
+
+
+def test_december_committee_snapshot_matches_november_26_today_view(prices, universe, rules, calibration):
+    cutoff, later = date(2026, 11, 26), date(2026, 11, 27)
+    through_cutoff = {code: [bar for bar in bars if bar.day <= cutoff] for code, bars in prices.items()}
+    original = build_latest(through_cutoff, universe, rules, calibration)["views"][0]
+    extended = {code: bars + [Bar(later, 10000, 200, 2000000)] for code, bars in through_cutoff.items()}
+    payload = build_latest(extended, universe, rules, calibration)
+    snapshot = next(view for view in payload["views"] if view["label"] == "12월 최종평가 (위원회)")
+    assert snapshot["snapshot"] is True
+    assert snapshot["date"] == original["date"] == "2026-11-26"
+    assert payload["views"][0]["date"] == "2026-11-27"
+    assert snapshot["official_mode"] == original["official_mode"]
+    assert snapshot["modes"] == original["modes"]
 
 
 def test_h1_zero_score_surfaces_with_raw(prices, universe, rules, calibration):

@@ -137,6 +137,14 @@ def test_year_end_flat_uses_each_tickers_nov26_price_and_volume(prices, universe
         )
         assert row["price"] == pytest.approx((two_month + 2 * last.close) / 3, abs=0.005)
     assert [(w["actual_days"], w["projected_days"]) for w in s["windows"]] == [(19, 23), (0, 21), (0, 5)]
+    assert len(rows) == 1 + len(universe.peers)
+    for member in rows[1:]:
+        current, base = member["windows_now"], member["windows_base"]
+        assert [w["spec"] for w in current] == [w["spec"] for w in base] == ["2M", "1M", "1W"]
+        assert [w["vwap"] for w in current[1:]] == [member["close"]] * 2
+        assert current[1]["actual_days"] == 0 and current[1]["projected_days"] == 21
+        assert member["price"] == pytest.approx(sum(w["vwap"] for w in current) / 3, abs=0.01)
+        assert member["base_price"] == pytest.approx(sum(w["vwap"] for w in base) / 3, abs=0.01)
     assert s["peer_change"] == pytest.approx(0.6 * s["group_changes"]["에화"] + 0.4 * s["group_changes"]["배소"], abs=1e-6)
     assert s["eval_price"] == pytest.approx(s["subject_price"] / (1 - (s["subject_change"] - s["peer_change"])), abs=0.15)
     assert s["scores"]["V2"]["anchor"] == calibration["baselines"]["V2"]["value"]

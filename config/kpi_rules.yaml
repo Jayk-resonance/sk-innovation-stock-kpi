@@ -17,6 +17,8 @@ eval_dates:
   - { label: "10월 잠정평가 (이사회)", key: "10월-잠정평가", date: "2026-09-30", mode: 최종, snapshot: true }
   # SK Inc. 최종평가용 11월 16일 기준 기록 탭.
   - { label: "11월 최종평가 (Inc.)", date: "2026-11-16", mode: 최종, snapshot: true }
+  # 위원회 보고용 11월 26일 주가평가 기록.
+  - { label: "12월 최종평가 (위원회)", key: "12월-최종평가-위원회", date: "2026-11-26", mode: 최종, snapshot: true }
   # - { label: "2026 3분기", date: null, mode: 잠정 }   # 안내 수신 후 기입
   # - { label: "2026 최종",  date: null, mode: 최종 }   # 안내 수신 후 기입
 

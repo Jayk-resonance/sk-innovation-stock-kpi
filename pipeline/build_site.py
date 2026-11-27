@@ -211,6 +211,24 @@ def _score_marks(scale: dict, anchor: float) -> list[dict]:
             for pt in (scale["min_points"], scale["base_points"], 80, scale["max_points"])]
 
 
+def _window_details(bars, end, specs, method, ranges=None, as_of=None) -> list[dict]:
+    """Report the trading dates and VWAP used by each evaluation window."""
+    rows = []
+    for spec in specs:
+        selected = slice_window(bars, *ranges[spec]) if ranges and spec in ranges else slice_spec_window(
+            bars, end, spec
+        )
+        row = {
+            "spec": spec, "start_date": selected[0].day.isoformat(), "end_date": selected[-1].day.isoformat(),
+            "vwap": round(vwap(selected, method), 2),
+        }
+        if as_of is not None:
+            row["actual_days"] = sum(bar.day <= as_of for bar in selected)
+            row["projected_days"] = len(selected) - row["actual_days"]
+        rows.append(row)
+    return rows
+
+
 def _mode_detail(prices, universe, rules, calibration, eval_date, mode, method) -> dict:
     """한 평가시점·한 방식의 산출 전 과정.
 
@@ -225,20 +243,7 @@ def _mode_detail(prices, universe, rules, calibration, eval_date, mode, method) 
 
     def windows(code, anchor_date, window_ranges=None):
         bars = apply_corporate_actions(prices[code], code, actions)
-        rows = []
-        for spec in specs:
-            window_bars = (
-                slice_window(bars, *window_ranges[spec])
-                if window_ranges and spec in window_ranges
-                else slice_spec_window(bars, anchor_date, spec)
-            )
-            rows.append({
-                "spec": spec,
-                "start_date": window_bars[0].day.isoformat(),
-                "end_date": window_bars[-1].day.isoformat(),
-                "vwap": round(adjusted_price(bars, anchor_date, [spec], method, window_ranges), 2),
-            })
-        return rows
+        return _window_details(bars, anchor_date, specs, method, window_ranges)
 
     subject_bars = apply_corporate_actions(prices[subject], subject, actions)
     subject_by_day = {bar.day: bar for bar in subject_bars}
@@ -479,7 +484,7 @@ def build_latest(
     views[0]["modes"]["최종"]["contribution"] = _score_contribution(
         views[0]["modes"]["최종"]
     )
-    for entry in reversed([e for e in rules["eval_dates"] if e["date"]]):
+    for entry in reversed([e for e in rules["eval_dates"] if e["date"] and e["date"] <= as_of]):
         view = {
             "key": entry.get("key", entry["label"].replace(" ", "-")), "label": entry["label"],
             "date": entry["date"].isoformat(), "official_mode": entry["mode"], "confirmed": True,
@@ -554,6 +559,7 @@ def build_year_end_estimate(prices, universe, rules, calibration) -> dict:
     result = evaluate(projected, universe, rules, fixed_calibration, end, mode, method)
     now = adjusted_prices(projected, universe, end, specs, method, actions)
     base = base_adjusted_prices(projected, universe, rules, mode, method, actions)
+    base_ranges = (rules.get("base_window_ranges") or {}).get(mode)
 
     def ticker_row(ticker):
         actual = next(bar for bar in projected[ticker.code] if bar.day == as_of)
@@ -563,16 +569,18 @@ def build_year_end_estimate(prices, universe, rules, calibration) -> dict:
             "change": round(now[ticker.code] / base[ticker.code] - 1, 6),
         }
 
-    windows = []
-    subject = apply_corporate_actions(projected[universe.subject.code], universe.subject.code, actions)
-    for spec in specs:
-        bars = slice_spec_window(subject, end, spec)
-        windows.append({
-            "spec": spec, "start_date": bars[0].day.isoformat(), "end_date": bars[-1].day.isoformat(),
-            "actual_days": sum(bar.day <= as_of for bar in bars),
-            "projected_days": sum(bar.day > as_of for bar in bars),
-            "vwap": round(vwap(bars, method), 2),
-        })
+    def ticker_windows(ticker):
+        return apply_corporate_actions(projected[ticker.code], ticker.code, actions)
+
+    def peer_row(ticker):
+        bars = ticker_windows(ticker)
+        return {
+            **ticker_row(ticker),
+            "windows_now": _window_details(bars, end, specs, method, as_of=as_of),
+            "windows_base": _window_details(bars, rules["base_date"], specs, method, base_ranges),
+        }
+
+    windows = _window_details(ticker_windows(universe.subject), end, specs, method, as_of=as_of)
     return {
         **_result_json(result),
         "as_of": as_of.isoformat(), "start_date": start.isoformat(),
@@ -581,7 +589,7 @@ def build_year_end_estimate(prices, universe, rules, calibration) -> dict:
         "closed_dates": [day.isoformat() for day in YEAR_END_CLOSED],
         "subject": ticker_row(universe.subject), "windows": windows,
         "groups": {
-            name: {"weight": weight, "members": [ticker_row(t) for t in tickers]}
+            name: {"weight": weight, "members": [peer_row(t) for t in tickers]}
             for name, (weight, tickers) in universe.groups.items()
         },
         "score_marks": _score_marks(rules["score_scale"], result.scores["V2"].anchor),
